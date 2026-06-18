@@ -30,7 +30,7 @@ const state = {
   format: "portrait", reel: false,
   game: "lol", customColor: "#00c2e0",
   watermark: true, gradient: 1,
-  titleScale: 1, zoom: 1, textY: -80, textDrag: 0,
+  titleScale: 1, descScale: 1, zoom: 1, textY: -80, textDrag: 0,
   hiColor: "#00c2e0", // auto-synced from game color
   dur: 2.5, trans: "cut", kenburns: true,
 };
@@ -165,14 +165,19 @@ function drawEdgeScrims(W,H){
 // ═══ SECTION: TEXT WRAP + RICH TEXT ═══
 function wrapText(text, font, maxW){
   ctx.font = font;
-  const words = (text||"").split(/\s+/).filter(Boolean);
-  const lines = []; let line = "";
-  for(const w of words){
-    const test = line ? line+" "+w : w;
-    if(ctx.measureText(test).width > maxW && line){ lines.push(line); line = w; }
-    else line = test;
+  const paragraphs = (text||"").split(/\n/);
+  const lines = [];
+  for(const para of paragraphs){
+    if(para.trim() === ""){ lines.push(""); continue; }
+    const words = para.split(/\s+/).filter(Boolean);
+    let line = "";
+    for(const w of words){
+      const test = line ? line+" "+w : w;
+      if(ctx.measureText(test).width > maxW && line){ lines.push(line); line = w; }
+      else line = test;
+    }
+    if(line) lines.push(line);
   }
-  if(line) lines.push(line);
   return lines;
 }
 
@@ -352,13 +357,13 @@ function drawLayoutBottom(W,H,c,scale,pad,maxW,acc,hi){
 
   const eyeF = Math.round(22*scale);
   const titleF = Math.round((state.format==="story"||state.reel?86:74) * scale * state.titleScale);
-  const descF = Math.round(30*scale);
+  const descF = Math.round(30*scale*state.descScale);
   const titleLH = Math.round(titleF*1.04);
   const descLH = Math.round(descF*1.4);
   const titleFont = `800 ${titleF}px Sora, sans-serif`;
   const eyebrow = (c.eyebrow||"").toUpperCase();
   const titleLines = wrapRich(richWords(c.title), titleFont, maxW);
-  const descLines = (c.showDesc && c.desc.trim()) ? wrapText(c.desc, `500 ${descF}px Manrope, sans-serif`, maxW).slice(0,3) : [];
+  const descLines = (c.showDesc && c.desc.trim()) ? wrapText(c.desc, `500 ${descF}px Manrope, sans-serif`, maxW).slice(0,10) : [];
   if(!eyebrow && !titleLines.length && !descLines.length){ lastTextBox=null; return; }
 
   const accentLineH = Math.round(4*scale);
@@ -401,7 +406,7 @@ function drawLayoutBottom(W,H,c,scale,pad,maxW,acc,hi){
 function drawLayoutCentered(W,H,c,scale,pad,maxW,acc,hi){
   const eyeF = Math.round(22*scale);
   const titleF = Math.round((state.format==="story"||state.reel?96:84) * scale * state.titleScale);
-  const descF = Math.round(30*scale);
+  const descF = Math.round(30*scale*state.descScale);
   const titleLH = Math.round(titleF*1.06);
   const descLH = Math.round(descF*1.5);
   const titleFont = `800 ${titleF}px Sora, sans-serif`;
@@ -563,7 +568,7 @@ function drawLayoutScore(W,H,c,scale,pad,maxW,acc,hi){
 
   // title + desc at bottom
   const titleF = Math.round((state.format==="story"||state.reel?76:68) * scale * state.titleScale);
-  const descF = Math.round(30*scale);
+  const descF = Math.round(30*scale*state.descScale);
   const titleLH = Math.round(titleF*1.05);
   const descLH = Math.round(descF*1.4);
   const titleFont = `800 ${titleF}px Sora, sans-serif`;
@@ -601,7 +606,7 @@ function drawLayoutBreaking(W,H,c,scale,pad,maxW,hi){
   const badgeLabel = badge==="officiel" ? "OFFICIEL" : "BREAKING";
 
   const titleF = Math.round((state.format==="story"||state.reel?120:104) * scale * state.titleScale);
-  const descF = Math.round((state.format==="story"||state.reel?38:34)*scale);
+  const descF = Math.round((state.format==="story"||state.reel?38:34)*scale*state.descScale);
   const titleLH = Math.round(titleF*1.0);
   const descLH = Math.round(descF*1.5);
   const titleFont = `800 ${titleF}px Sora, sans-serif`;
@@ -1185,7 +1190,7 @@ function drawLayoutTransfert(W,H,c,scale,pad,maxW,acc,hi){
   // bottom text
   const eyeF = Math.round(22*scale);
   const titleF = Math.round((state.format==="story"||state.reel?80:72)*scale*state.titleScale);
-  const descF = Math.round(28*scale);
+  const descF = Math.round(28*scale*state.descScale);
   const titleLH = Math.round(titleF*1.04);
   const descLH = Math.round(descF*1.4);
   const titleFont = `800 ${titleF}px Sora, sans-serif`;
@@ -1341,7 +1346,8 @@ function drawLayoutCitation(W,H,c,scale,pad,maxW,acc,hi){
   const quoteLines = wrapRich(richWords(c.title), quoteFont, maxW);
 
   // eyebrow at top
-  let y = Math.round(H*0.18);
+  const dragOffset = (state.textY*scale) + state.textDrag;
+  let y = Math.round(H*0.18) + dragOffset;
   if(eyebrow){
     ctx.font = `700 ${eyeF}px Sora, sans-serif`;
     ctx.fillStyle = acc; ctx.textBaseline = "top";
@@ -1532,7 +1538,7 @@ function drawLayoutMVP(W,H,c,scale,pad,maxW,acc,hi){
   // bottom text
   const eyeF = Math.round(22*scale);
   const titleF = Math.round((state.format==="story"||state.reel?80:72)*scale*state.titleScale);
-  const descF = Math.round(28*scale);
+  const descF = Math.round(28*scale*state.descScale);
   const titleLH = Math.round(titleF*1.04);
   const titleFont = `800 ${titleF}px Sora, sans-serif`;
   const eyebrow = (c.eyebrow||"").toUpperCase();
@@ -1940,6 +1946,7 @@ function applyJsonPreset(data, imageFiles){
   if(data.watermark!=null){ state.watermark = data.watermark; $("watermark").checked = data.watermark; }
   if(data.gradient!=null){ state.gradient = data.gradient/100; $("gradient").value = data.gradient; $("gradientV").textContent = data.gradient+"%"; }
   if(data.titleSize!=null){ state.titleScale = data.titleSize/100; $("titleSize").value = data.titleSize; $("titleSizeV").textContent = data.titleSize+"%"; }
+  if(data.descSize!=null){ state.descScale = data.descSize/100; $("descSize").value = data.descSize; $("descSizeV").textContent = data.descSize+"%"; }
 
   const imgMap = {};
   if(imageFiles && imageFiles.length){
@@ -2044,6 +2051,7 @@ function bindSlider(id, key, fmt, scale){
 }
 bindSlider("gradient","gradient", v=>v+"%", 0.01);
 bindSlider("titleSize","titleScale", v=>v+"%", 0.01);
+bindSlider("descSize","descScale", v=>v+"%", 0.01);
 bindSlider("zoom","zoom", v=>v+"%", 0.01);
 $("textY").oninput = ()=>{ state.textY=parseFloat($("textY").value); $("textYV").textContent=state.textY; render(); };
 $("dur").oninput = ()=>{ state.dur=parseFloat($("dur").value); $("durV").textContent=state.dur+"s"; };
