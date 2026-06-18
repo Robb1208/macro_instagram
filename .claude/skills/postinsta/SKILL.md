@@ -155,3 +155,4 @@ L'utilisateur clique "Importer un dossier" dans l'outil Instagram et sélectionn
 - Eyebrow = contexte court (nom de la compétition, date, phase).
 - 2 à 5 slides par post en général.
 - La description ne doit pas entrer en conflit avec le crédit photo (le texte par défaut est remonté de -80px).
+- **Horaires : toujours convertir en heure de Paris (CET/CEST)**, quel que soit le jeu ou le lieu de l'événement. Ne jamais afficher les horaires dans le fuseau local de l'événement (ex: pas KST pour la Corée, pas PST pour Los Angeles). Indiquer "Horaires CEST" ou "Horaires CET" dans le footer.

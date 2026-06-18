@@ -32,7 +32,7 @@ const state = {
   watermark: true, gradient: 1,
   titleScale: 1, zoom: 1, textY: -80, textDrag: 0,
   hiColor: "#00c2e0", // auto-synced from game color
-  dur: 2.5, trans: "fade", kenburns: true,
+  dur: 2.5, trans: "cut", kenburns: true,
 };
 
 function newSlide(img, name, tpl){
@@ -51,7 +51,7 @@ const EMPTY = { template:"post-image", eyebrow:"", title:"", desc:"", showDesc:f
 
 // ═══ SECTION: CANVAS INIT ═══
 const cv = document.getElementById("cv");
-const ctx = cv.getContext("2d");
+let ctx = cv.getContext("2d");
 const logo = new Image();
 let logoReady = false;
 logo.onload = () => { logoReady = true; document.getElementById("hdrlogo").src = LOGO_SRC; render(); };
@@ -407,7 +407,7 @@ function drawLayoutCentered(W,H,c,scale,pad,maxW,acc,hi){
   const titleFont = `800 ${titleF}px Sora, sans-serif`;
   const eyebrow = (c.eyebrow||"").toUpperCase();
   const titleLines = wrapRich(richWords(c.title), titleFont, maxW);
-  const descLines = (c.showDesc && c.desc.trim()) ? wrapText(c.desc, `500 ${descF}px Manrope, sans-serif`, Math.round(maxW*0.92)).slice(0,6) : [];
+  const descLines = (c.showDesc && c.desc.trim()) ? wrapText(c.desc, `500 ${descF}px Manrope, sans-serif`, Math.round(maxW*0.92)).slice(0,14) : [];
 
   const accentLineH = Math.round(4*scale);
   const gap = Math.round(15*scale);
@@ -1673,6 +1673,7 @@ function addFiles(files){
   if(!pending) return;
   arr.forEach(f=>{
     const img = new Image();
+    img.crossOrigin = "anonymous";
     img.onload = ()=>{
       state.images.push(newSlide(img, f.name));
       if(--pending===0){ state.active = state.images.length-1; refreshThumbs(); syncInputs(); updateReelAvailability(); render(); }
@@ -1843,6 +1844,7 @@ if($("photoCredit")) $("photoCredit").oninput = e => setField("photoCredit", e.t
 if($("bgImageFile")) $("bgImageFile").onchange = e => {
   const f = e.target.files[0]; if(!f) return;
   const img = new Image();
+  img.crossOrigin = "anonymous";
   img.onload = ()=>{
     let it = cur();
     if(!it){ state.images.push(newSlide(img, f.name)); state.active = state.images.length-1; refreshThumbs(); updateReelAvailability(); }
@@ -1991,6 +1993,7 @@ function applyJsonPreset(data, imageFiles){
         pending++;
         const idx = i;
         const img = new Image();
+        img.crossOrigin = "anonymous";
         img.onload = ()=>{
           state.images[idx].img = img;
           state.images[idx].name = file.name;
@@ -2134,11 +2137,44 @@ function pickMime(){
   for(const c of cands) if(window.MediaRecorder && MediaRecorder.isTypeSupported(c)) return c;
   return "";
 }
-function drawReelFrame(W, H, tMs){
+let _offCv1 = null, _offCtx1 = null, _offCv2 = null, _offCtx2 = null;
+function getOffscreen(W, H, n){
+  if(n===2){
+    if(!_offCv2){ _offCv2 = document.createElement("canvas"); _offCtx2 = _offCv2.getContext("2d"); }
+    if(_offCv2.width!==W||_offCv2.height!==H){ _offCv2.width=W; _offCv2.height=H; }
+    return [_offCv2, _offCtx2];
+  }
+  if(!_offCv1){ _offCv1 = document.createElement("canvas"); _offCtx1 = _offCv1.getContext("2d"); }
+  if(_offCv1.width!==W||_offCv1.height!==H){ _offCv1.width=W; _offCv1.height=H; }
+  return [_offCv1, _offCtx1];
+}
+
+function drawFullSlide(targetCtx, W, H, slide, idx, total, zoomMul){
+  const origCtx = ctx;
+  ctx = targetCtx;
   ctx.clearRect(0,0,W,H);
   ctx.fillStyle = INK; ctx.fillRect(0,0,W,H);
+  const showImg = slide.img && slide.showBgImage !== false;
+  const framed = showImg && slide.framedImage;
+  const tpl = slide.template;
+  if(showImg && !framed){
+    if(tpl==="transfert" || tpl==="spotlight") drawStripeBackground(W,H);
+    drawSlideMedia(slide, W, H, state.zoom * (zoomMul||1));
+  } else if(framed){
+    drawBaseBackground(W,H); drawFramedImage(slide, W, H, state.zoom);
+  } else {
+    if(tpl==="breaking") drawBreakingBackground(W,H);
+    else if(tpl==="transfert" || tpl==="spotlight"){ drawBaseBackground(W,H); drawStripeBackground(W,H); }
+    else drawBaseBackground(W,H);
+  }
+  drawEdgeScrims(W,H);
+  drawOverlay(W, H, { index: idx, total: total }, slide, showImg);
+  ctx = origCtx;
+}
+
+function drawReelFrame(W, H, tMs){
   const imgs = state.images;
-  if(!imgs.length){ drawBaseBackground(W,H); drawOverlay(W,H,null,EMPTY); return; }
+  if(!imgs.length){ ctx.clearRect(0,0,W,H); ctx.fillStyle=INK; ctx.fillRect(0,0,W,H); drawBaseBackground(W,H); drawOverlay(W,H,null,EMPTY); return; }
   const per = state.dur*1000, transMs = 600;
   const idx = Math.min(imgs.length-1, Math.floor(tMs/per));
   const local = tMs - idx*per;
@@ -2146,27 +2182,31 @@ function drawReelFrame(W, H, tMs){
   const showImg = imgs[idx].img && imgs[idx].showBgImage !== false;
   const framedCur = showImg && imgs[idx].framedImage;
   const kb = (state.kenburns && showImg && !framedCur) ? (1 + 0.07*prog) : 1;
-  if(showImg && !framedCur) drawSlideMedia(imgs[idx], W, H, state.zoom*kb);
-  else if(framedCur){ drawBaseBackground(W,H); drawFramedImage(imgs[idx], W, H, state.zoom); }
-  else drawBaseBackground(W,H);
+
   const next = imgs[idx+1];
-  if(next && local > per - transMs){
-    const nextShow = next.img && next.showBgImage !== false;
+  const inTrans = next && local > per - transMs && state.trans !== "cut";
+
+  if(!inTrans){
+    drawFullSlide(ctx, W, H, imgs[idx], idx, imgs.length, kb);
+  } else {
     const a = (local-(per-transMs))/transMs;
     if(state.trans==="fade"){
+      drawFullSlide(ctx, W, H, imgs[idx], idx, imgs.length, kb);
+      const [offCv, offCtx] = getOffscreen(W, H, 1);
+      drawFullSlide(offCtx, W, H, next, idx+1, imgs.length, 1);
       ctx.save(); ctx.globalAlpha = a;
-      if(nextShow) drawSlideMedia(next, W, H, state.zoom);
-      else drawBaseBackground(W,H);
+      ctx.drawImage(offCv, 0, 0);
       ctx.restore();
     } else {
-      ctx.save(); ctx.translate(W*(1-a),0);
-      if(nextShow) drawSlideMedia(next, W, H, state.zoom);
-      else drawBaseBackground(W,H);
-      ctx.restore();
+      const [curCv, curCtx] = getOffscreen(W, H, 1);
+      const [nxtCv, nxtCtx] = getOffscreen(W, H, 2);
+      drawFullSlide(curCtx, W, H, imgs[idx], idx, imgs.length, kb);
+      drawFullSlide(nxtCtx, W, H, next, idx+1, imgs.length, 1);
+      ctx.clearRect(0,0,W,H);
+      ctx.drawImage(curCv, Math.round(-W*a), 0);
+      ctx.drawImage(nxtCv, Math.round(W*(1-a)), 0);
     }
   }
-  drawEdgeScrims(W,H);
-  drawOverlay(W, H, { index: idx, total: imgs.length }, imgs[idx], showImg);
 }
 
 let playing = false, ticker = null;
