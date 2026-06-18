@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Macro · Générateur de posts Instagram</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="macro-instagram.css" />
+</head>
+<body>
+
+<header>
+  <img id="hdrlogo" alt="Macro" />
+  <div class="sep"></div>
+  <h1>Générateur de posts Instagram</h1>
+  <span class="tag mono">DA Macro · esport</span>
+</header>
+
+<div class="wrap">
+  <!-- ════════ PANEL DE CONTRÔLE ════════ -->
+  <div class="panel">
+
+    <!-- Template -->
+    <div class="group">
+      <label class="title">0 · Template</label>
+      <div class="tpl-grid" id="tplGrid">
+        <button class="tpl-btn on" data-tpl="post-image"><span class="tpl-icon">IMG</span><span class="tpl-name">Post image</span></button>
+        <button class="tpl-btn" data-tpl="post-texte"><span class="tpl-icon">Aa</span><span class="tpl-name">Texte seul</span></button>
+        <button class="tpl-btn" data-tpl="score"><span class="tpl-icon">VS</span><span class="tpl-name">Score</span></button>
+        <button class="tpl-btn" data-tpl="breaking"><span class="tpl-icon">!!</span><span class="tpl-name">Breaking</span></button>
+        <button class="tpl-btn" data-tpl="classement"><span class="tpl-icon">#1</span><span class="tpl-name">Classement</span></button>
+        <button class="tpl-btn" data-tpl="statistique"><span class="tpl-icon">∑</span><span class="tpl-name">Statistique</span></button>
+        <button class="tpl-btn" data-tpl="programme"><span class="tpl-icon">📅</span><span class="tpl-name">Programme</span></button>
+        <button class="tpl-btn" data-tpl="sondage"><span class="tpl-icon">📊</span><span class="tpl-name">Sondage</span></button>
+        <button class="tpl-btn" data-tpl="transfert"><span class="tpl-icon">⇄</span><span class="tpl-name">Transfert</span></button>
+        <button class="tpl-btn" data-tpl="tierlist"><span class="tpl-icon">S</span><span class="tpl-name">Tier List</span></button>
+        <button class="tpl-btn" data-tpl="citation"><span class="tpl-icon">❝</span><span class="tpl-name">Citation</span></button>
+        <button class="tpl-btn" data-tpl="spotlight"><span class="tpl-icon">★</span><span class="tpl-name">Spotlight</span></button>
+        <button class="tpl-btn" data-tpl="mvp"><span class="tpl-icon">🏆</span><span class="tpl-name">MVP</span></button>
+      </div>
+      <div style="margin-top:10px">
+        <button class="btn" id="folderImport" style="width:100%;justify-content:center;font-size:11px;padding:8px">📂 Importer un dossier (JSON + images)</button>
+      </div>
+      <input type="file" id="folderInput" webkitdirectory directory class="hide" />
+    </div>
+
+    <!-- Slides -->
+    <div class="group">
+      <label class="title">1 · Slides</label>
+      <input type="file" id="file" accept="image/*" multiple class="hide" />
+      <button class="btn" id="addText" style="width:100%;justify-content:center;font-size:11px;padding:8px">+ Slide texte (sans image)</button>
+      <div class="thumbs" id="thumbs"></div>
+      <p class="dim" id="slideHint" style="margin-top:8px;display:none">Clique une slide pour l'éditer · chaque slide a son propre texte.</p>
+    </div>
+
+    <!-- Contenu -->
+    <div class="group">
+      <label class="title">2 · Contenu <span id="contentSlideTag" style="color:var(--cyan);font-weight:600"></span></label>
+      <div id="bgImageRow">
+        <div class="upload" id="drop">
+          <strong>Cliquer pour choisir</strong> ou glisser-déposer<br>
+          <span style="color:var(--fg-mute)">une ou plusieurs images</span>
+        </div>
+        <input type="file" id="bgImageFile" accept="image/*" class="hide" />
+        <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
+          <label class="check" style="flex:1"><input type="checkbox" id="showBgImage" checked /> Afficher l'image</label>
+          <label class="check" style="flex:1"><input type="checkbox" id="framedImage" /> Cadrer l'image</label>
+          <button class="btn" id="bgImageClear" style="font-size:11px;padding:5px 8px;display:none">✕</button>
+        </div>
+      </div>
+      <div class="field" style="margin-top:12px">
+        <label>Crédit photo <span style="color:var(--fg-mute);font-weight:400">— affiché en haut à droite</span></label>
+        <input type="text" id="photoCredit" placeholder="Ex. Wojciech Wandzel / Riot Games" />
+      </div>
+      <div class="field" style="margin-top:12px">
+        <label>Surtitre (eyebrow)</label>
+        <input type="text" id="eyebrow" placeholder="Ex. LEAGUE OF LEGENDS" />
+      </div>
+      <div class="field">
+        <label>Titre</label>
+        <textarea id="title" placeholder="Le titre accrocheur de ton post"></textarea>
+      </div>
+      <div class="field">
+        <label>Description (optionnelle)</label>
+        <textarea id="desc" placeholder="Une ou deux phrases de contexte"></textarea>
+      </div>
+      <label class="check"><input type="checkbox" id="showDesc" checked /> Afficher la description</label>
+      <div id="teamRow" style="display:none">
+        <div class="field" style="margin-top:12px">
+          <label>Equipe A</label>
+          <input type="text" id="teamA" placeholder="Ex. Vitality" />
+        </div>
+        <div class="field">
+          <label>Equipe B</label>
+          <input type="text" id="teamB" placeholder="Ex. The MongolZ" />
+        </div>
+      </div>
+      <div id="scoreRow" class="field" style="margin-top:12px">
+        <label>Score (gros, au centre)</label>
+        <input type="text" id="score" placeholder="Ex. 2 - 1" />
+      </div>
+      <label id="scoreCheckRow" class="check"><input type="checkbox" id="showScore" /> Afficher le score</label>
+      <div id="scoreYRow" class="field" style="margin-top:10px">
+        <label>Position verticale du score</label>
+        <div class="slider"><input type="range" id="scoreY" min="-350" max="350" value="0" /><span class="val" id="scoreYV">0</span></div>
+      </div>
+      <div id="badgeRow" style="display:none">
+        <div class="field" style="margin-top:12px">
+          <label>Type de badge</label>
+          <select id="badge">
+            <option value="breaking">Breaking (rouge)</option>
+            <option value="officiel">Officiel (or)</option>
+          </select>
+        </div>
+      </div>
+      <div id="signatureRow" style="display:none">
+        <div class="field" style="margin-top:12px">
+          <label>Signature / source</label>
+          <input type="text" id="signature" placeholder="Ex. Robin Picard · Macro" />
+        </div>
+      </div>
+      <div id="standingsRow" style="display:none">
+        <div class="field" style="margin-top:12px">
+          <label>Classement <span style="color:var(--fg-mute);font-weight:400">— une ligne par équipe : Nom W-D</span></label>
+          <textarea id="standings" rows="8" placeholder="Karmine Corp 15-3&#10;G2 Esports 14-4&#10;Team Vitality 12-6&#10;Fnatic 10-8&#10;SK Gaming 7-11"></textarea>
+        </div>
+      </div>
+      <div id="relegationRow" style="display:none">
+        <div class="field" style="margin-top:8px">
+          <label>Ligne de relégation (à partir du rang…)</label>
+          <div class="slider"><input type="range" id="relegationLine" min="0" max="12" value="0" /><span class="val" id="relegationLineV">0</span></div>
+        </div>
+      </div>
+      <div id="statsRow" style="display:none">
+        <div class="field" style="margin-top:12px">
+          <label>Stats <span style="color:var(--fg-mute);font-weight:400">— une ligne par stat : Label Valeur</span></label>
+          <textarea id="stats" rows="5" placeholder="Victoires consécutives 11&#10;Durée moyenne 28:14&#10;First bloods 72%"></textarea>
+        </div>
+      </div>
+      <div id="matchesRow" style="display:none">
+        <div class="field" style="margin-top:12px">
+          <label>Matchs <span style="color:var(--fg-mute);font-weight:400">— ## Jour puis Heure TeamA vs TeamB BO3</span></label>
+          <textarea id="matches" rows="8" placeholder="## Samedi 21 juin&#10;18h00 Karmine Corp vs G2 Esports BO3&#10;20h00 Vitality vs Fnatic BO1&#10;&#10;## Dimanche 22 juin&#10;17h00 BDS vs SK Gaming BO3"></textarea>
+        </div>
+      </div>
+      <div id="footerRow" style="display:none">
+        <div class="field" style="margin-top:8px">
+          <label>Texte de pied</label>
+          <input type="text" id="footerText" placeholder="Ex. 21–22 juin 2026 · CET" />
+        </div>
+      </div>
+      <div id="pollRow" style="display:none">
+        <div class="field" style="margin-top:12px">
+          <label>Options du sondage <span style="color:var(--fg-mute);font-weight:400">— une par ligne : Label Pourcentage</span></label>
+          <textarea id="pollOptions" rows="5" placeholder="Karmine Corp 42&#10;G2 Esports 31&#10;Vitality 18&#10;Fnatic 9"></textarea>
+        </div>
+        <div class="field" style="margin-top:8px">
+          <label>Option gagnante (n° à partir de 0)</label>
+          <div class="slider"><input type="range" id="pollWinner" min="0" max="5" value="0" /><span class="val" id="pollWinnerV">0</span></div>
+        </div>
+      </div>
+      <div id="tiersRow" style="display:none">
+        <div class="field" style="margin-top:12px">
+          <label>Tiers <span style="color:var(--fg-mute);font-weight:400">— une par ligne : S: Équipe1, Équipe2</span></label>
+          <textarea id="tiers" rows="5" placeholder="S: Karmine Corp&#10;A: G2 Esports, Vitality&#10;B: Fnatic, BDS, SK Gaming&#10;C: Astralis, Team Heretics"></textarea>
+        </div>
+      </div>
+      <div id="playerNameRow" style="display:none">
+        <div class="field" style="margin-top:12px">
+          <label>Nom du joueur</label>
+          <input type="text" id="playerName" placeholder="Ex. Caps" />
+        </div>
+      </div>
+      <div id="playerRoleRow" style="display:none">
+        <div class="field" style="margin-top:8px">
+          <label>Rôle / équipe</label>
+          <input type="text" id="playerRole" placeholder="Ex. Mid · Karmine Corp · League of Legends" />
+        </div>
+      </div>
+      <div id="transferBadgeRow" style="display:none">
+        <div class="field" style="margin-top:12px">
+          <label>Statut du transfert</label>
+          <select id="transferBadge">
+            <option value="officiel">Officiel (vert)</option>
+            <option value="rumeur">Rumeur (or)</option>
+            <option value="negociation">En négociation (bleu)</option>
+          </select>
+        </div>
+      </div>
+      <div id="matchResultRow" style="display:none">
+        <div class="field" style="margin-top:8px">
+          <label>Résultat du match</label>
+          <input type="text" id="matchResult" placeholder="Ex. Vitality bat The MongolZ 2–1" />
+        </div>
+      </div>
+      <p class="dim" style="margin-top:8px">Astuce : entoure un mot de * pour le colorer avec la couleur du jeu. Ex : Karmine *Corp*</p>
+    </div>
+
+    <!-- Format -->
+    <div class="group">
+      <label class="title">3 · Format d'export</label>
+      <div class="seg" id="formatSeg">
+        <button data-fmt="portrait" class="on">Portrait<small>1080×1350</small></button>
+        <button data-fmt="story">Story / Reel<small>1080×1920</small></button>
+      </div>
+      <label class="check" style="margin-top:12px"><input type="checkbox" id="reelToggle" disabled /> Mode <b style="margin:0 4px;color:var(--cyan)">Reel</b> (vidéo · nécessite ≥ 2 images)</label>
+    </div>
+
+    <!-- Direction artistique -->
+    <div class="group">
+      <label class="title">4 · Direction artistique</label>
+      <div class="field">
+        <label>Couleur d'accent (jeu)</label>
+        <select id="game">
+          <option value="lol">League of Legends — cyan</option>
+          <option value="cs2">Counter-Strike 2 — or</option>
+          <option value="val">Valorant — rouge</option>
+          <option value="rl">Rocket League — bleu</option>
+          <option value="cod">Call of Duty — orange</option>
+          <option value="macro">Macro — cyan signature</option>
+          <option value="custom">Couleur personnalisée…</option>
+        </select>
+        <div class="colorrow" id="customRow" style="display:none">
+          <input type="color" id="customColor" value="#00c2e0" />
+          <span class="dim">Couleur libre</span>
+        </div>
+      </div>
+      <label class="check"><input type="checkbox" id="watermark" checked /> Watermark logo Macro (bas-droite)</label>
+      <div id="gradientRow" class="field" style="margin-top:12px">
+        <label>Force du dégradé bas</label>
+        <div class="slider"><input type="range" id="gradient" min="0" max="100" value="100" /><span class="val" id="gradientV">100%</span></div>
+      </div>
+    </div>
+
+    <!-- Réglages visuels -->
+    <div class="group">
+      <label class="title">5 · Réglages visuels</label>
+      <div class="field">
+        <label>Taille du titre</label>
+        <div class="slider"><input type="range" id="titleSize" min="55" max="135" value="100" /><span class="val" id="titleSizeV">100%</span></div>
+      </div>
+      <div id="zoomRow" class="field">
+        <label>Zoom de l'image</label>
+        <div class="slider"><input type="range" id="zoom" min="100" max="260" value="100" /><span class="val" id="zoomV">100%</span></div>
+      </div>
+      <div id="textYRow" class="field">
+        <label>Position verticale du texte</label>
+        <div class="slider"><input type="range" id="textY" min="-200" max="20" value="-80" /><span class="val" id="textYV">-80</span></div>
+      </div>
+      <button class="btn" id="resetView" style="width:100%;justify-content:center;margin-top:4px">↺ Recentrer l'image</button>
+    </div>
+
+    <!-- Réglages Reel -->
+    <div class="group hide" id="reelGroup">
+      <label class="title">6 · Réglages Reel</label>
+      <div class="field">
+        <label>Durée par image</label>
+        <div class="slider"><input type="range" id="dur" min="1.5" max="5" step="0.5" value="2.5" /><span class="val" id="durV">2.5s</span></div>
+      </div>
+      <div class="field">
+        <label>Transition</label>
+        <select id="trans">
+          <option value="fade">Fondu</option>
+          <option value="slide">Glissé latéral</option>
+        </select>
+      </div>
+      <label class="check"><input type="checkbox" id="kenburns" checked /> Léger zoom (effet Ken Burns)</label>
+    </div>
+
+  </div>
+
+  <!-- ════════ SCÈNE / APERÇU ════════ -->
+  <div class="stage">
+    <div class="canvas-shell">
+      <canvas id="cv" width="1080" height="1080"></canvas>
+    </div>
+    <p class="stage-hint">
+      <b>Glisse sur l'image</b> pour repositionner · <b>molette</b> pour zoomer · le texte se met à jour en direct.
+    </p>
+
+    <div class="recbar" id="recbar"><i id="recprog"></i></div>
+    <div class="status mono" id="status"></div>
+
+    <div class="exportbar" id="exportImage">
+      <span class="dim" id="dimLabel">1080 × 1080</span>
+      <button class="btn primary" id="dlPng">⬇ Exporter PNG</button>
+      <button class="btn" id="dlJpg">⬇ Exporter JPG</button>
+    </div>
+
+    <div class="exportbar hide" id="exportReel">
+      <span class="dim">9:16 · 1080 × 1920</span>
+      <button class="btn" id="previewReel">▶ Aperçu animé</button>
+      <button class="btn primary" id="dlReel">⬇ Générer la vidéo</button>
+    </div>
+  </div>
+</div>
+
+<script src="macro-instagram.js"></script>
+</body>
+</html>

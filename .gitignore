@@ -1,0 +1,23 @@
+# Tout ignorer par défaut
+*
+
+# === OUTIL INSTAGRAM (code) ===
+!outil-instagram/
+!outil-instagram/index.html
+!outil-instagram/macro-instagram.js
+!outil-instagram/macro-instagram.css
+!outil-instagram/macro-logo.png
+!outil-instagram/CLAUDE.md
+!outil-instagram/Macro Templates Instagram v4.html
+
+# Ignorer les presets (posts générés + images = lourd)
+outil-instagram/presets/
+
+# === SKILL POST INSTA ===
+!.claude/
+!.claude/skills/
+!.claude/skills/postinsta/
+!.claude/skills/postinsta/SKILL.md
+
+# === GITIGNORE lui-même ===
+!.gitignore
