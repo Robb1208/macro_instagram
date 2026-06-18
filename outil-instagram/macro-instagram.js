@@ -1657,7 +1657,15 @@ drop.ondragover = e => { e.preventDefault(); drop.style.borderColor="var(--cyan)
 drop.ondragleave = ()=> drop.style.borderColor="";
 drop.ondrop = e => { e.preventDefault(); drop.style.borderColor=""; addFiles(e.dataTransfer.files); };
 
-function setActive(i){ state.active = i; refreshThumbs(); syncInputs(); render(); }
+function setActive(i){ state.active = i; refreshThumbs(); syncInputs(); updateSlideNav(); render(); }
+
+function updateSlideNav(){
+  const total = state.images.length;
+  const cur = state.active;
+  if($("slideNavLabel")) $("slideNavLabel").textContent = total ? (cur+1)+" / "+total : "–";
+  if($("prevSlide")) $("prevSlide").disabled = cur <= 0;
+  if($("nextSlide")) $("nextSlide").disabled = cur >= total - 1;
+}
 
 function addFiles(files){
   const arr = [...files].filter(f=>f.type.startsWith("image/"));
@@ -1907,6 +1915,11 @@ if($("zipInput")) $("zipInput").onchange = async e => {
   e.target.value = "";
 };
 
+// Slide navigation buttons
+if($("prevSlide")) $("prevSlide").onclick = ()=>{ if(state.active > 0) setActive(state.active - 1); };
+if($("nextSlide")) $("nextSlide").onclick = ()=>{ if(state.active < state.images.length - 1) setActive(state.active + 1); };
+updateSlideNav();
+
 function applyJsonPreset(data, imageFiles){
   if(data.format && FORMATS[data.format]) {
     state.format = data.format;
@@ -1934,7 +1947,7 @@ function applyJsonPreset(data, imageFiles){
   let pending = 0;
   const finalize = ()=>{
     state.active = 0;
-    refreshThumbs(); syncInputs(); updateDimLabel(); updateReelAvailability(); render();
+    refreshThumbs(); syncInputs(); updateDimLabel(); updateReelAvailability(); updateSlideNav(); render();
   };
 
   if(!data.slides || !data.slides.length){ finalize(); return; }
