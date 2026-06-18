@@ -40,10 +40,12 @@
         <button class="tpl-btn" data-tpl="spotlight"><span class="tpl-icon">★</span><span class="tpl-name">Spotlight</span></button>
         <button class="tpl-btn" data-tpl="mvp"><span class="tpl-icon">🏆</span><span class="tpl-name">MVP</span></button>
       </div>
-      <div style="margin-top:10px">
-        <button class="btn" id="folderImport" style="width:100%;justify-content:center;font-size:11px;padding:8px">📂 Importer un dossier (JSON + images)</button>
+      <div style="margin-top:10px;display:flex;gap:6px">
+        <button class="btn" id="folderImport" style="flex:1;justify-content:center;font-size:11px;padding:8px">📂 Dossier</button>
+        <button class="btn" id="zipImport" style="flex:1;justify-content:center;font-size:11px;padding:8px">📦 ZIP</button>
       </div>
       <input type="file" id="folderInput" webkitdirectory directory class="hide" />
+      <input type="file" id="zipInput" accept=".zip" class="hide" />
     </div>
 
     <!-- Slides -->
@@ -297,6 +299,7 @@
   </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="macro-instagram.js"></script>
 </body>
 </html>

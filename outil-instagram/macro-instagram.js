@@ -1884,6 +1884,29 @@ if($("folderInput")) $("folderInput").onchange = e => {
   e.target.value = "";
 };
 
+// ZIP import (JSON + images)
+if($("zipImport")) $("zipImport").onclick = ()=> $("zipInput").click();
+if($("zipInput")) $("zipInput").onchange = async e => {
+  const file = e.target.files[0]; if(!file) return;
+  if(typeof JSZip === "undefined"){ alert("JSZip non chargé."); return; }
+  try{
+    const zip = await JSZip.loadAsync(file);
+    const entries = Object.values(zip.files).filter(f => !f.dir);
+    const jsonEntry = entries.find(f => f.name.replace(/.*\//, "").endsWith(".json"));
+    if(!jsonEntry){ alert("Aucun fichier JSON trouvé dans le ZIP."); return; }
+    const jsonText = await jsonEntry.async("string");
+    const data = JSON.parse(jsonText);
+    const imgEntries = entries.filter(f => /\.(jpe?g|png|webp|gif|bmp|avif)$/i.test(f.name));
+    const imageFiles = await Promise.all(imgEntries.map(async entry => {
+      const blob = await entry.async("blob");
+      const name = entry.name.replace(/.*\//, "");
+      return new File([blob], name, {type: blob.type || "image/jpeg"});
+    }));
+    applyJsonPreset(data, imageFiles);
+  }catch(err){ alert("Erreur de lecture ZIP : " + err.message); }
+  e.target.value = "";
+};
+
 function applyJsonPreset(data, imageFiles){
   if(data.format && FORMATS[data.format]) {
     state.format = data.format;
