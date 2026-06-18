@@ -19,5 +19,8 @@ outil-instagram/presets/
 !.claude/skills/postinsta/
 !.claude/skills/postinsta/SKILL.md
 
+# === REDIRECTION GITHUB PAGES ===
+!index.html
+
 # === GITIGNORE lui-même ===
 !.gitignore
