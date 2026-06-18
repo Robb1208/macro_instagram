@@ -1657,7 +1657,7 @@ drop.ondragover = e => { e.preventDefault(); drop.style.borderColor="var(--cyan)
 drop.ondragleave = ()=> drop.style.borderColor="";
 drop.ondrop = e => { e.preventDefault(); drop.style.borderColor=""; addFiles(e.dataTransfer.files); };
 
-function setActive(i){ state.active = i; refreshThumbs(); syncInputs(); updateSlideNav(); render(); }
+function setActive(i){ state.active = i; refreshThumbs(); syncInputs(); render(); }
 
 function updateSlideNav(){
   const total = state.images.length;
@@ -1707,6 +1707,7 @@ function refreshThumbs(){
     box.appendChild(t);
   });
   document.getElementById("slideHint").style.display = state.images.length>1 ? "block" : "none";
+  updateSlideNav();
 }
 function reorderSlides(from, to){
   if(from==null || from===to) return;
@@ -1947,7 +1948,7 @@ function applyJsonPreset(data, imageFiles){
   let pending = 0;
   const finalize = ()=>{
     state.active = 0;
-    refreshThumbs(); syncInputs(); updateDimLabel(); updateReelAvailability(); updateSlideNav(); render();
+    refreshThumbs(); syncInputs(); updateDimLabel(); updateReelAvailability(); render();
   };
 
   if(!data.slides || !data.slides.length){ finalize(); return; }
