@@ -24,6 +24,41 @@ const TEMPLATES = {
   "mvp":       { label:"MVP", icon:"🏆" },
 };
 
+// ═══ SECTION: TEAM LOGOS ═══
+const teamLogos = {};
+let logosReady = false;
+(async function loadLogos(){
+  try {
+    const resp = await fetch("LOGOS_TEAMS/");
+    const html = await resp.text();
+    const matches = html.match(/href="([^"]+\.png)"/gi) || [];
+    const names = matches.map(m => m.match(/href="([^"]+\.png)"/i)[1]).map(decodeURIComponent);
+    let pending = names.length;
+    if(!pending){ logosReady=true; return; }
+    names.forEach(filename => {
+      const key = filename.replace(/\.png$/i,"").toUpperCase().replace(/[_\s]+/g," ").trim();
+      const img = new Image();
+      img.onload = ()=>{ teamLogos[key] = img; if(--pending===0){ logosReady=true; render(); } };
+      img.onerror = ()=>{ if(--pending===0){ logosReady=true; } };
+      img.src = "LOGOS_TEAMS/" + filename;
+    });
+  } catch(e){ logosReady=true; }
+})();
+
+function findTeamLogo(name){
+  if(!name) return null;
+  const key = name.toUpperCase().replace(/[_\s]+/g," ").trim();
+  if(teamLogos[key]) return teamLogos[key];
+  for(const k in teamLogos){
+    if(k.includes(key) || key.includes(k)) return teamLogos[k];
+  }
+  const abbr = key.slice(0,3);
+  for(const k in teamLogos){
+    if(k.slice(0,3) === abbr) return teamLogos[k];
+  }
+  return null;
+}
+
 // ═══ SECTION: STATE ═══
 const state = {
   images: [], active: 0,
@@ -38,7 +73,7 @@ const state = {
 function newSlide(img, name, tpl){
   return { img: img||null, name: name||"Texte", tx:{ox:0,oy:0},
            template: tpl || (img ? "post-image" : "post-texte"),
-           eyebrow:"", title:"", desc:"", showDesc:true, score:"", showScore:false, scoreY:0, textY:0, textDrag:0,
+           eyebrow:"", title:"", desc:"", showDesc:true, score:"", showScore:false, scoreY:0, textY:0, textDrag:0, logoA:null, logoB:null,
            badge:"breaking", signature:"", teamA:"", teamB:"",
            standings:"", relegationLine:0, stats:"",
            matches:"", footerText:"", pollOptions:"", pollWinner:0,
@@ -520,11 +555,19 @@ function drawLayoutScore(W,H,c,scale,pad,maxW,acc,hi){
   const teamAName = c.teamA || "";
   const teamAAbbr = teamAName.slice(0,3).toUpperCase();
   const boxAx = rowX, boxAy = scoreY - boxSize/2;
+  const logoA = c.logoA || findTeamLogo(teamAName);
   ctx.fillStyle = "#13161c";
   roundRectPath(boxAx, boxAy, boxSize, boxSize, boxR); ctx.fill();
   ctx.strokeStyle = "#2a2f38"; ctx.lineWidth = Math.max(1,2*scale);
   roundRectPath(boxAx, boxAy, boxSize, boxSize, boxR); ctx.stroke();
-  if(teamAAbbr){
+  if(logoA){
+    const logoPad = Math.round(24*scale);
+    const logoSize = boxSize - logoPad*2;
+    ctx.save();
+    ctx.beginPath(); roundRectPath(boxAx, boxAy, boxSize, boxSize, boxR); ctx.clip();
+    ctx.drawImage(logoA, boxAx+logoPad, boxAy+logoPad, logoSize, logoSize);
+    ctx.restore();
+  } else if(teamAAbbr){
     ctx.font = `800 ${teamAbbrF}px Sora, sans-serif`;
     ctx.fillStyle = "#dfe6ea"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
     ctx.fillText(teamAAbbr, boxAx+boxSize/2, boxAy+boxSize/2);
@@ -550,11 +593,19 @@ function drawLayoutScore(W,H,c,scale,pad,maxW,acc,hi){
   const teamBName = c.teamB || "";
   const teamBAbbr = teamBName.slice(0,3).toUpperCase();
   const boxBx = W - rowX - boxSize, boxBy = scoreY - boxSize/2;
+  const logoB = c.logoB || findTeamLogo(teamBName);
   ctx.fillStyle = "#13161c";
   roundRectPath(boxBx, boxBy, boxSize, boxSize, boxR); ctx.fill();
   ctx.strokeStyle = "#2a2f38"; ctx.lineWidth = Math.max(1,2*scale);
   roundRectPath(boxBx, boxBy, boxSize, boxSize, boxR); ctx.stroke();
-  if(teamBAbbr){
+  if(logoB){
+    const logoPad = Math.round(24*scale);
+    const logoSize = boxSize - logoPad*2;
+    ctx.save();
+    ctx.beginPath(); roundRectPath(boxBx, boxBy, boxSize, boxSize, boxR); ctx.clip();
+    ctx.drawImage(logoB, boxBx+logoPad, boxBy+logoPad, logoSize, logoSize);
+    ctx.restore();
+  } else if(teamBAbbr){
     ctx.font = `800 ${teamAbbrF}px Sora, sans-serif`;
     ctx.fillStyle = "#dfe6ea"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
     ctx.fillText(teamBAbbr, boxBx+boxSize/2, boxBy+boxSize/2);
@@ -1846,6 +1897,8 @@ if($("badge")) $("badge").onchange = e => setField("badge", e.target.value);
 if($("signature")) $("signature").oninput = e => setField("signature", e.target.value);
 if($("teamA")) $("teamA").oninput = e => setField("teamA", e.target.value);
 if($("teamB")) $("teamB").oninput = e => setField("teamB", e.target.value);
+if($("logoAFile")) $("logoAFile").onchange = e => { const f=e.target.files[0]; if(!f) return; const img=new Image(); img.onload=()=>{ setField("logoA", img); }; img.src=URL.createObjectURL(f); };
+if($("logoBFile")) $("logoBFile").onchange = e => { const f=e.target.files[0]; if(!f) return; const img=new Image(); img.onload=()=>{ setField("logoB", img); }; img.src=URL.createObjectURL(f); };
 if($("standings")) $("standings").oninput = e => setField("standings", e.target.value);
 if($("relegationLine")) $("relegationLine").oninput = e => { const v=parseInt(e.target.value)||0; $("relegationLineV").textContent=v; setField("relegationLine", v); };
 if($("stats")) $("stats").oninput = e => setField("stats", e.target.value);

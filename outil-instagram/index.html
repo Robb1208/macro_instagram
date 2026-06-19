@@ -92,11 +92,17 @@
       <div id="teamRow" style="display:none">
         <div class="field" style="margin-top:12px">
           <label>Equipe A</label>
-          <input type="text" id="teamA" placeholder="Ex. Vitality" />
+          <div style="display:flex;gap:6px;align-items:center">
+            <input type="text" id="teamA" placeholder="Ex. Vitality" style="flex:1" />
+            <label class="btn btn-sm" style="cursor:pointer;white-space:nowrap;padding:6px 10px;font-size:12px" title="Charger un logo manuellement">🖼 Logo<input type="file" id="logoAFile" accept="image/png,image/webp,image/svg+xml" style="display:none" /></label>
+          </div>
         </div>
         <div class="field">
           <label>Equipe B</label>
-          <input type="text" id="teamB" placeholder="Ex. The MongolZ" />
+          <div style="display:flex;gap:6px;align-items:center">
+            <input type="text" id="teamB" placeholder="Ex. The MongolZ" style="flex:1" />
+            <label class="btn btn-sm" style="cursor:pointer;white-space:nowrap;padding:6px 10px;font-size:12px" title="Charger un logo manuellement">🖼 Logo<input type="file" id="logoBFile" accept="image/png,image/webp,image/svg+xml" style="display:none" /></label>
+          </div>
         </div>
       </div>
       <div id="scoreRow" class="field" style="margin-top:12px">
