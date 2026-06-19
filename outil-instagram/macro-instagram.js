@@ -422,7 +422,8 @@ function drawLayoutCentered(W,H,c,scale,pad,maxW,acc,hi){
   blockH += titleLines.length * titleLH;
   if(descLines.length) blockH += Math.round(18*scale) + descLines.length*descLH;
 
-  const centerY = H * 0.48;
+  const dragOffset = (state.textY*scale) + state.textDrag;
+  const centerY = H * 0.48 + dragOffset;
   let y = centerY - blockH/2;
   lastTextBox = { x:pad, y, w:maxW, h:blockH };
 
@@ -1788,7 +1789,7 @@ function syncInputs(){
   show("teamRow", tpl==="score");
   show("gradientRow", tpl==="post-image" || tpl==="score" || tpl==="statistique" || tpl==="transfert");
   show("zoomRow", hasImage);
-  show("textYRow", tpl==="post-image" || tpl==="statistique");
+  show("textYRow", tpl==="post-image" || tpl==="statistique" || tpl==="post-texte" || tpl==="citation");
   show("resetView", hasImage);
   show("standingsRow", tpl==="classement");
   show("relegationRow", tpl==="classement");
