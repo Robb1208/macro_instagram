@@ -10,6 +10,7 @@ const GAME_LABELS = { lol:"League of Legends", cs2:"Counter-Strike 2", val:"Valo
 const INK = "#070a0d";
 const TEMPLATES = {
   "post-image":{ label:"Post image", icon:"IMG" },
+  "post-video":{ label:"Post vidéo", icon:"▶" },
   "post-texte":{ label:"Texte seul", icon:"Aa" },
   "score":     { label:"Score", icon:"VS" },
   "breaking":  { label:"Breaking", icon:"!!" },
@@ -71,14 +72,14 @@ const state = {
 };
 
 function newSlide(img, name, tpl){
-  return { img: img||null, name: name||"Texte", tx:{ox:0,oy:0},
+  return { img: img||null, video: null, name: name||"Texte", tx:{ox:0,oy:0},
            template: tpl || (img ? "post-image" : "post-texte"),
            eyebrow:"", title:"", desc:"", showDesc:true, score:"", showScore:false, scoreY:0, textY:0, textDrag:0, logoA:null, logoB:null,
            badge:"breaking", signature:"", teamA:"", teamB:"",
            standings:"", relegationLine:0, stats:"",
            matches:"", footerText:"", pollOptions:"", pollWinner:0,
            tiers:"", playerName:"", playerRole:"", transferBadge:"officiel", matchResult:"",
-           showBgImage: !!img, framedImage: false, photoCredit:"" };
+           showBgImage: !!img, framedImage: false, photoCredit:"", dur: null };
 }
 function cur(){ return state.images[state.active] || null; }
 function curTpl(){ const it = cur(); return (it && it.template) || "post-image"; }
@@ -110,7 +111,7 @@ function accentColor(){ return state.game === "custom" ? state.customColor : GAM
 
 // ═══ SECTION: DRAW HELPERS ═══
 function drawCover(img, x, y, w, h, zoom, ox, oy){
-  const iw = img.naturalWidth, ih = img.naturalHeight;
+  const iw = img.videoWidth || img.naturalWidth, ih = img.videoHeight || img.naturalHeight;
   const base = Math.max(w/iw, h/ih);
   const scale = base * zoom;
   const dw = iw*scale, dh = ih*scale;
@@ -135,8 +136,20 @@ function drawBreakingBackground(W,H){
 }
 
 function drawSlideMedia(it, W, H, zoom){
-  if(it && it.img){ drawCover(it.img, 0,0,W,H, zoom, it.tx.ox, it.tx.oy); }
-  else { drawBaseBackground(W,H); }
+  if(it && it.video && it.template === "post-video"){
+    drawCover(it.video, 0,0,W,H, zoom, it.tx.ox, it.tx.oy);
+  } else if(it && it.img){
+    drawCover(it.img, 0,0,W,H, zoom, it.tx.ox, it.tx.oy);
+  } else { drawBaseBackground(W,H); }
+}
+
+let videoLoopId = null;
+function startVideoLoop(){
+  if(videoLoopId) return;
+  (function loop(){ videoLoopId = requestAnimationFrame(loop); render(); })();
+}
+function stopVideoLoop(){
+  if(videoLoopId){ cancelAnimationFrame(videoLoopId); videoLoopId = null; }
 }
 
 function drawFramedImage(it, W, H, zoom){
@@ -370,6 +383,7 @@ function drawOverlay(W, H, slideInfo, content, hasImage){
   // --- Template-specific content ---
   switch(tpl){
     case "post-image": drawLayoutBottom(W,H,c,scale,pad,maxW,acc,hi); break;
+    case "post-video": drawLayoutBottom(W,H,c,scale,pad,maxW,acc,hi); break;
     case "post-texte": drawLayoutCentered(W,H,c,scale,pad,maxW,acc,hi); break;
     case "score":      drawLayoutScore(W,H,c,scale,pad,maxW,acc,hi); break;
     case "breaking":   drawLayoutBreaking(W,H,c,scale,pad,maxW,hi); break;
@@ -1692,8 +1706,9 @@ function render(){
 
   const item = cur();
   const tpl = curTpl();
-  const showImg = item && item.img && item.showBgImage !== false;
-  const framed = showImg && item.framedImage;
+  const showVideo = item && item.video && tpl === "post-video" && item.showBgImage !== false;
+  const showImg = (item && item.img && item.showBgImage !== false) || showVideo;
+  const framed = showImg && item.framedImage && !showVideo;
   if(showImg && !framed){
     if(tpl==="transfert" || tpl==="spotlight") drawStripeBackground(W,H);
     drawSlideMedia(item, W, H, state.zoom);
@@ -1793,7 +1808,8 @@ function removeImage(i){
 }
 function updateReelAvailability(){
   const t = document.getElementById("reelToggle");
-  const ok = state.images.length>=2;
+  const hasVideo = state.images.some(s => s.video && s.template === "post-video");
+  const ok = state.images.length>=2 || hasVideo;
   t.disabled = !ok;
   if(!ok && t.checked){ t.checked=false; setReel(false); }
 }
@@ -1818,6 +1834,14 @@ function syncInputs(){
   $("textY").value = has ? (it.textY||0) : 0;
   $("textYV").textContent = has ? (it.textY||0) : 0;
   $("contentSlideTag").textContent = has && state.images.length>1 ? `· slide ${state.active+1}` : "";
+
+  if($("dur") && $("durAll")){
+    const allMode = $("durAll").checked;
+    const d = allMode ? state.dur : (has && it.dur ? it.dur : state.dur);
+    $("dur").value = d;
+    $("durV").textContent = d+"s";
+    if($("durSlideTag")) $("durSlideTag").textContent = (!allMode && state.images.length>1) ? `· slide ${state.active+1}` : "";
+  }
 
   // new fields
   if($("badge")) { $("badge").value = has ? (it.badge||"breaking") : "breaking"; $("badge").disabled = !has; }
@@ -1844,14 +1868,15 @@ function syncInputs(){
 
   // template-specific field visibility
   const show = (id, vis) => { const el = document.getElementById(id); if(el) el.style.display = vis ? "" : "none"; };
-  const hasImage = tpl==="post-image" || tpl==="statistique" || tpl==="transfert" || tpl==="spotlight" || tpl==="mvp";
-  show("scoreRow", tpl==="post-image" || tpl==="score");
-  show("scoreYRow", tpl==="post-image" || tpl==="score");
-  show("scoreCheckRow", tpl==="post-image");
+  const hasImage = tpl==="post-image" || tpl==="post-video" || tpl==="statistique" || tpl==="transfert" || tpl==="spotlight" || tpl==="mvp";
+  show("scoreRow", tpl==="post-image" || tpl==="post-video" || tpl==="score");
+  show("scoreYRow", tpl==="post-image" || tpl==="post-video" || tpl==="score");
+  show("scoreCheckRow", tpl==="post-image" || tpl==="post-video");
   show("badgeRow", tpl==="breaking");
   show("signatureRow", tpl==="post-texte" || tpl==="breaking");
   show("teamRow", tpl==="score");
-  show("gradientRow", tpl==="post-image" || tpl==="score" || tpl==="statistique" || tpl==="transfert");
+  show("gradientRow", tpl==="post-image" || tpl==="post-video" || tpl==="score" || tpl==="statistique" || tpl==="transfert");
+  show("videoRow", tpl==="post-video");
   show("zoomRow", hasImage);
   show("textYRow", true);
   show("resetView", hasImage);
@@ -1871,6 +1896,13 @@ function syncInputs(){
   if(tpl==="score" && has){
     it.showScore = true;
     $("showScore").checked = true;
+  }
+
+  // video loop management
+  if(tpl === "post-video" && has && it.video && !it.video.paused){
+    startVideoLoop();
+  } else {
+    stopVideoLoop();
   }
 
   // template buttons active state
@@ -1899,6 +1931,19 @@ if($("teamA")) $("teamA").oninput = e => setField("teamA", e.target.value);
 if($("teamB")) $("teamB").oninput = e => setField("teamB", e.target.value);
 if($("logoAFile")) $("logoAFile").onchange = e => { const f=e.target.files[0]; if(!f) return; const img=new Image(); img.onload=()=>{ setField("logoA", img); }; img.src=URL.createObjectURL(f); };
 if($("logoBFile")) $("logoBFile").onchange = e => { const f=e.target.files[0]; if(!f) return; const img=new Image(); img.onload=()=>{ setField("logoB", img); }; img.src=URL.createObjectURL(f); };
+if($("videoFile")) $("videoFile").onchange = e => {
+  const f = e.target.files[0]; if(!f) return;
+  const it = cur(); if(!it) return;
+  const vid = document.createElement("video");
+  vid.crossOrigin = "anonymous"; vid.muted = true; vid.loop = true; vid.playsInline = true;
+  vid.onloadeddata = ()=>{ it.video = vid; it.showBgImage = true; vid.play(); startVideoLoop(); updateReelAvailability(); render(); };
+  vid.src = URL.createObjectURL(f);
+};
+if($("videoPlayPause")) $("videoPlayPause").onclick = ()=>{
+  const it = cur(); if(!it || !it.video) return;
+  if(it.video.paused){ it.video.play(); startVideoLoop(); $("videoPlayPause").textContent = "⏸ Pause"; }
+  else { it.video.pause(); stopVideoLoop(); render(); $("videoPlayPause").textContent = "▶ Play"; }
+};
 if($("standings")) $("standings").oninput = e => setField("standings", e.target.value);
 if($("relegationLine")) $("relegationLine").oninput = e => { const v=parseInt(e.target.value)||0; $("relegationLineV").textContent=v; setField("relegationLine", v); };
 if($("stats")) $("stats").oninput = e => setField("stats", e.target.value);
@@ -2059,6 +2104,7 @@ function applyJsonPreset(data, imageFiles){
     slide.photoCredit = s.photoCredit || "";
     slide.showBgImage = s.showBgImage !== false;
     slide.framedImage = !!s.framedImage;
+    slide.dur = s.dur || null;
     state.images.push(slide);
 
     const imgName = s.image;
@@ -2122,7 +2168,23 @@ bindSlider("titleSize","titleScale", v=>v+"%", 0.01);
 bindSlider("descSize","descScale", v=>v+"%", 0.01);
 bindSlider("zoom","zoom", v=>v+"%", 0.01);
 $("textY").oninput = ()=>{ const v=parseFloat($("textY").value); $("textYV").textContent=v; setField("textY", v); };
-$("dur").oninput = ()=>{ state.dur=parseFloat($("dur").value); $("durV").textContent=state.dur+"s"; };
+$("dur").oninput = ()=>{
+  const v = parseFloat($("dur").value);
+  $("durV").textContent = v+"s";
+  if($("durAll").checked){
+    state.dur = v;
+    state.images.forEach(s => s.dur = null);
+  } else {
+    const it = cur(); if(it) it.dur = v;
+  }
+};
+$("durAll").onchange = ()=>{
+  if($("durAll").checked){
+    const v = parseFloat($("dur").value);
+    state.dur = v;
+    state.images.forEach(s => s.dur = null);
+  }
+};
 $("trans").onchange = ()=> state.trans=$("trans").value;
 $("kenburns").onchange = e => state.kenburns=e.target.checked;
 
@@ -2230,8 +2292,9 @@ function drawFullSlide(targetCtx, W, H, slide, idx, total, zoomMul){
   ctx = targetCtx;
   ctx.clearRect(0,0,W,H);
   ctx.fillStyle = INK; ctx.fillRect(0,0,W,H);
-  const showImg = slide.img && slide.showBgImage !== false;
-  const framed = showImg && slide.framedImage;
+  const showVideo = slide.video && slide.template === "post-video" && slide.showBgImage !== false;
+  const showImg = (slide.img && slide.showBgImage !== false) || showVideo;
+  const framed = showImg && slide.framedImage && !showVideo;
   const tpl = slide.template;
   if(showImg && !framed){
     if(tpl==="transfert" || tpl==="spotlight") drawStripeBackground(W,H);
@@ -2248,12 +2311,16 @@ function drawFullSlide(targetCtx, W, H, slide, idx, total, zoomMul){
   ctx = origCtx;
 }
 
+function slideDur(s){ return (s.video && s.template==="post-video" && s.video.duration && isFinite(s.video.duration)) ? Math.min(s.video.duration,60)*1000 : (s.dur || state.dur)*1000; }
+
 function drawReelFrame(W, H, tMs){
   const imgs = state.images;
   if(!imgs.length){ ctx.clearRect(0,0,W,H); ctx.fillStyle=INK; ctx.fillRect(0,0,W,H); drawBaseBackground(W,H); drawOverlay(W,H,null,EMPTY); return; }
-  const per = state.dur*1000, transMs = 600;
-  const idx = Math.min(imgs.length-1, Math.floor(tMs/per));
-  const local = tMs - idx*per;
+  const transMs = 600;
+  let acc = 0, idx = 0;
+  for(let i=0; i<imgs.length; i++){ const d=slideDur(imgs[i]); if(acc+d>tMs||i===imgs.length-1){idx=i;break;} acc+=d; }
+  const per = slideDur(imgs[idx]);
+  const local = tMs - acc;
   const prog = Math.min(1, local/per);
   const showImg = imgs[idx].img && imgs[idx].showBgImage !== false;
   const framedCur = showImg && imgs[idx].framedImage;
@@ -2297,12 +2364,18 @@ $("dlReel").onclick = ()=> playReel(true);
 
 function playReel(record){
   if(playing) return;
-  if(state.images.length < 2){ $("status").textContent = "⚠ Ajoute au moins 2 images pour le Reel."; return; }
+  const hasVideo = state.images.some(s => s.video && s.template === "post-video");
+  if(state.images.length < 2 && !hasVideo){ $("status").textContent = "⚠ Ajoute au moins 2 images ou une vidéo pour le Reel."; return; }
   if(record && !window.MediaRecorder){ $("status").textContent = "⚠ Ce navigateur ne supporte pas l'enregistrement vidéo."; return; }
 
   const [W,H] = FORMATS.story;
   if(cv.width!==W || cv.height!==H){ cv.width=W; cv.height=H; }
-  const total = state.images.length * state.dur * 1000;
+  let total = 0;
+  for(const s of state.images){
+    total += slideDur(s);
+    if(s.video){ s.video.currentTime = 0; s.video.play(); }
+  }
+  stopVideoLoop();
   const t0 = performance.now();
   playing = true;
 

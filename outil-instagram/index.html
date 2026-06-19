@@ -27,6 +27,7 @@
       <label class="title">0 · Template</label>
       <div class="tpl-grid" id="tplGrid">
         <button class="tpl-btn on" data-tpl="post-image"><span class="tpl-icon">IMG</span><span class="tpl-name">Post image</span></button>
+        <button class="tpl-btn" data-tpl="post-video"><span class="tpl-icon">▶</span><span class="tpl-name">Post vidéo</span></button>
         <button class="tpl-btn" data-tpl="post-texte"><span class="tpl-icon">Aa</span><span class="tpl-name">Texte seul</span></button>
         <button class="tpl-btn" data-tpl="score"><span class="tpl-icon">VS</span><span class="tpl-name">Score</span></button>
         <button class="tpl-btn" data-tpl="breaking"><span class="tpl-icon">!!</span><span class="tpl-name">Breaking</span></button>
@@ -89,6 +90,15 @@
         <textarea id="desc" placeholder="Une ou deux phrases de contexte"></textarea>
       </div>
       <label class="check"><input type="checkbox" id="showDesc" checked /> Afficher la description</label>
+      <div id="videoRow" style="display:none;margin-top:12px">
+        <div class="field">
+          <label>Vidéo de fond</label>
+          <div style="display:flex;gap:8px;align-items:center">
+            <label class="btn btn-sm" style="cursor:pointer;padding:6px 12px;font-size:13px">▶ Importer une vidéo<input type="file" id="videoFile" accept="video/mp4,video/webm,video/mov" style="display:none" /></label>
+            <button class="btn btn-sm" id="videoPlayPause" style="padding:6px 10px;font-size:13px">⏸ Pause</button>
+          </div>
+        </div>
+      </div>
       <div id="teamRow" style="display:none">
         <div class="field" style="margin-top:12px">
           <label>Equipe A</label>
@@ -268,8 +278,9 @@
     <div class="group hide" id="reelGroup">
       <label class="title">6 · Réglages Reel</label>
       <div class="field">
-        <label>Durée par image</label>
-        <div class="slider"><input type="range" id="dur" min="1.5" max="5" step="0.5" value="2.5" /><span class="val" id="durV">2.5s</span></div>
+        <label>Durée slide <span id="durSlideTag" style="opacity:.5;font-size:.85em"></span></label>
+        <div class="slider"><input type="range" id="dur" min="1" max="10" step="0.5" value="2.5" /><span class="val" id="durV">2.5s</span></div>
+        <label class="check" style="margin-top:4px"><input type="checkbox" id="durAll" checked /> Appliquer à toutes les slides</label>
       </div>
       <div class="field">
         <label>Transition</label>
