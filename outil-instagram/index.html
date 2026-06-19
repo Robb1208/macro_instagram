@@ -230,7 +230,7 @@
     <div class="group">
       <label class="title">4 · Direction artistique</label>
       <div class="field">
-        <label>Couleur d'accent (jeu)</label>
+        <label>Couleur d'accent (jeu) <span id="gameSlideTag" style="opacity:.5;font-size:.85em"></span></label>
         <select id="game">
           <option value="lol">League of Legends — cyan</option>
           <option value="cs2">Counter-Strike 2 — or</option>
@@ -240,6 +240,7 @@
           <option value="macro">Macro — cyan signature</option>
           <option value="custom">Couleur personnalisée…</option>
         </select>
+        <label class="check" style="margin-top:4px"><input type="checkbox" id="gameAll" checked /> Appliquer à toutes les slides</label>
         <div class="colorrow" id="customRow" style="display:none">
           <input type="color" id="customColor" value="#00c2e0" />
           <span class="dim">Couleur libre</span>

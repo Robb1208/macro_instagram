@@ -30,14 +30,13 @@ const teamLogos = {};
 let logosReady = false;
 (async function loadLogos(){
   try {
-    const resp = await fetch("LOGOS_TEAMS/");
-    const html = await resp.text();
-    const matches = html.match(/href="([^"]+\.png)"/gi) || [];
-    const names = matches.map(m => m.match(/href="([^"]+\.png)"/i)[1]).map(decodeURIComponent);
+    const resp = await fetch("LOGOS_TEAMS/logos.json");
+    const names = await resp.json();
     let pending = names.length;
     if(!pending){ logosReady=true; return; }
     names.forEach(filename => {
-      const key = filename.replace(/\.png$/i,"").toUpperCase().replace(/[_\s]+/g," ").trim();
+      const base = filename.includes("/") ? filename.split("/").pop() : filename;
+      const key = base.replace(/\.png$/i,"").toUpperCase().replace(/[_\s]+/g," ").trim();
       const img = new Image();
       img.onload = ()=>{ teamLogos[key] = img; if(--pending===0){ logosReady=true; render(); } };
       img.onerror = ()=>{ if(--pending===0){ logosReady=true; } };
@@ -79,7 +78,7 @@ function newSlide(img, name, tpl){
            standings:"", relegationLine:0, stats:"",
            matches:"", footerText:"", pollOptions:"", pollWinner:0,
            tiers:"", playerName:"", playerRole:"", transferBadge:"officiel", matchResult:"",
-           showBgImage: !!img, framedImage: false, photoCredit:"", dur: null };
+           showBgImage: !!img, framedImage: false, photoCredit:"", dur: null, game: null };
 }
 function cur(){ return state.images[state.active] || null; }
 function curTpl(){ const it = cur(); return (it && it.template) || "post-image"; }
@@ -107,7 +106,7 @@ noise.width = noise.height = 220;
 })();
 const noisePattern = ctx.createPattern(noise,"repeat");
 
-function accentColor(){ return state.game === "custom" ? state.customColor : GAME_COLORS[state.game]; }
+function accentColor(g){ const game = g || state.game; return game === "custom" ? state.customColor : GAME_COLORS[game]; }
 
 // ═══ SECTION: DRAW HELPERS ═══
 function drawCover(img, x, y, w, h, zoom, ox, oy){
@@ -283,8 +282,9 @@ function drawSpaced(text, x, y, spacing){
 // ═══ SECTION: OVERLAY ═══
 function drawOverlay(W, H, slideInfo, content, hasImage){
   const tpl = (content && content.template) || "post-image";
-  const acc = accentColor();
-  const hi = state.hiColor;
+  const slideGame = (content && content.game) || null;
+  const acc = accentColor(slideGame);
+  const hi = acc;
   const c = content || EMPTY;
   const scale = W/1080;
   const pad = Math.round(W*0.075);
@@ -1843,6 +1843,14 @@ function syncInputs(){
     if($("durSlideTag")) $("durSlideTag").textContent = (!allMode && state.images.length>1) ? `· slide ${state.active+1}` : "";
   }
 
+  if($("game") && $("gameAll")){
+    const allMode = $("gameAll").checked;
+    const g = allMode ? state.game : (has && it.game ? it.game : state.game);
+    $("game").value = g;
+    $("customRow").style.display = g==="custom" ? "flex" : "none";
+    if($("gameSlideTag")) $("gameSlideTag").textContent = (!allMode && state.images.length>1) ? `· slide ${state.active+1}` : "";
+  }
+
   // new fields
   if($("badge")) { $("badge").value = has ? (it.badge||"breaking") : "breaking"; $("badge").disabled = !has; }
   if($("signature")) { $("signature").value = has ? (it.signature||"") : ""; $("signature").disabled = !has; }
@@ -2105,6 +2113,7 @@ function applyJsonPreset(data, imageFiles){
     slide.showBgImage = s.showBgImage !== false;
     slide.framedImage = !!s.framedImage;
     slide.dur = s.dur || null;
+    slide.game = s.game || null;
     state.images.push(slide);
 
     const imgName = s.image;
@@ -2131,12 +2140,26 @@ function applyJsonPreset(data, imageFiles){
 
 
 $("game").onchange = e => {
-  state.game = e.target.value;
-  $("customRow").style.display = state.game==="custom" ? "flex" : "none";
+  const v = e.target.value;
+  if($("gameAll").checked){
+    state.game = v;
+    state.images.forEach(s => s.game = null);
+  } else {
+    const it = cur(); if(it) it.game = v;
+  }
+  $("customRow").style.display = v==="custom" ? "flex" : "none";
   state.hiColor = accentColor();
   const it = cur();
-  if(it && !it.eyebrow && state.game!=="custom"){ it.eyebrow = GAME_LABELS[state.game]; $("eyebrow").value = it.eyebrow; }
+  if(it && !it.eyebrow && v!=="custom"){ it.eyebrow = GAME_LABELS[v]; $("eyebrow").value = it.eyebrow; }
   render();
+};
+$("gameAll").onchange = ()=>{
+  if($("gameAll").checked){
+    const v = $("game").value;
+    state.game = v;
+    state.images.forEach(s => s.game = null);
+    render();
+  }
 };
 $("customColor").oninput = e => { state.customColor=e.target.value; state.hiColor=accentColor(); render(); };
 
