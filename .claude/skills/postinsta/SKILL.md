@@ -145,6 +145,65 @@ Si le téléchargement direct n'est pas possible, fournir les liens de télécha
 ### 6. Import dans l'outil
 L'utilisateur clique "Importer un dossier" dans l'outil Instagram et sélectionne le dossier généré. L'outil retrouve le JSON et les images et reconstruit le post automatiquement.
 
+### 7. Description Instagram (caption)
+Après avoir fourni le dossier/ZIP, écrire directement dans la conversation une **description prête à copier-coller** pour accompagner le post Instagram.
+
+#### Structure de la caption
+1. **Accroche** (1-2 phrases) — résumé percutant du sujet, ton engageant mais pas clickbait. Peut utiliser des émojis pertinents (🏆⚡🔥🎯 etc.) sans en abuser (2-3 max dans l'accroche).
+2. **Corps** (2-4 phrases) — contexte, chiffres clés, détails importants. Aller à l'essentiel.
+3. **Call-to-action** (1 phrase) — question ou invitation à interagir ("Qui prend le titre selon vous ?", "Swipe pour voir le programme 👉", etc.).
+4. **Ligne de séparation** — un simple `·` ou `—` sur une ligne seule.
+5. **Hashtags** (8-15) — mélange de :
+   - Hashtags génériques esport : `#esport` `#esportfr` `#competitive`
+   - Hashtags du jeu : `#LeagueOfLegends` `#LoL` `#CS2` `#Valorant` `#RocketLeague`
+   - Hashtags de la compétition : `#LFL` `#LEC` `#Worlds` `#VCT` `#RLCS`
+   - Hashtags des équipes/joueurs mentionnés : `#KarmineCorporation` `#Vitality` `#G2`
+   - Hashtags engagement : `#gaming` `#esportnews` `#gamingcommunity`
+
+#### Exemple de caption
+```
+🏆 Karmine Corp remporte la LFL Summer 2026 avec un reverse sweep historique face à Vitality !
+
+Après avoir été menés 0-2, les joueurs de KC ont enchaîné trois victoires consécutives pour décrocher leur 4e titre LFL. Une finale qui restera dans les mémoires.
+
+Qui a regardé ce comeback en live ? 🔥
+
+·
+
+#esport #esportfr #LeagueOfLegends #LoL #LFL #KarmineCorporation #Vitality #KCwin #gaming #esportnews #competitive #LFLSummer
+```
+
+#### Règles
+- Écrire en français.
+- Pas de mention @ (on ne connaît pas les handles Instagram exacts).
+- Pas de lien (Instagram ne rend pas les liens cliquables dans les captions).
+- Adapter le ton au sujet : plus sérieux pour un transfert officiel, plus hype pour un résultat de match.
+- La caption doit tenir seule — quelqu'un qui lit sans voir le post doit comprendre le sujet.
+
+### 8. Suggestion musicale (Reels uniquement)
+Si le post est un Reel (format vidéo, `"format": "story"` + mode reel), ou si l'utilisateur demande un Reel, proposer **2-3 musiques** pour accompagner la vidéo.
+
+#### Critères de sélection
+- **Trending sur Instagram** — privilégier les sons populaires/viraux du moment pour maximiser la portée.
+- **Énergie adaptée au sujet** :
+  - Match hype / highlight → musique énergique, drop, bass (EDM, trap, phonk)
+  - Transfert / annonce officielle → musique épique, cinématique
+  - Récap / classement → musique chill, lo-fi, ambient
+  - Breaking news → musique tendue, dramatique
+- **Durée** — indiquer le moment clé du morceau (drop, refrain) pour caler les transitions.
+- **Disponible sur Instagram** — ne proposer que des morceaux connus/mainstream susceptibles d'être dans la bibliothèque Instagram.
+
+#### Format de suggestion
+```
+🎵 Musiques suggérées pour le Reel :
+
+1. "Artiste — Titre" — [genre/vibe]. Utiliser le passage à 0:XX pour le drop.
+2. "Artiste — Titre" — [genre/vibe]. Refrain à 0:XX, bon pour les transitions.
+3. "Artiste — Titre" — [genre/vibe]. Ambiance plus calme, bon pour un récap.
+```
+
+Ne pas suggérer de musique pour les posts carrousel classiques (non-Reel).
+
 ## Bonnes pratiques éditoriales
 
 - **Ton** : informatif, concis, engageant. Pas de clickbait.
