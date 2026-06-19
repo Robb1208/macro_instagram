@@ -718,6 +718,18 @@ function drawScoreCenter(W,H,c,scale,maxW,hi){
   ctx.textBaseline = "alphabetic";
 }
 
+// --- Shared: vertically center a text block on the canvas ---
+// Given the measured height of the whole content block, returns the starting Y
+// so the block is centered between the top (logo) and bottom (counter) safe areas.
+// Falls back to the top safe margin when the block is taller than the available space.
+function centeredStartY(H, blockH, scale){
+  const topSafe = Math.round(H*0.11 + 70*scale);
+  const botSafe = Math.round(H*0.07 + 40*scale);
+  const avail = H - topSafe - botSafe;
+  if(blockH >= avail) return topSafe;
+  return topSafe + Math.round((avail - blockH)/2);
+}
+
 // --- T5: Classement / Standings (table with rows) ---
 function parseStandings(text){
   return (text||"").split("\n").map(l=>l.trim()).filter(Boolean).map(line=>{
@@ -738,7 +750,28 @@ function drawLayoutClassement(W,H,c,scale,pad,maxW,acc,hi){
   const accentLineH = Math.round(4*scale);
   const gap = Math.round(13*scale);
   const dragOffset = ((c.textY||0)*scale) + (c.textDrag||0);
-  let y = Math.round(H*0.085 + 80*scale) + dragOffset;
+
+  // table metrics (computed up front so the whole block can be vertically centered)
+  const teams = parseStandings(c.standings);
+  if(!teams.length){ lastTextBox=null; return; }
+  const relLine = c.relegationLine || 0;
+  const rowH = Math.round(46*scale);
+  const headerH = Math.round(32*scale);
+  const numW = Math.round(32*scale);
+  const recW = Math.round(72*scale);
+  const nameX = pad + numW;
+  const recX = pad + maxW - recW;
+  const rowR = Math.round(9*scale);
+  const nameF = Math.round(32*scale);
+  const recF = Math.round(24*scale);
+  const headerF = Math.round(20*scale);
+
+  let blockH = accentLineH + gap;
+  if(eyebrow) blockH += eyeF + Math.round(10*scale);
+  blockH += titleLines.length * titleLH;
+  blockH += Math.round(24*scale) + headerH + teams.length*rowH;
+
+  let y = centeredStartY(H, blockH, scale) + dragOffset;
   ctx.fillStyle = acc;
   ctx.fillRect(pad, y, Math.round(54*scale), accentLineH);
   y += accentLineH + gap;
@@ -752,20 +785,7 @@ function drawLayoutClassement(W,H,c,scale,pad,maxW,acc,hi){
   for(const ln of titleLines){ drawRichLine(ln, pad, y, titleFont, hi, "#ffffff"); y += titleLH; }
 
   // table
-  const teams = parseStandings(c.standings);
-  if(!teams.length){ lastTextBox=null; return; }
-  const relLine = c.relegationLine || 0;
-  const rowH = Math.round(46*scale);
-  const headerH = Math.round(32*scale);
   const tableY = y + Math.round(24*scale);
-  const numW = Math.round(32*scale);
-  const recW = Math.round(72*scale);
-  const nameX = pad + numW;
-  const recX = pad + maxW - recW;
-  const rowR = Math.round(9*scale);
-  const nameF = Math.round(32*scale);
-  const recF = Math.round(24*scale);
-  const headerF = Math.round(20*scale);
 
   // column headers
   ctx.font = `600 ${headerF}px 'JetBrains Mono', monospace`;
@@ -851,7 +871,19 @@ function drawLayoutCarousel(W,H,c,scale,pad,maxW,acc,hi){
     const titleLines = wrapRich(richWords(c.title), titleFont, maxW);
 
     const dragOffset = ((c.textY||0)*scale) + (c.textDrag||0);
-    let y = Math.round(H*0.085 + 80*scale) + dragOffset;
+    const labelF = Math.round(28*scale);
+    const valueF = Math.round(72*scale);
+    const rowGap = Math.round(14*scale);
+
+    // measure the whole block so it can be vertically centered
+    let blockH = 0;
+    if(eyebrow) blockH += eyeF + Math.round(10*scale);
+    blockH += titleLines.length * titleLH;
+    blockH += Math.round(28*scale);
+    const perStat = Math.round(18*scale) + Math.round(valueF*0.8) + rowGap;
+    blockH += stats.length * perStat;
+
+    let y = centeredStartY(H, blockH, scale) + dragOffset;
     if(eyebrow){
       ctx.font = `700 ${eyeF}px Sora, sans-serif`;
       ctx.fillStyle = acc; ctx.textBaseline = "top";
@@ -863,9 +895,6 @@ function drawLayoutCarousel(W,H,c,scale,pad,maxW,acc,hi){
 
     // stat rows
     y += Math.round(28*scale);
-    const labelF = Math.round(28*scale);
-    const valueF = Math.round(72*scale);
-    const rowGap = Math.round(14*scale);
 
     stats.forEach((stat,i)=>{
       // separator line
@@ -942,7 +971,26 @@ function drawLayoutProgramme(W,H,c,scale,pad,maxW,acc,hi){
   const accentLineH = Math.round(4*scale);
   const gap = Math.round(13*scale);
   const dragOffset = ((c.textY||0)*scale) + (c.textDrag||0);
-  let y = Math.round(H*0.065 + 80*scale) + dragOffset;
+
+  const days = parseMatches(c.matches);
+  if(!days.length){ lastTextBox=null; return; }
+
+  const dateF = Math.round(24*scale);
+  const matchF = Math.round(26*scale);
+  const timeF = Math.round(24*scale);
+  const fmtF = Math.round(18*scale);
+  const rowH = Math.round(84*scale);
+  const rowR = Math.round(16*scale);
+  const rowGap = Math.round(10*scale);
+
+  // measure the whole block so it can be vertically centered (footer stays bottom-anchored)
+  let blockH = accentLineH + gap;
+  if(eyebrow) blockH += eyeF + Math.round(10*scale);
+  blockH += titleLines.length * titleLH;
+  blockH += Math.round(20*scale);
+  for(const day of days) blockH += Math.round(36*scale) + day.matches.length*(rowH+rowGap) + Math.round(8*scale);
+
+  let y = centeredStartY(H, blockH, scale) + dragOffset;
   ctx.fillStyle = acc;
   ctx.fillRect(pad, y, Math.round(54*scale), accentLineH);
   y += accentLineH + gap;
@@ -955,17 +1003,7 @@ function drawLayoutProgramme(W,H,c,scale,pad,maxW,acc,hi){
   ctx.textBaseline = "top";
   for(const ln of titleLines){ drawRichLine(ln, pad, y, titleFont, hi, "#ffffff"); y += titleLH; }
 
-  const days = parseMatches(c.matches);
-  if(!days.length){ lastTextBox=null; return; }
-
   y += Math.round(20*scale);
-  const dateF = Math.round(24*scale);
-  const matchF = Math.round(26*scale);
-  const timeF = Math.round(24*scale);
-  const fmtF = Math.round(18*scale);
-  const rowH = Math.round(84*scale);
-  const rowR = Math.round(16*scale);
-  const rowGap = Math.round(10*scale);
 
   for(const day of days){
     // day header
