@@ -96,42 +96,38 @@ Structure du JSON :
   "titleSize": 100,
   "slides": [
     {
-      "template": "post-image|post-texte|score|breaking|classement|statistique|programme|sondage|tierlist|transfert|spotlight|mvp|citation",
+      "template": "post-image",
       "image": "slide-1.jpg",
       "photoCredit": "Prénom Nom / Source",
       "eyebrow": "SURTITRE EN MAJUSCULES",
       "title": "Titre avec *mots en surbrillance*",
       "desc": "Description du slide",
-      "showDesc": true,
-      "score": "",
-      "showScore": false,
-      "scoreY": 0,
-      "badge": "",
-      "signature": "Macro",
-      "teamA": "",
-      "teamB": "",
-      "standings": "",
-      "relegationLine": 0,
-      "stats": "",
-      "matches": "",
-      "footerText": "",
-      "pollOptions": "",
-      "pollWinner": 0,
-      "tiers": "",
-      "playerName": "",
-      "playerRole": "",
-      "transferBadge": "officiel",
-      "matchResult": "",
-      "showBgImage": true,
-      "framedImage": false
+      "showDesc": true
     }
   ]
 }
 ```
 
+**Ne remplir que les champs pertinents au template** — omettre tous les champs vides/par défaut. L'outil les remplira automatiquement. Champs communs : `template`, `eyebrow`, `title`. Champs conditionnels :
+
+| Template | Champs spécifiques à inclure |
+|----------|------------------------------|
+| `post-image` | `image`, `photoCredit`, `desc`, `showDesc` |
+| `post-texte` | `desc`, `showDesc`, `signature` (dernière slide = `"Macro"`) |
+| `score` | `teamA`, `teamB`, `score`, `showScore: true` |
+| `breaking` | `badge`, `desc`, `showDesc` |
+| `classement` | `standings`, `relegationLine` (si applicable) |
+| `statistique` | `stats` |
+| `programme` | `matches`, `footerText` |
+| `sondage` | `pollOptions`, `pollWinner` |
+| `tierlist` | `tiers` |
+| `transfert` | `playerName`, `playerRole`, `transferBadge`, `image` |
+| `spotlight` | `playerName`, `playerRole`, `image`, `stats` |
+| `mvp` | `playerName`, `playerRole`, `image`, `matchResult` |
+| `citation` | `desc`, `playerName`, `playerRole` |
+
 - `"image"` : nom du fichier image dans le même dossier. L'outil associe automatiquement les images aux slides à l'import.
-- `"photoCredit"` : affiché en bas à droite du canvas au format `"Photo — Crédit"`. Laisser vide pour les slides sans image (programme, post-texte, etc.).
-- Ne remplir que les champs utiles au template choisi (les autres restent à `""` ou `0`).
+- `"photoCredit"` : affiché en bas à droite du canvas. Inclure uniquement pour les slides avec image.
 
 ### 5. Output
 Créer un dossier dans `outil-instagram/presets/` avec :
@@ -213,5 +209,36 @@ Ne pas suggérer de musique pour les posts carrousel classiques (non-Reel).
 - Le texte entre `*astérisques*` sera affiché en couleur d'accent (couleur du jeu).
 - Eyebrow = contexte court (nom de la compétition, date, phase).
 - 2 à 5 slides par post en général.
+- **Max 2 slides texte consécutives sans image** — casser le rythme avec des templates visuels (score, classement, statistique, tierlist).
 - La description ne doit pas entrer en conflit avec le crédit photo (le texte par défaut est remonté de -80px).
 - **Horaires : toujours convertir en heure de Paris (CET/CEST)**, quel que soit le jeu ou le lieu de l'événement. Ne jamais afficher les horaires dans le fuseau local de l'événement (ex: pas KST pour la Corée, pas PST pour Los Angeles). Indiquer "Horaires CEST" ou "Horaires CET" dans le footer.
+
+### Structures par type de sujet
+
+| Type de sujet | Nb slides | Structure type |
+|---------------|-----------|----------------|
+| **Résultat de match** | 3-4 | `post-image` (accroche) → `score` (résultat) → `mvp` ou `spotlight` (joueur clé) → optionnel `post-texte` (analyse) |
+| **Breaking news** | 2 | `post-image` ou `breaking` (annonce) → `post-texte` (contexte + signature Macro) |
+| **Transfert** | 2-3 | `transfert` (annonce joueur) → `post-texte` (contexte/historique) → optionnel `statistique` (stats du joueur) |
+| **Preview / analyse** | 4-5 | `post-image` (accroche) → `post-texte` (contexte) → `tierlist` ou `classement` → `programme` (si applicable) → `post-texte` (verdict + signature) |
+| **Programme** | 2-3 | `post-image` (accroche) → `programme` (matchs/horaires) → optionnel `sondage` (pronostics) |
+| **Récap compétition** | 3-4 | `post-image` → `classement` (standings) → `statistique` (chiffres clés) → `post-texte` (bilan + signature) |
+
+Ces structures sont des guides, pas des règles rigides — adapter selon le contenu.
+
+### Limites de texte par template
+
+Respecter ces limites pour éviter que le texte soit coupé sur le canvas :
+
+| Champ | Limite |
+|-------|--------|
+| **eyebrow** | ~40 caractères |
+| **title** | ~60 caractères (avec `*surbrillance*`) |
+| **desc** (post-image) | ~150 caractères (2-3 lignes sous le titre) |
+| **desc** (post-texte) | ~400 caractères (le template a plus d'espace) |
+| **standings** | max 8 lignes |
+| **stats** | max 4 paires label/valeur |
+| **tiers** | max 5 tiers (S à D) |
+| **matches** | max 6 matchs par slide |
+
+Si le contenu dépasse, répartir sur plusieurs slides plutôt que surcharger une seule.
