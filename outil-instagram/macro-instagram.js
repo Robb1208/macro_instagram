@@ -30,7 +30,7 @@ const state = {
   format: "portrait", reel: false,
   game: "lol", customColor: "#00c2e0",
   watermark: true, gradient: 1,
-  titleScale: 1, descScale: 1, zoom: 1, textY: -80, textDrag: 0,
+  titleScale: 1, descScale: 1, zoom: 1,
   hiColor: "#00c2e0", // auto-synced from game color
   dur: 2.5, trans: "cut", kenburns: true,
 };
@@ -38,7 +38,7 @@ const state = {
 function newSlide(img, name, tpl){
   return { img: img||null, name: name||"Texte", tx:{ox:0,oy:0},
            template: tpl || (img ? "post-image" : "post-texte"),
-           eyebrow:"", title:"", desc:"", showDesc:true, score:"", showScore:false, scoreY:0,
+           eyebrow:"", title:"", desc:"", showDesc:true, score:"", showScore:false, scoreY:0, textY:0, textDrag:0,
            badge:"breaking", signature:"", teamA:"", teamB:"",
            standings:"", relegationLine:0, stats:"",
            matches:"", footerText:"", pollOptions:"", pollWinner:0,
@@ -375,7 +375,7 @@ function drawLayoutBottom(W,H,c,scale,pad,maxW,acc,hi){
   blockH += titleLines.length*titleLH;
   if(descLines.length) blockH += gapAfterTitle + descLines.length*descLH;
 
-  const dragOffset = (state.textY*scale) + state.textDrag;
+  const dragOffset = ((c.textY||0)*scale) + (c.textDrag||0);
   const bottomY = H - pad + dragOffset;
   const yTop = bottomY - blockH;
   lastTextBox = { x:pad, y:yTop, w:maxW, h:blockH };
@@ -422,7 +422,7 @@ function drawLayoutCentered(W,H,c,scale,pad,maxW,acc,hi){
   blockH += titleLines.length * titleLH;
   if(descLines.length) blockH += Math.round(18*scale) + descLines.length*descLH;
 
-  const dragOffset = (state.textY*scale) + state.textDrag;
+  const dragOffset = ((c.textY||0)*scale) + (c.textDrag||0);
   const centerY = H * 0.48 + dragOffset;
   let y = centerY - blockH/2;
   lastTextBox = { x:pad, y, w:maxW, h:blockH };
@@ -581,7 +581,8 @@ function drawLayoutScore(W,H,c,scale,pad,maxW,acc,hi){
   const gap = Math.round(14*scale);
   let blockH = accentLineH + gap + titleLines.length*titleLH;
   if(descLines.length) blockH += Math.round(11*scale) + descLines.length*descLH;
-  const bottomY = H - pad;
+  const dragOffset = ((c.textY||0)*scale) + (c.textDrag||0);
+  const bottomY = H - pad + dragOffset;
   let y = bottomY - blockH;
   lastTextBox = { x:pad, y, w:maxW, h:blockH };
 
@@ -621,7 +622,8 @@ function drawLayoutBreaking(W,H,c,scale,pad,maxW,hi){
   let blockH = badgeH + badgeGap + titleLines.length*titleLH;
   if(descLines.length) blockH += descGap + descLines.length*descLH;
 
-  const centerY = H*0.50;
+  const dragOffset = ((c.textY||0)*scale) + (c.textDrag||0);
+  const centerY = H*0.50 + dragOffset;
   let y = centerY - blockH/2;
 
   // badge pill
@@ -735,7 +737,8 @@ function drawLayoutClassement(W,H,c,scale,pad,maxW,acc,hi){
   // header block: tick + eyebrow + title
   const accentLineH = Math.round(4*scale);
   const gap = Math.round(13*scale);
-  let y = Math.round(H*0.085 + 80*scale);
+  const dragOffset = ((c.textY||0)*scale) + (c.textDrag||0);
+  let y = Math.round(H*0.085 + 80*scale) + dragOffset;
   ctx.fillStyle = acc;
   ctx.fillRect(pad, y, Math.round(54*scale), accentLineH);
   y += accentLineH + gap;
@@ -847,7 +850,8 @@ function drawLayoutCarousel(W,H,c,scale,pad,maxW,acc,hi){
     const eyebrow = (c.eyebrow||"").toUpperCase();
     const titleLines = wrapRich(richWords(c.title), titleFont, maxW);
 
-    let y = Math.round(H*0.085 + 80*scale);
+    const dragOffset = ((c.textY||0)*scale) + (c.textDrag||0);
+    let y = Math.round(H*0.085 + 80*scale) + dragOffset;
     if(eyebrow){
       ctx.font = `700 ${eyeF}px Sora, sans-serif`;
       ctx.fillStyle = acc; ctx.textBaseline = "top";
@@ -937,7 +941,8 @@ function drawLayoutProgramme(W,H,c,scale,pad,maxW,acc,hi){
 
   const accentLineH = Math.round(4*scale);
   const gap = Math.round(13*scale);
-  let y = Math.round(H*0.065 + 80*scale);
+  const dragOffset = ((c.textY||0)*scale) + (c.textDrag||0);
+  let y = Math.round(H*0.065 + 80*scale) + dragOffset;
   ctx.fillStyle = acc;
   ctx.fillRect(pad, y, Math.round(54*scale), accentLineH);
   y += accentLineH + gap;
@@ -1060,7 +1065,8 @@ function drawLayoutSondage(W,H,c,scale,pad,maxW,acc,hi){
 
   const accentLineH = Math.round(4*scale);
   const gap = Math.round(13*scale);
-  let y = Math.round(H*0.075 + 80*scale);
+  const dragOffset = ((c.textY||0)*scale) + (c.textDrag||0);
+  let y = Math.round(H*0.075 + 80*scale) + dragOffset;
   ctx.fillStyle = acc;
   ctx.fillRect(pad, y, Math.round(54*scale), accentLineH);
   y += accentLineH + gap;
@@ -1208,7 +1214,8 @@ function drawLayoutTransfert(W,H,c,scale,pad,maxW,acc,hi){
   blockH += titleLines.length*titleLH;
   if(descLines.length) blockH += gapTitle + descLines.length*descLH;
 
-  let y = H - pad - blockH;
+  const dragOffset = ((c.textY||0)*scale) + (c.textDrag||0);
+  let y = H - pad - blockH + dragOffset;
   ctx.fillStyle = acc;
   ctx.fillRect(pad, y, Math.round(54*scale), accentLineH);
   y += accentLineH + gapLine;
@@ -1248,7 +1255,8 @@ function drawLayoutTierList(W,H,c,scale,pad,maxW,acc,hi){
 
   const accentLineH = Math.round(4*scale);
   const gap = Math.round(13*scale);
-  let y = Math.round(H*0.065 + 80*scale);
+  const dragOffset = ((c.textY||0)*scale) + (c.textDrag||0);
+  let y = Math.round(H*0.065 + 80*scale) + dragOffset;
   ctx.fillStyle = acc;
   ctx.fillRect(pad, y, Math.round(54*scale), accentLineH);
   y += accentLineH + gap;
@@ -1347,7 +1355,7 @@ function drawLayoutCitation(W,H,c,scale,pad,maxW,acc,hi){
   const quoteLines = wrapRich(richWords(c.title), quoteFont, maxW);
 
   // eyebrow at top
-  const dragOffset = (state.textY*scale) + state.textDrag;
+  const dragOffset = ((c.textY||0)*scale) + (c.textDrag||0);
   let y = Math.round(H*0.18) + dragOffset;
   if(eyebrow){
     ctx.font = `700 ${eyeF}px Sora, sans-serif`;
@@ -1429,7 +1437,8 @@ function drawLayoutSpotlight(W,H,c,scale,pad,maxW,acc,hi){
   const statLabelF = Math.round(21*scale);
   const showStats = stats.length >= 1;
 
-  const statsBlockY = showStats ? H - pad - statBoxH : H - pad;
+  const dragOffset = ((c.textY||0)*scale) + (c.textDrag||0);
+  const statsBlockY = (showStats ? H - pad - statBoxH : H - pad) + dragOffset;
   const identityBottom = statsBlockY - Math.round(28*scale);
 
   // build identity block from bottom up
@@ -1556,7 +1565,8 @@ function drawLayoutMVP(W,H,c,scale,pad,maxW,acc,hi){
   const showStats = stats.length >= 1;
 
   // layout from bottom
-  let bottomEdge = H - pad;
+  const dragOffset = ((c.textY||0)*scale) + (c.textDrag||0);
+  let bottomEdge = H - pad + dragOffset;
   let statsY = bottomEdge;
   if(showStats){
     statsY = bottomEdge - statBoxH;
@@ -1753,6 +1763,9 @@ function syncInputs(){
   $("scoreY").disabled = !has;
   $("scoreY").value = has ? (it.scoreY||0) : 0;
   $("scoreYV").textContent = has ? (it.scoreY||0) : 0;
+  $("textY").disabled = !has;
+  $("textY").value = has ? (it.textY||0) : 0;
+  $("textYV").textContent = has ? (it.textY||0) : 0;
   $("contentSlideTag").textContent = has && state.images.length>1 ? `· slide ${state.active+1}` : "";
 
   // new fields
@@ -1789,7 +1802,7 @@ function syncInputs(){
   show("teamRow", tpl==="score");
   show("gradientRow", tpl==="post-image" || tpl==="score" || tpl==="statistique" || tpl==="transfert");
   show("zoomRow", hasImage);
-  show("textYRow", tpl==="post-image" || tpl==="statistique" || tpl==="post-texte" || tpl==="citation");
+  show("textYRow", true);
   show("resetView", hasImage);
   show("standingsRow", tpl==="classement");
   show("relegationRow", tpl==="classement");
@@ -1973,6 +1986,7 @@ function applyJsonPreset(data, imageFiles){
     slide.score = s.score || "";
     slide.showScore = s.showScore || false;
     slide.scoreY = s.scoreY || 0;
+    slide.textY = s.textY || 0;
     slide.badge = s.badge || "breaking";
     slide.signature = s.signature || "";
     slide.teamA = s.teamA || "";
@@ -2054,7 +2068,7 @@ bindSlider("gradient","gradient", v=>v+"%", 0.01);
 bindSlider("titleSize","titleScale", v=>v+"%", 0.01);
 bindSlider("descSize","descScale", v=>v+"%", 0.01);
 bindSlider("zoom","zoom", v=>v+"%", 0.01);
-$("textY").oninput = ()=>{ state.textY=parseFloat($("textY").value); $("textYV").textContent=state.textY; render(); };
+$("textY").oninput = ()=>{ const v=parseFloat($("textY").value); $("textYV").textContent=v; setField("textY", v); };
 $("dur").oninput = ()=>{ state.dur=parseFloat($("dur").value); $("durV").textContent=state.dur+"s"; };
 $("trans").onchange = ()=> state.trans=$("trans").value;
 $("kenburns").onchange = e => state.kenburns=e.target.checked;
@@ -2063,7 +2077,7 @@ $("resetView").onclick = ()=>{
   const it = state.images[state.active];
   if(it){ it.tx.ox=0; it.tx.oy=0; }
   state.zoom=1; $("zoom").value=100; $("zoomV").textContent="100%";
-  state.textDrag=0; render();
+  const c=cur(); if(c) c.textDrag=0; render();
 };
 
 function updateDimLabel(){
@@ -2084,7 +2098,7 @@ function startDrag(e){
   const p = canvasCoords(e);
   const b = lastTextBox;
   if(b && p.x>=b.x-20 && p.x<=b.x+b.w+20 && p.y>=b.y-20 && p.y<=b.y+b.h+30){
-    dragMode = "text"; startTextDrag = state.textDrag;
+    dragMode = "text"; startTextDrag = (cur()||{}).textDrag||0;
   } else {
     dragMode = "image";
     const it = state.images[state.active];
@@ -2102,7 +2116,7 @@ function moveDrag(e){
     it.tx.ox = startTx.ox + (p.x-dragStart.x);
     it.tx.oy = startTx.oy + (p.y-dragStart.y);
   } else {
-    state.textDrag = startTextDrag + (p.y-dragStart.y);
+    const it = cur(); if(it) it.textDrag = startTextDrag + (p.y-dragStart.y);
   }
   render();
 }
