@@ -789,7 +789,7 @@ function drawLayoutClassement(W,H,c,scale,pad,maxW,acc,hi){
   const accentLineH = Math.round(4*scale);
   const gap = Math.round(13*scale);
   const dragOffset = ((c.textY||0)*scale) + (c.textDrag||0);
-  let y = Math.round(H*0.085 + 80*scale) + dragOffset;
+  let y = Math.round(H*0.16 + 80*scale) + dragOffset;
   ctx.fillStyle = acc;
   ctx.fillRect(pad, y, Math.round(54*scale), accentLineH);
   y += accentLineH + gap;
@@ -902,7 +902,7 @@ function drawLayoutCarousel(W,H,c,scale,pad,maxW,acc,hi){
     const titleLines = wrapRich(richWords(c.title), titleFont, maxW);
 
     const dragOffset = ((c.textY||0)*scale) + (c.textDrag||0);
-    let y = Math.round(H*0.085 + 80*scale) + dragOffset;
+    let y = Math.round(H*0.16 + 80*scale) + dragOffset;
     if(eyebrow){
       ctx.font = `700 ${eyeF}px Sora, sans-serif`;
       ctx.fillStyle = acc; ctx.textBaseline = "top";
@@ -993,7 +993,7 @@ function drawLayoutProgramme(W,H,c,scale,pad,maxW,acc,hi){
   const accentLineH = Math.round(4*scale);
   const gap = Math.round(13*scale);
   const dragOffset = ((c.textY||0)*scale) + (c.textDrag||0);
-  let y = Math.round(H*0.065 + 80*scale) + dragOffset;
+  let y = Math.round(H*0.14 + 80*scale) + dragOffset;
   ctx.fillStyle = acc;
   ctx.fillRect(pad, y, Math.round(54*scale), accentLineH);
   y += accentLineH + gap;
@@ -1117,7 +1117,7 @@ function drawLayoutSondage(W,H,c,scale,pad,maxW,acc,hi){
   const accentLineH = Math.round(4*scale);
   const gap = Math.round(13*scale);
   const dragOffset = ((c.textY||0)*scale) + (c.textDrag||0);
-  let y = Math.round(H*0.075 + 80*scale) + dragOffset;
+  let y = Math.round(H*0.14 + 80*scale) + dragOffset;
   ctx.fillStyle = acc;
   ctx.fillRect(pad, y, Math.round(54*scale), accentLineH);
   y += accentLineH + gap;
@@ -1307,7 +1307,7 @@ function drawLayoutTierList(W,H,c,scale,pad,maxW,acc,hi){
   const accentLineH = Math.round(4*scale);
   const gap = Math.round(13*scale);
   const dragOffset = ((c.textY||0)*scale) + (c.textDrag||0);
-  let y = Math.round(H*0.065 + 80*scale) + dragOffset;
+  let y = Math.round(H*0.14 + 80*scale) + dragOffset;
   ctx.fillStyle = acc;
   ctx.fillRect(pad, y, Math.round(54*scale), accentLineH);
   y += accentLineH + gap;
