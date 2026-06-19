@@ -1912,6 +1912,7 @@ function syncInputs(){
   } else {
     stopVideoLoop();
   }
+  if($("videoAudio")) $("videoAudio").checked = has && it.video ? !it.video.muted : false;
 
   // template buttons active state
   document.querySelectorAll("#tplGrid .tpl-btn").forEach(b=>{
@@ -1951,6 +1952,10 @@ if($("videoPlayPause")) $("videoPlayPause").onclick = ()=>{
   const it = cur(); if(!it || !it.video) return;
   if(it.video.paused){ it.video.play(); startVideoLoop(); $("videoPlayPause").textContent = "⏸ Pause"; }
   else { it.video.pause(); stopVideoLoop(); render(); $("videoPlayPause").textContent = "▶ Play"; }
+};
+if($("videoAudio")) $("videoAudio").onchange = e => {
+  const it = cur(); if(!it || !it.video) return;
+  it.video.muted = !e.target.checked;
 };
 if($("standings")) $("standings").oninput = e => setField("standings", e.target.value);
 if($("relegationLine")) $("relegationLine").oninput = e => { const v=parseInt(e.target.value)||0; $("relegationLineV").textContent=v; setField("relegationLine", v); };
@@ -2408,6 +2413,14 @@ function playReel(record){
       if(!cv.captureStream){ throw new Error("captureStream indisponible"); }
       mime = pickMime();
       const stream = cv.captureStream(30);
+      const audioCtx = new AudioContext();
+      const dest = audioCtx.createMediaStreamDestination();
+      state.images.forEach(s => {
+        if(s.video && !s.video.muted){
+          try { const src = audioCtx.createMediaElementSource(s.video); src.connect(dest); src.connect(audioCtx.destination); } catch(e){}
+        }
+      });
+      if(dest.stream.getAudioTracks().length) dest.stream.getAudioTracks().forEach(t => stream.addTrack(t));
       rec = mime ? new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 6000000 })
                  : new MediaRecorder(stream);
       mime = rec.mimeType || mime;
