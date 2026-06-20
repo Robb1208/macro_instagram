@@ -2485,8 +2485,29 @@ function download(blob, filename){
   const url = URL.createObjectURL(blob);
   const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
   if(isMobile && blob.type && blob.type.startsWith("video/")){
-    window.open(url, "_blank");
-    $("status").textContent = "✓ Vidéo ouverte — appui long pour enregistrer.";
+    let overlay = document.getElementById("videoOverlay");
+    if(overlay) overlay.remove();
+    overlay = document.createElement("div");
+    overlay.id = "videoOverlay";
+    overlay.style.cssText = "position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.9);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;gap:16px;";
+    const vid = document.createElement("video");
+    vid.src = url;
+    vid.controls = true;
+    vid.playsInline = true;
+    vid.autoplay = true;
+    vid.style.cssText = "max-width:90%;max-height:70vh;border-radius:12px;";
+    const msg = document.createElement("p");
+    msg.textContent = "Appui long sur la vidéo → Enregistrer";
+    msg.style.cssText = "color:#fff;font:600 16px Manrope,sans-serif;text-align:center;";
+    const close = document.createElement("button");
+    close.textContent = "✕ Fermer";
+    close.style.cssText = "background:#333;color:#fff;border:none;padding:10px 24px;border-radius:8px;font:500 14px Manrope,sans-serif;cursor:pointer;";
+    close.onclick = ()=>{ overlay.remove(); URL.revokeObjectURL(url); };
+    overlay.appendChild(vid);
+    overlay.appendChild(msg);
+    overlay.appendChild(close);
+    document.body.appendChild(overlay);
+    $("status").textContent = "✓ Vidéo prête — appui long pour enregistrer.";
     return;
   }
   const a = document.createElement("a");
@@ -2615,7 +2636,10 @@ function playReel(record){
     if(s.video){ s.video.currentTime = 0; s.video.play(); }
   }
   stopVideoLoop();
+  const FPS = 30;
+  const frameDur = 1000 / FPS;
   const t0 = performance.now();
+  let virtualT = 0;
   playing = true;
 
   let rec = null, chunks = [], mime = "";
@@ -2664,15 +2688,16 @@ function playReel(record){
   }
 
   function tick(){
-    const t = performance.now() - t0;
+    const t = record ? virtualT : (performance.now() - t0);
     const tt = Math.min(t, total);
     drawReelFrame(W, H, tt);
     if(record){
-      $("recprog").style.width = (t/total*100) + "%";
+      virtualT += frameDur;
+      $("recprog").style.width = (tt/total*100) + "%";
       $("status").textContent = "● Enregistrement… " + (Math.round(tt/100)/10) + "s / " + (total/1000) + "s";
     }
-    if(t < total){
-      ticker = setTimeout(tick, 1000/30);
+    if(tt < total){
+      ticker = setTimeout(tick, record ? 0 : frameDur);
     } else {
       stopTicker();
       playing = false;
