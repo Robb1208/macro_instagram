@@ -2483,6 +2483,12 @@ cv.addEventListener("wheel", e=>{
 // ═══ SECTION: EXPORT IMAGE ═══
 function download(blob, filename){
   const url = URL.createObjectURL(blob);
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  if(isMobile && blob.type && blob.type.startsWith("video/")){
+    window.open(url, "_blank");
+    $("status").textContent = "✓ Vidéo ouverte — appui long pour enregistrer.";
+    return;
+  }
   const a = document.createElement("a");
   a.href = url;
   a.download = filename;
