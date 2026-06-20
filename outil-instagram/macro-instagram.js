@@ -2482,41 +2482,10 @@ cv.addEventListener("wheel", e=>{
 
 // ═══ SECTION: EXPORT IMAGE ═══
 function download(blob, filename){
-  const url = URL.createObjectURL(blob);
-  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-  if(isMobile && blob.type && blob.type.startsWith("video/")){
-    let overlay = document.getElementById("videoOverlay");
-    if(overlay) overlay.remove();
-    overlay = document.createElement("div");
-    overlay.id = "videoOverlay";
-    overlay.style.cssText = "position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.9);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;gap:16px;";
-    const vid = document.createElement("video");
-    vid.src = url;
-    vid.controls = true;
-    vid.playsInline = true;
-    vid.autoplay = true;
-    vid.style.cssText = "max-width:90%;max-height:70vh;border-radius:12px;";
-    const msg = document.createElement("p");
-    msg.textContent = "Appui long sur la vidéo → Enregistrer";
-    msg.style.cssText = "color:#fff;font:600 16px Manrope,sans-serif;text-align:center;";
-    const close = document.createElement("button");
-    close.textContent = "✕ Fermer";
-    close.style.cssText = "background:#333;color:#fff;border:none;padding:10px 24px;border-radius:8px;font:500 14px Manrope,sans-serif;cursor:pointer;";
-    close.onclick = ()=>{ overlay.remove(); URL.revokeObjectURL(url); };
-    overlay.appendChild(vid);
-    overlay.appendChild(msg);
-    overlay.appendChild(close);
-    document.body.appendChild(overlay);
-    $("status").textContent = "✓ Vidéo prête — appui long pour enregistrer.";
-    return;
-  }
   const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  setTimeout(()=>URL.revokeObjectURL(url), 5000);
+  a.href = URL.createObjectURL(blob);
+  a.download = filename; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 2000);
 }
 function slug(){
   const first = (state.images.find(s=>s.title && s.title.trim()) || {}).title || "post";
@@ -2527,14 +2496,6 @@ $("dlPng").onclick = ()=>{ render(); cv.toBlob(b=>download(b, slug()+".png"), "i
 $("dlJpg").onclick = ()=>{ render(); cv.toBlob(b=>download(b, slug()+".jpg"), "image/jpeg", 0.92); };
 
 // ═══ SECTION: REEL ═══
-function pickMime(){
-  const cands = [
-    "video/mp4;codecs=avc1.42E01E","video/mp4",
-    "video/webm;codecs=h264","video/webm;codecs=vp9","video/webm;codecs=vp8","video/webm"
-  ];
-  for(const c of cands) if(window.MediaRecorder && MediaRecorder.isTypeSupported(c)) return c;
-  return "";
-}
 let _offCv1 = null, _offCtx1 = null, _offCv2 = null, _offCtx2 = null;
 function getOffscreen(W, H, n){
   if(n===2){
@@ -2612,11 +2573,41 @@ function drawReelFrame(W, H, tMs){
   }
 }
 
-let playing = false, ticker = null;
-function stopTicker(){ if(ticker){ clearTimeout(ticker); ticker = null; } }
+let playing = false, rafId = null;
+function stopTicker(){ if(rafId){ cancelAnimationFrame(rafId); rafId = null; } }
 function resetReelUI(){
   $("recbar").classList.remove("on"); $("recprog").style.width = "0%";
   $("dlReel").disabled = false; $("previewReel").disabled = false;
+}
+
+function deliverVideo(blob){
+  const url = URL.createObjectURL(blob);
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  if(isMobile){
+    let overlay = document.getElementById("videoOverlay");
+    if(overlay) overlay.remove();
+    overlay = document.createElement("div");
+    overlay.id = "videoOverlay";
+    overlay.style.cssText = "position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.9);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;gap:16px;";
+    const vid = document.createElement("video");
+    vid.src = url; vid.controls = true; vid.playsInline = true; vid.autoplay = true;
+    vid.style.cssText = "max-width:90%;max-height:70vh;border-radius:12px;";
+    const msg = document.createElement("p");
+    msg.textContent = "Appui long sur la vidéo → Enregistrer";
+    msg.style.cssText = "color:#fff;font:600 16px Manrope,sans-serif;text-align:center;";
+    const close = document.createElement("button");
+    close.textContent = "✕ Fermer";
+    close.style.cssText = "background:#333;color:#fff;border:none;padding:10px 24px;border-radius:8px;font:500 14px Manrope,sans-serif;cursor:pointer;";
+    close.onclick = ()=>{ overlay.remove(); URL.revokeObjectURL(url); };
+    overlay.appendChild(vid); overlay.appendChild(msg); overlay.appendChild(close);
+    document.body.appendChild(overlay);
+    $("status").textContent = "✓ Vidéo prête — appui long pour enregistrer.";
+  } else {
+    const a = document.createElement("a");
+    a.href = url; a.download = slug()+"-reel.mp4"; a.click();
+    setTimeout(()=>URL.revokeObjectURL(url), 5000);
+    $("status").textContent = "✓ Vidéo exportée.";
+  }
 }
 
 $("previewReel").onclick = ()=> playReel(false);
@@ -2626,90 +2617,87 @@ function playReel(record){
   if(playing) return;
   const hasVideo = state.images.some(s => s.video && s.template === "post-video");
   if(state.images.length < 2 && !hasVideo){ $("status").textContent = "⚠ Ajoute au moins 2 images ou une vidéo pour le Reel."; return; }
-  if(record && !window.MediaRecorder){ $("status").textContent = "⚠ Ce navigateur ne supporte pas l'enregistrement vidéo."; return; }
 
   const [W,H] = FORMATS.story;
   if(cv.width!==W || cv.height!==H){ cv.width=W; cv.height=H; }
   let total = 0;
   for(const s of state.images){
     total += slideDur(s);
-    if(s.video){ s.video.currentTime = 0; s.video.play(); }
+    if(s.video){ s.video.currentTime = 0; }
   }
   stopVideoLoop();
-  const FPS = 30;
-  const frameDur = 1000 / FPS;
-  const t0 = performance.now();
-  let virtualT = 0;
   playing = true;
 
-  let rec = null, chunks = [], mime = "";
-  if(record){
-    try{
-      if(!cv.captureStream){ throw new Error("captureStream indisponible"); }
-      mime = pickMime();
-      const stream = cv.captureStream(30);
-      const audioCtx = new AudioContext();
-      const dest = audioCtx.createMediaStreamDestination();
-      state.images.forEach(s => {
-        if(s.video && !s.video.muted){
-          try { const src = audioCtx.createMediaElementSource(s.video); src.connect(dest); src.connect(audioCtx.destination); } catch(e){}
-        }
-      });
-      if(dest.stream.getAudioTracks().length) dest.stream.getAudioTracks().forEach(t => stream.addTrack(t));
-      rec = mime ? new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 6000000 })
-                 : new MediaRecorder(stream);
-      mime = rec.mimeType || mime;
-      rec.ondataavailable = e => { if(e.data && e.data.size) chunks.push(e.data); };
-      rec.onstop = ()=>{
-        const type = (mime||"video/webm").split(";")[0];
-        const ext = type.includes("mp4") ? "mp4" : "webm";
-        resetReelUI();
-        if(!chunks.length){
-          $("status").textContent = "⚠ Aucune donnée capturée. Garde cet onglet au premier plan pendant la génération.";
-          render(); return;
-        }
-        download(new Blob(chunks, {type}), slug()+"-reel."+ext);
-        $("status").textContent = ext==="mp4"
-          ? "✓ Vidéo MP4 exportée (1080×1920, H.264)."
-          : "✓ Vidéo WebM exportée (ce navigateur ne génère pas de MP4 — voir la note).";
-        render();
-      };
-      rec.onerror = ev => { $("status").textContent = "⚠ Erreur d'enregistrement : " + ((ev.error&&ev.error.name)||"inconnue"); playing=false; stopTicker(); resetReelUI(); render(); };
-      rec.start(100);
-      $("recbar").classList.add("on");
-      $("dlReel").disabled = true; $("previewReel").disabled = true;
-    }catch(e){
-      playing = false;
-      $("status").textContent = "⚠ Impossible de démarrer l'enregistrement : " + e.message;
-      return;
-    }
-  } else {
+  if(!record){
     $("status").textContent = "▶ Lecture de l'aperçu…";
+    state.images.forEach(s => { if(s.video) s.video.play(); });
+    const t0 = performance.now();
+    function prevTick(){
+      const t = performance.now() - t0;
+      if(t >= total){ playing = false; $("status").textContent = ""; render(); return; }
+      drawReelFrame(W, H, t);
+      rafId = requestAnimationFrame(prevTick);
+    }
+    rafId = requestAnimationFrame(prevTick);
+    return;
   }
 
-  function tick(){
-    const t = record ? virtualT : (performance.now() - t0);
-    const tt = Math.min(t, total);
-    drawReelFrame(W, H, tt);
-    if(record){
-      virtualT += frameDur;
-      $("recprog").style.width = (tt/total*100) + "%";
-      $("status").textContent = "● Enregistrement… " + (Math.round(tt/100)/10) + "s / " + (total/1000) + "s";
-    }
-    if(tt < total){
-      ticker = setTimeout(tick, record ? 0 : frameDur);
+  if(!window.VideoEncoder){ $("status").textContent = "⚠ Ce navigateur ne supporte pas VideoEncoder (Chrome 94+ requis)."; playing=false; return; }
+  if(!window.Mp4Muxer){ $("status").textContent = "⚠ mp4-muxer non chargé."; playing=false; return; }
+
+  $("recbar").classList.add("on");
+  $("dlReel").disabled = true; $("previewReel").disabled = true;
+
+  const FPS = 30;
+  const frameDur = 1000 / FPS;
+  const totalFrames = Math.ceil(total / frameDur);
+
+  const muxer = new Mp4Muxer.Muxer({
+    target: new Mp4Muxer.ArrayBufferTarget(),
+    video: { codec: "avc", width: W, height: H },
+    fastStart: "in-memory"
+  });
+
+  const encoder = new VideoEncoder({
+    output: (chunk, meta) => muxer.addVideoChunk(chunk, meta),
+    error: e => { $("status").textContent = "⚠ Erreur encodage : " + e.message; playing=false; resetReelUI(); render(); }
+  });
+  encoder.configure({
+    codec: "avc1.640028",
+    width: W, height: H,
+    bitrate: 6_000_000,
+    framerate: FPS
+  });
+
+  let frame = 0;
+
+  function renderNextFrame(){
+    const tMs = frame * frameDur;
+    drawReelFrame(W, H, Math.min(tMs, total));
+
+    const vf = new VideoFrame(cv, { timestamp: frame * (1_000_000 / FPS) });
+    const isKey = frame % (FPS * 2) === 0;
+    encoder.encode(vf, { keyFrame: isKey });
+    vf.close();
+
+    $("recprog").style.width = (frame / totalFrames * 100) + "%";
+    $("status").textContent = "● Encodage MP4… " + Math.round(frame/totalFrames*100) + "%";
+    frame++;
+
+    if(frame <= totalFrames){
+      setTimeout(renderNextFrame, 0);
     } else {
-      stopTicker();
-      playing = false;
-      if(record){
-        if(rec && rec.state !== "inactive"){ try{ rec.stop(); }catch(e){} }
-      } else {
-        $("status").textContent = "";
+      encoder.flush().then(()=>{
+        muxer.finalize();
+        const blob = new Blob([muxer.target.buffer], { type: "video/mp4" });
+        resetReelUI();
+        playing = false;
+        deliverVideo(blob);
         render();
-      }
+      });
     }
   }
-  tick();
+  setTimeout(renderNextFrame, 50);
 }
 
 // ═══ SECTION: INIT ═══
