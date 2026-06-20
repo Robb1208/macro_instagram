@@ -40,6 +40,7 @@
         <button class="tpl-btn" data-tpl="citation"><span class="tpl-icon">❝</span><span class="tpl-name">Citation</span></button>
         <button class="tpl-btn" data-tpl="spotlight"><span class="tpl-icon">★</span><span class="tpl-name">Spotlight</span></button>
         <button class="tpl-btn" data-tpl="mvp"><span class="tpl-icon">🏆</span><span class="tpl-name">MVP</span></button>
+        <button class="tpl-btn" data-tpl="lineup"><span class="tpl-icon">👥</span><span class="tpl-name">Lineup</span></button>
       </div>
       <div style="margin-top:10px;display:flex;gap:6px">
         <button class="btn" id="folderImport" style="flex:1;justify-content:center;font-size:11px;padding:8px">📂 Dossier</button>
@@ -212,6 +213,29 @@
         <div class="field" style="margin-top:8px">
           <label>Résultat du match</label>
           <input type="text" id="matchResult" placeholder="Ex. Vitality bat The MongolZ 2–1" />
+        </div>
+      </div>
+      <div id="lineupRow" style="display:none">
+        <div class="field" style="margin-top:8px">
+          <label>Joueurs <small>(Nom / Rôle / Note — un par ligne)</small></label>
+          <textarea id="lineup" rows="5" placeholder="Cabochard / Toplaner / 4&#10;Yike / Jungler / 8&#10;Caps / Midlaner / 2"></textarea>
+        </div>
+        <div class="field" style="margin-top:8px">
+          <label>Nombre de joueurs</label>
+          <div class="seg" id="lineupCountSeg" style="max-width:160px">
+            <button data-lc="3">3</button>
+            <button data-lc="5" class="on">5</button>
+          </div>
+        </div>
+        <div class="field" style="margin-top:8px">
+          <label>Photos joueurs <small>(dans l'ordre)</small></label>
+          <input type="file" id="lineupPhotoInput" accept="image/*" multiple style="display:none" />
+          <button class="btn" id="lineupPhotoBtn" style="font-size:11px;padding:8px">📷 Importer photos joueurs</button>
+          <span id="lineupPhotoCount" class="dim" style="margin-left:8px"></span>
+        </div>
+        <div class="field" style="margin-top:8px">
+          <label>Note équipe</label>
+          <input type="text" id="lineupTeamRating" placeholder="Ex. 8" style="max-width:80px" />
         </div>
       </div>
       <p class="dim" style="margin-top:8px">Astuce : entoure un mot de * pour le colorer avec la couleur du jeu. Ex : Karmine *Corp*</p>

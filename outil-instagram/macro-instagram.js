@@ -23,6 +23,7 @@ const TEMPLATES = {
   "citation":  { label:"Citation", icon:"❝" },
   "spotlight": { label:"Spotlight", icon:"★" },
   "mvp":       { label:"MVP", icon:"🏆" },
+  "lineup":    { label:"Lineup", icon:"👥" },
 };
 
 // ═══ SECTION: TEAM LOGOS ═══
@@ -59,6 +60,36 @@ function findTeamLogo(name){
   return null;
 }
 
+// ═══ SECTION: PLAYER IMAGES ═══
+const playerImages = {};
+let playersReady = false;
+(async function loadPlayers(){
+  try {
+    const resp = await fetch("PLAYER_IMAGES/players.json");
+    const names = await resp.json();
+    let pending = names.length;
+    if(!pending){ playersReady=true; return; }
+    names.forEach(filename => {
+      const base = filename.includes("\\") ? filename.split("\\").pop() : filename;
+      const key = base.replace(/\.(png|jpe?g|webp)$/i,"").toUpperCase().replace(/[_\s]+/g," ").trim();
+      const img = new Image();
+      img.onload = ()=>{ playerImages[key] = img; if(--pending===0){ playersReady=true; render(); } };
+      img.onerror = ()=>{ if(--pending===0){ playersReady=true; } };
+      img.src = "PLAYER_IMAGES/" + filename;
+    });
+  } catch(e){ playersReady=true; }
+})();
+
+function findPlayerImage(name){
+  if(!name) return null;
+  const key = name.toUpperCase().replace(/[_\s]+/g," ").trim();
+  if(playerImages[key]) return playerImages[key];
+  for(const k in playerImages){
+    if(k.includes(key) || key.includes(k)) return playerImages[k];
+  }
+  return null;
+}
+
 // ═══ SECTION: STATE ═══
 const state = {
   images: [], active: 0,
@@ -78,11 +109,12 @@ function newSlide(img, name, tpl){
            standings:"", relegationLine:0, stats:"",
            matches:"", footerText:"", pollOptions:"", pollWinner:0,
            tiers:"", playerName:"", playerRole:"", transferBadge:"officiel", matchResult:"",
-           showBgImage: !!img, framedImage: false, photoCredit:"", dur: null, game: null };
+           showBgImage: !!img, framedImage: false, photoCredit:"", dur: null, game: null,
+           lineup:"", lineupCount:5, lineupTeamRating:"", lineupPhotos:[] };
 }
 function cur(){ return state.images[state.active] || null; }
 function curTpl(){ const it = cur(); return (it && it.template) || "post-image"; }
-const EMPTY = { template:"post-image", eyebrow:"", title:"", desc:"", showDesc:false, score:"", showScore:false, badge:"", signature:"", teamA:"", teamB:"", standings:"", relegationLine:0, stats:"", matches:"", footerText:"", pollOptions:"", pollWinner:0, tiers:"", playerName:"", playerRole:"", transferBadge:"officiel", matchResult:"" };
+const EMPTY = { template:"post-image", eyebrow:"", title:"", desc:"", showDesc:false, score:"", showScore:false, badge:"", signature:"", teamA:"", teamB:"", standings:"", relegationLine:0, stats:"", matches:"", footerText:"", pollOptions:"", pollWinner:0, tiers:"", playerName:"", playerRole:"", transferBadge:"officiel", matchResult:"", lineup:"", lineupCount:5, lineupTeamRating:"" };
 
 // ═══ SECTION: CANVAS INIT ═══
 const cv = document.getElementById("cv");
@@ -396,6 +428,7 @@ function drawOverlay(W, H, slideInfo, content, hasImage){
     case "citation":   drawLayoutCitation(W,H,c,scale,pad,maxW,acc,hi); break;
     case "spotlight":  drawLayoutSpotlight(W,H,c,scale,pad,maxW,acc,hi); break;
     case "mvp":        drawLayoutMVP(W,H,c,scale,pad,maxW,acc,hi); break;
+    case "lineup":     drawLayoutLineup(W,H,c,scale,pad,maxW,acc,hi); break;
     default:           drawLayoutBottom(W,H,c,scale,pad,maxW,acc,hi); break;
   }
 }
@@ -1697,6 +1730,138 @@ function drawLayoutMVP(W,H,c,scale,pad,maxW,acc,hi){
   lastTextBox = null;
 }
 
+// --- T15: Lineup ---
+function parseLineup(text){
+  return (text||"").split("\n").map(l=>l.trim()).filter(Boolean).map(line=>{
+    const parts = line.split("/").map(s=>s.trim());
+    return { name: parts[0]||"", role: parts[1]||"", rating: parts[2]||"" };
+  });
+}
+function drawLayoutLineup(W,H,c,scale,pad,maxW,acc,hi){
+  const players = parseLineup(c.lineup);
+  const count = c.lineupCount || 5;
+  const teamRating = (c.lineupTeamRating||"").trim();
+  const showRatings = players.some(p => p.rating !== "");
+
+  const eyeF = Math.round(22*scale);
+  const titleF = Math.round((state.format==="story"||state.reel?80:72)*scale*state.titleScale);
+  const titleLH = Math.round(titleF*1.04);
+  const titleFont = `800 ${titleF}px Sora, sans-serif`;
+  const eyebrow = (c.eyebrow||"").toUpperCase();
+  const titleLines = wrapRich(richWords(c.title), titleFont, maxW);
+
+  const dragOffset = ((c.textY||0)*scale) + (c.textDrag||0);
+
+  // header block
+  const accentLineH = Math.round(4*scale);
+  const gapLine = Math.round(14*scale);
+  const gapEye = Math.round(14*scale);
+  let headerY = Math.round(210*scale) + dragOffset;
+
+  ctx.fillStyle = hi;
+  ctx.fillRect(pad, headerY, Math.round(54*scale), accentLineH);
+  headerY += accentLineH + gapLine;
+
+  if(eyebrow){
+    ctx.font = `700 ${eyeF}px Sora, sans-serif`;
+    ctx.fillStyle = hi; ctx.textBaseline = "top";
+    drawSpaced(eyebrow, pad, headerY, eyeF*0.18);
+    headerY += eyeF + gapEye;
+  }
+
+  ctx.textBaseline = "top";
+  ctx.shadowColor = "rgba(0,0,0,0.35)"; ctx.shadowBlur = 12; ctx.shadowOffsetY = 2;
+  for(const ln of titleLines){ drawRichLine(ln, pad, headerY, titleFont, hi, "#ffffff"); headerY += titleLH; }
+  ctx.shadowColor = "transparent"; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+
+  // player cards — fill available space
+  const cardGap = Math.round(14*scale);
+  const cardR = Math.round(16*scale);
+  const teamRatingH = teamRating ? Math.round(120*scale) : 0;
+  const bottomPad = Math.round(80*scale);
+  const cardsTop = headerY + Math.round(36*scale);
+  const cardsBottom = H - bottomPad - teamRatingH;
+  const availableH = cardsBottom - cardsTop;
+  const cardH = Math.floor((availableH - (count-1)*cardGap) / count);
+  const photoInset = Math.round(10*scale);
+  const photoSize = cardH - photoInset*2;
+  const photoR = Math.round(12*scale);
+  const nameF = Math.round(32*scale);
+  const roleF = Math.round(20*scale);
+  const ratingF = Math.round(52*scale);
+  for(let i=0; i<count; i++){
+    const p = players[i] || { name:"", role:"", rating:"" };
+    const cy = cardsTop + i*(cardH + cardGap);
+
+    // card bg
+    ctx.fillStyle = "rgba(255,255,255,0.04)";
+    roundRectPath(pad, cy, maxW, cardH, cardR); ctx.fill();
+    ctx.strokeStyle = "rgba(255,255,255,0.06)"; ctx.lineWidth = Math.max(1, 1.5*scale);
+    roundRectPath(pad, cy, maxW, cardH, cardR); ctx.stroke();
+
+    // photo — auto-match by player name, fallback to manual lineupPhotos, else empty
+    const photoX = pad + photoInset;
+    const photoY = cy + photoInset;
+    const autoImg = findPlayerImage(p.name);
+    const manualImg = c.lineupPhotos && c.lineupPhotos[i];
+    const pImg = autoImg || manualImg;
+    if(pImg){
+      ctx.save();
+      roundRectPath(photoX, photoY, photoSize, photoSize, photoR); ctx.clip();
+      const iw = pImg.naturalWidth || pImg.width, ih = pImg.naturalHeight || pImg.height;
+      const coverScale = Math.max(photoSize/iw, photoSize/ih);
+      const dw = iw*coverScale, dh = ih*coverScale;
+      ctx.drawImage(pImg, photoX+(photoSize-dw)/2, photoY+(photoSize-dh)/2, dw, dh);
+      ctx.restore();
+    } else {
+      ctx.fillStyle = "rgba(255,255,255,0.06)";
+      roundRectPath(photoX, photoY, photoSize, photoSize, photoR); ctx.fill();
+    }
+
+    // name + role
+    const textX = photoX + photoSize + Math.round(20*scale);
+    if(p.name){
+      ctx.font = `700 ${nameF}px Sora, sans-serif`;
+      ctx.fillStyle = "#ffffff"; ctx.textBaseline = "middle";
+      const nameY = p.role ? cy + cardH*0.38 : cy + cardH/2;
+      ctx.fillText(p.name, textX, nameY);
+    }
+    if(p.role){
+      ctx.font = `500 ${roleF}px Manrope, sans-serif`;
+      ctx.fillStyle = "#9aa7b0"; ctx.textBaseline = "middle";
+      ctx.fillText(p.role, textX, cy + cardH*0.65);
+    }
+
+    // rating
+    if(p.rating){
+      ctx.font = `800 ${ratingF}px Sora, sans-serif`;
+      const ratingNum = parseFloat(p.rating);
+      if(ratingNum >= 7) ctx.fillStyle = hi;
+      else if(ratingNum >= 5) ctx.fillStyle = "#ffffff";
+      else ctx.fillStyle = "#ff4d57";
+      ctx.textAlign = "right"; ctx.textBaseline = "middle";
+      ctx.fillText(p.rating, pad + maxW - Math.round(24*scale), cy + cardH/2);
+      ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+    }
+  }
+
+  // team rating
+  if(teamRating){
+    const trY = cardsBottom + Math.round(10*scale);
+    const trF = Math.round(72*scale);
+    const trLabelF = Math.round(18*scale);
+    ctx.font = `800 ${trF}px Sora, sans-serif`;
+    ctx.fillStyle = hi; ctx.textAlign = "center"; ctx.textBaseline = "top";
+    ctx.fillText(teamRating, W/2, trY);
+    ctx.font = `700 ${trLabelF}px Sora, sans-serif`;
+    ctx.fillStyle = "#9aa7b0";
+    drawSpaced("NOTE ÉQUIPE", W/2 - ctx.measureText("NOTE ÉQUIPE").width/2, trY + trF + Math.round(6*scale), trLabelF*0.25);
+    ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+  }
+
+  lastTextBox = null;
+}
+
 // ═══ SECTION: RENDER ═══
 function render(){
   const [W,H] = state.reel ? FORMATS.story : FORMATS[state.format];
@@ -1868,6 +2033,10 @@ function syncInputs(){
   if($("playerRole")) { $("playerRole").value = has ? (it.playerRole||"") : ""; $("playerRole").disabled = !has; }
   if($("transferBadge")) { $("transferBadge").value = has ? (it.transferBadge||"officiel") : "officiel"; $("transferBadge").disabled = !has; }
   if($("matchResult")) { $("matchResult").value = has ? (it.matchResult||"") : ""; $("matchResult").disabled = !has; }
+  if($("lineup")) { $("lineup").value = has ? (it.lineup||"") : ""; $("lineup").disabled = !has; }
+  if($("lineupTeamRating")) { $("lineupTeamRating").value = has ? (it.lineupTeamRating||"") : ""; $("lineupTeamRating").disabled = !has; }
+  if($("lineupCountSeg")) { document.querySelectorAll("#lineupCountSeg button").forEach(b=>{ b.classList.toggle("on", parseInt(b.dataset.lc)===(has ? (it.lineupCount||5) : 5)); }); }
+  if($("lineupPhotoCount")) { const n = has && it.lineupPhotos ? it.lineupPhotos.filter(Boolean).length : 0; $("lineupPhotoCount").textContent = n ? n+" photo"+(n>1?"s":"") : ""; }
   if($("showBgImage")) { $("showBgImage").checked = has ? (it.showBgImage !== false) : true; $("showBgImage").disabled = !has; }
   if($("framedImage")) { $("framedImage").checked = has ? !!it.framedImage : false; $("framedImage").disabled = !has; }
   if($("photoCredit")) { $("photoCredit").value = has ? (it.photoCredit||"") : ""; $("photoCredit").disabled = !has; }
@@ -1899,6 +2068,7 @@ function syncInputs(){
   show("playerRoleRow", tpl==="citation" || tpl==="spotlight");
   show("transferBadgeRow", tpl==="transfert");
   show("matchResultRow", tpl==="mvp");
+  show("lineupRow", tpl==="lineup");
 
   // for score template, force showScore on
   if(tpl==="score" && has){
@@ -1945,7 +2115,12 @@ if($("videoFile")) $("videoFile").onchange = e => {
   const it = cur(); if(!it) return;
   const vid = document.createElement("video");
   vid.crossOrigin = "anonymous"; vid.muted = true; vid.loop = true; vid.playsInline = true;
-  vid.onloadeddata = ()=>{ it.video = vid; it.showBgImage = true; vid.play(); startVideoLoop(); updateReelAvailability(); render(); };
+  vid.onloadeddata = ()=>{
+    it.video = vid; it.showBgImage = true;
+    const p = vid.play();
+    if(p && p.catch) p.catch(()=>{});
+    startVideoLoop(); updateReelAvailability(); render();
+  };
   vid.src = URL.createObjectURL(f);
 };
 if($("videoPlayPause")) $("videoPlayPause").onclick = ()=>{
@@ -1970,6 +2145,29 @@ if($("playerRole")) $("playerRole").oninput = e => setField("playerRole", e.targ
 if($("transferBadge")) $("transferBadge").onchange = e => setField("transferBadge", e.target.value);
 if($("matchResult")) $("matchResult").oninput = e => setField("matchResult", e.target.value);
 if($("photoCredit")) $("photoCredit").oninput = e => setField("photoCredit", e.target.value);
+if($("lineup")) $("lineup").oninput = e => setField("lineup", e.target.value);
+if($("lineupTeamRating")) $("lineupTeamRating").oninput = e => setField("lineupTeamRating", e.target.value);
+document.querySelectorAll("#lineupCountSeg button").forEach(b=>{
+  b.onclick = ()=>{
+    document.querySelectorAll("#lineupCountSeg button").forEach(x=>x.classList.remove("on"));
+    b.classList.add("on");
+    setField("lineupCount", parseInt(b.dataset.lc));
+  };
+});
+if($("lineupPhotoBtn")) $("lineupPhotoBtn").onclick = ()=> $("lineupPhotoInput").click();
+if($("lineupPhotoInput")) $("lineupPhotoInput").onchange = e => {
+  const it = cur(); if(!it) return;
+  const files = Array.from(e.target.files);
+  if(!files.length) return;
+  it.lineupPhotos = [];
+  let loaded = 0;
+  files.forEach((f,i) => {
+    const img = new Image();
+    img.onload = ()=>{ it.lineupPhotos[i] = img; loaded++; if(loaded===files.length){ render(); if($("lineupPhotoCount")) $("lineupPhotoCount").textContent = loaded+" photo"+(loaded>1?"s":""); } };
+    img.src = URL.createObjectURL(f);
+  });
+  e.target.value = "";
+};
 
 // background image per slide
 if($("bgImageFile")) $("bgImageFile").onchange = e => {
@@ -2119,6 +2317,9 @@ function applyJsonPreset(data, imageFiles){
     slide.framedImage = !!s.framedImage;
     slide.dur = s.dur || null;
     slide.game = s.game || null;
+    slide.lineup = s.lineup || "";
+    slide.lineupCount = s.lineupCount || 5;
+    slide.lineupTeamRating = s.lineupTeamRating || "";
     state.images.push(slide);
 
     const imgName = s.image;
@@ -2282,16 +2483,13 @@ cv.addEventListener("wheel", e=>{
 // ═══ SECTION: EXPORT IMAGE ═══
 function download(blob, filename){
   const url = URL.createObjectURL(blob);
-  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-  if(isMobile && blob.type && blob.type.startsWith("video/")){
-    window.open(url, "_blank");
-    $("status").textContent = "✓ Vidéo ouverte — appui long pour enregistrer.";
-    return;
-  }
   const a = document.createElement("a");
   a.href = url;
-  a.download = filename; a.click();
-  setTimeout(()=>URL.revokeObjectURL(url), 2000);
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url), 5000);
 }
 function slug(){
   const first = (state.images.find(s=>s.title && s.title.trim()) || {}).title || "post";

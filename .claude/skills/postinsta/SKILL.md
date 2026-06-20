@@ -202,14 +202,16 @@ Ne pas suggérer de musique pour les posts carrousel classiques (non-Reel).
 
 ## Bonnes pratiques éditoriales
 
-- **Ton** : informatif, concis, engageant. Pas de clickbait.
+- **Ton** : informatif, concis, engageant. Pas de clickbait. Court et punchy > long et détaillé.
 - **Slide 1** : accroche visuelle (template `post-image` avec photo forte) — titre court et percutant.
 - **Slides suivantes** : développer le sujet (contexte, programme, analyse).
-- **Dernière slide** : souvent un `post-texte` avec signature "Macro" — opinion ou conclusion.
+- **Dernière slide** : souvent un `post-texte` avec signature "Macro" — opinion ou conclusion courte (1-2 phrases max).
 - Le texte entre `*astérisques*` sera affiché en couleur d'accent (couleur du jeu).
 - Eyebrow = contexte court (nom de la compétition, date, phase).
 - 2 à 5 slides par post en général.
-- **Max 2 slides texte consécutives sans image** — casser le rythme avec des templates visuels (score, classement, statistique, tierlist).
+- **Privilégier les templates visuels/data** (`score`, `statistique`, `mvp`, `classement`, `tierlist`) sur les slides `post-texte`. Les chiffres parlent mieux que les paragraphes.
+- **Max 1 slide `post-texte` pour les posts résultat.** Aucune si les stats suffisent.
+- **Max 2 slides texte consécutives sans image** — casser le rythme avec des templates visuels.
 - La description ne doit pas entrer en conflit avec le crédit photo (le texte par défaut est remonté de -80px).
 - **Horaires : toujours convertir en heure de Paris (CET/CEST)**, quel que soit le jeu ou le lieu de l'événement. Ne jamais afficher les horaires dans le fuseau local de l'événement (ex: pas KST pour la Corée, pas PST pour Los Angeles). Indiquer "Horaires CEST" ou "Horaires CET" dans le footer.
 
@@ -217,7 +219,7 @@ Ne pas suggérer de musique pour les posts carrousel classiques (non-Reel).
 
 | Type de sujet | Nb slides | Structure type |
 |---------------|-----------|----------------|
-| **Résultat de match** | 3-4 | `post-image` (accroche) → `score` (résultat) → `mvp` ou `spotlight` (joueur clé) → optionnel `post-texte` (analyse) |
+| **Résultat de match** | 3-4 | `post-image` (accroche) → `score` (résultat) → `statistique` ou `mvp` (stats MVP) → optionnel `post-texte` court (take/opinion, pas résumé) |
 | **Breaking news** | 2 | `post-image` ou `breaking` (annonce) → `post-texte` (contexte + signature Macro) |
 | **Transfert** | 2-3 | `transfert` (annonce joueur) → `post-texte` (contexte/historique) → optionnel `statistique` (stats du joueur) |
 | **Preview / analyse** | 4-5 | `post-image` (accroche) → `post-texte` (contexte) → `tierlist` ou `classement` → `programme` (si applicable) → `post-texte` (verdict + signature) |
@@ -225,6 +227,55 @@ Ne pas suggérer de musique pour les posts carrousel classiques (non-Reel).
 | **Récap compétition** | 3-4 | `post-image` → `classement` (standings) → `statistique` (chiffres clés) → `post-texte` (bilan + signature) |
 
 Ces structures sont des guides, pas des règles rigides — adapter selon le contenu.
+
+### Posts résultat — règles spécifiques
+
+Les posts résultat doivent être **visuels et chiffrés, pas des articles**. Minimiser le texte, maximiser les stats.
+
+#### Structure obligatoire pour un résultat
+1. **Slide 1** — `post-image` : photo forte + titre court percutant (pas un résumé, une accroche)
+2. **Slide 2** — `score` : score du match avec logos d'équipe
+3. **Slide 3** — `statistique` ou `mvp` : le MVP du match avec ses stats clés (voir ci-dessous)
+4. **Slide 4** (optionnel) — `post-texte` court : une take/opinion en 1-2 phrases max, pas un résumé du match. Signature "Macro".
+
+**Règle : max 1 slide texte par post résultat.** Le score et les stats parlent d'eux-mêmes.
+
+#### Stats à rechercher par jeu
+
+**Counter-Strike 2** — source : page du match sur HLTV (https://www.hltv.org/matches/)
+- K-D (kills - deaths)
+- Rating 3.0
+- ADR (Average Damage per Round)
+- Impact rating
+- Format : `"stats": "Rating 3.0 · 1.45\nK-D · 28-14\nADR · 95.2\nImpact · 1.52"`
+
+**Valorant** — source : vlr.gg (page du match)
+- K-D (kills - deaths)
+- ACS (Average Combat Score)
+- Rating
+- KAST %
+- Format : `"stats": "ACS · 312\nK-D · 45-19\nRating · 1.77\nKAST · 84%"`
+
+**League of Legends** — source : lolesports.com ou gol.gg
+- KDA (kills/deaths/assists)
+- Damage share (DPM%)
+- Kill participation (KP%)
+- Gold diff @15 vs opponent
+- Format : `"stats": "KDA · 8/1/12\nDmg share · 31.2%\nKP · 78%\nGold @15 · +1.2k"`
+
+**Rocket League** — source : octane.gg / liquipedia
+- Score/game
+- Goals + assists
+- Shots %
+- Saves
+- Format : `"stats": "Score · 487/game\nGoals · 3\nAssists · 2\nShot % · 42%"`
+
+#### Ton des posts résultat
+- **Court, punchy, rythmé.** Pas de phrases longues. Fragments OK.
+- Mauvais : "Team Falcons a créé la surprise en éliminant Vitality avec un score de 2-1 dans une série très serrée"
+- Bon : "13-11. 13-11. 13-11. Falcons sort Vitality. 💀"
+- **Les stats > les descriptions.** Montrer les chiffres, pas les raconter.
+- **CTA binaire** : "Vitality ou Falcons ? 🐝🦅" plutôt que "Quel match vous hype le plus ?"
 
 ### Limites de texte par template
 

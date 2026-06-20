@@ -10,6 +10,12 @@
 !outil-instagram/CLAUDE.md
 !outil-instagram/Macro Templates Instagram v4.html
 
+# Logos équipes + images joueurs (index JSON + images)
+!outil-instagram/LOGOS_TEAMS/
+!outil-instagram/LOGOS_TEAMS/**
+!outil-instagram/PLAYER_IMAGES/
+!outil-instagram/PLAYER_IMAGES/**
+
 # Ignorer les presets (posts générés + images = lourd)
 outil-instagram/presets/
 
