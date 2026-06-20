@@ -1778,7 +1778,7 @@ function drawLayoutLineup(W,H,c,scale,pad,maxW,acc,hi){
   const cardGap = Math.round(14*scale);
   const cardR = Math.round(16*scale);
   const teamRatingH = teamRating ? Math.round(120*scale) : 0;
-  const bottomPad = Math.round(80*scale);
+  const bottomPad = Math.round(180*scale);
   const cardsTop = headerY + Math.round(36*scale);
   const cardsBottom = H - bottomPad - teamRatingH;
   const availableH = cardsBottom - cardsTop;
