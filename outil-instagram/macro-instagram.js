@@ -2281,10 +2281,17 @@ cv.addEventListener("wheel", e=>{
 
 // ═══ SECTION: EXPORT IMAGE ═══
 function download(blob, filename){
+  const url = URL.createObjectURL(blob);
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  if(isMobile && blob.type && blob.type.startsWith("video/")){
+    window.open(url, "_blank");
+    $("status").textContent = "✓ Vidéo ouverte — appui long pour enregistrer.";
+    return;
+  }
   const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
+  a.href = url;
   a.download = filename; a.click();
-  setTimeout(()=>URL.revokeObjectURL(a.href), 2000);
+  setTimeout(()=>URL.revokeObjectURL(url), 2000);
 }
 function slug(){
   const first = (state.images.find(s=>s.title && s.title.trim()) || {}).title || "post";
