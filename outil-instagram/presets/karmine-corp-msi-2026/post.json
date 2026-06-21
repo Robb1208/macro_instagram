@@ -1,0 +1,40 @@
+{
+  "format": "portrait",
+  "game": "lol",
+  "watermark": true,
+  "gradient": 100,
+  "titleSize": 100,
+  "slides": [
+    {
+      "template": "post-image",
+      "image": "slide-1.jpg",
+      "photoCredit": "",
+      "eyebrow": "MSI 2026 — PLAY-IN · 28 JUIN",
+      "title": "*Karmine Corp* au MSI",
+      "desc": "KC représente l'Europe en Corée du Sud. La France sur la scène internationale.",
+      "showDesc": true
+    },
+    {
+      "template": "programme",
+      "eyebrow": "PLAY-IN · 28 JUIN",
+      "title": "Premier match *KC*",
+      "matches": "05:00 · Karmine Corp vs Deep Cross Gaming",
+      "footerText": "Horaires CEST · MSI 2026 Daejeon"
+    },
+    {
+      "template": "post-texte",
+      "eyebrow": "LE ROSTER KC",
+      "title": "5 joueurs, *3 nationalités*",
+      "desc": "🇰🇷 Canna — Top\n🇸🇪 Yike — Jungle\n🇰🇷 Kyeahoo — Mid\n🇫🇷 Caliste — ADC\n🇺🇸 Busio — Support\n\nCaliste, seul Français du roster, porte les couleurs tricolores au MSI.",
+      "showDesc": true
+    },
+    {
+      "template": "post-texte",
+      "eyebrow": "MSI 2026 · DAEJEON",
+      "title": "La *France* en Corée",
+      "desc": "KC arrive au MSI après un Spring Split solide en LEC. Premier objectif : sortir du Play-In. Le bracket principal commence le 3 juillet.",
+      "showDesc": true,
+      "signature": "Macro"
+    }
+  ]
+}

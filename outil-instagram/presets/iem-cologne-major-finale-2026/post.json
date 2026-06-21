@@ -1,0 +1,42 @@
+{
+  "format": "portrait",
+  "game": "cs2",
+  "watermark": true,
+  "gradient": 100,
+  "titleSize": 100,
+  "slides": [
+    {
+      "template": "post-image",
+      "image": "",
+      "photoCredit": "",
+      "eyebrow": "IEM COLOGNE MAJOR 2026 — GRANDE FINALE",
+      "title": "La dernière danse de *FalleN*",
+      "desc": "Le vétéran brésilien vise un dernier Major avant la retraite. FURIA vs Falcons, 17h.",
+      "showDesc": true
+    },
+    {
+      "template": "score",
+      "eyebrow": "GRANDE FINALE — BO5 · 17H CEST",
+      "title": "*FURIA* vs *Falcons*",
+      "teamA": "FURIA",
+      "teamB": "Falcons",
+      "score": "? - ?",
+      "showScore": true
+    },
+    {
+      "template": "post-texte",
+      "eyebrow": "LE PARCOURS",
+      "title": "Deux runs *historiques*",
+      "desc": "FURIA : 5 victoires d'affilée, seulement 2 maps concédées. Aurora balayée 2-0 en demi.\n\nFalcons : le run le plus dur du tournoi. NAVI, Vitality, Spirit — tous éliminés. NiKo et karrigan chassent le Major depuis 8 ans.",
+      "showDesc": true
+    },
+    {
+      "template": "post-texte",
+      "eyebrow": "IEM COLOGNE MAJOR 2026",
+      "title": "*35 ans.* Un dernier trophée ?",
+      "desc": "FalleN a annoncé sa retraite. Ce Major est peut-être son dernier. S'il le gagne, FURIA devient la 3e équipe brésilienne à soulever un Major.\n\nHistoire ou heartbreak. 17h, Lanxess Arena.",
+      "showDesc": true,
+      "signature": "Macro"
+    }
+  ]
+}

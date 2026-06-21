@@ -1,0 +1,25 @@
+{
+  "format": "portrait",
+  "game": "val",
+  "watermark": true,
+  "gradient": 100,
+  "titleSize": 100,
+  "slides": [
+    {
+      "template": "programme",
+      "game": "val",
+      "eyebrow": "PROGRAMME — VALORANT",
+      "title": "*VCT Masters London* — Finale",
+      "matches": "15:00 · Paper Rex vs Leviatán — Grande Finale (BO5)",
+      "footerText": "Horaires CEST · Copper Box Arena, Londres"
+    },
+    {
+      "template": "programme",
+      "game": "cs2",
+      "eyebrow": "PROGRAMME — CS2",
+      "title": "*IEM Cologne Major* — Finale",
+      "matches": "17:00 · FURIA vs Falcons — Grande Finale (BO5)",
+      "footerText": "Horaires CEST · Lanxess Arena, Cologne"
+    }
+  ]
+}

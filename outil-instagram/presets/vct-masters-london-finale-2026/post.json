@@ -1,0 +1,42 @@
+{
+  "format": "portrait",
+  "game": "val",
+  "watermark": true,
+  "gradient": 100,
+  "titleSize": 100,
+  "slides": [
+    {
+      "template": "post-image",
+      "image": "slide-1.jpg",
+      "photoCredit": "",
+      "eyebrow": "VCT MASTERS LONDON 2026 — FINALE",
+      "title": "*Paper Rex* vs *Leviatán*",
+      "desc": "La Grande Finale du Masters London. Aujourd'hui, 15h. Copper Box Arena.",
+      "showDesc": true
+    },
+    {
+      "template": "score",
+      "eyebrow": "GRANDE FINALE — BO5 · 15H CEST",
+      "title": "*Paper Rex* vs *Leviatán*",
+      "teamA": "Paper Rex",
+      "teamB": "Leviatán",
+      "score": "? - ?",
+      "showScore": true
+    },
+    {
+      "template": "post-texte",
+      "eyebrow": "LE PARCOURS",
+      "title": "Deux chemins, *une finale*",
+      "desc": "Paper Rex : upper bracket run parfait. LEV 2-0, Vitality 2-1, EDG 2-1. Premiers qualifiés pour Champions 2026.\n\nLeviatán : lower bracket run de folie. EDG écrasé 3-0 (13-5, 13-9, 13-11). Première finale internationale de leur histoire.",
+      "showDesc": true
+    },
+    {
+      "template": "post-texte",
+      "eyebrow": "VCT MASTERS LONDON 2026",
+      "title": "Le roi du *upper* ou la *revanche* ?",
+      "desc": "PRX a déjà battu LEV 2-0 dans ces playoffs. Mais Leviatán revient en forme monstrueuse après leur lower bracket run. La revanche ou la confirmation ?",
+      "showDesc": true,
+      "signature": "Macro"
+    }
+  ]
+}
