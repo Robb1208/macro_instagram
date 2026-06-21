@@ -266,7 +266,11 @@ function richWords(text){
   const parts = String(text||"").split("*");
   const words = [];
   parts.forEach((p,i)=>{ if(p==="") return; const hi = i%2===1;
-    p.split(/\s+/).forEach(tok=>{ if(tok!=="") words.push({text:tok, hi}); });
+    const lines = p.split(/\n/);
+    lines.forEach((line,li)=>{
+      if(li > 0) words.push({text:"\n", hi:false, br:true});
+      line.split(/\s+/).forEach(tok=>{ if(tok!=="") words.push({text:tok, hi}); });
+    });
   });
   return words;
 }
@@ -275,6 +279,12 @@ function wrapRich(words, font, maxW){
   const sp = ctx.measureText(" ").width;
   const lines = []; let line = [], w = 0;
   for(const word of words){
+    if(word.br){
+      if(line.length) lines.push(line);
+      else lines.push([]);
+      line = []; w = 0;
+      continue;
+    }
     const ww = measureTextWithFlags(word.text);
     const add = (line.length ? sp : 0) + ww;
     if(line.length && w + add > maxW){ lines.push(line); line = [word]; w = ww; }
