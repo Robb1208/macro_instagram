@@ -25,6 +25,8 @@ outil-instagram/presets/
 !.claude/skills/
 !.claude/skills/postinsta/
 !.claude/skills/postinsta/SKILL.md
+!.claude/skills/programme-du-jour/
+!.claude/skills/programme-du-jour/SKILL.md
 
 # === REDIRECTION GITHUB PAGES ===
 !index.html
