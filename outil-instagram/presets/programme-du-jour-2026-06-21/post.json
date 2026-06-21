@@ -1,0 +1,41 @@
+{
+  "format": "story",
+  "game": "macro",
+  "watermark": true,
+  "gradient": 100,
+  "titleSize": 100,
+  "slides": [
+    {
+      "template": "programme",
+      "eyebrow": "PROGRAMME — VALORANT",
+      "title": "VCT Masters London",
+      "game": "val",
+      "matches": "15:00 · Paper Rex vs LEVIATÁN · Grande Finale (BO5)",
+      "footerText": "Horaires CEST"
+    },
+    {
+      "template": "programme",
+      "eyebrow": "PROGRAMME — COUNTER-STRIKE",
+      "title": "IEM Cologne Major 2026",
+      "game": "cs2",
+      "matches": "17:00 · FURIA vs Falcons · Grande Finale (BO5)",
+      "footerText": "Horaires CEST"
+    },
+    {
+      "template": "programme",
+      "eyebrow": "PROGRAMME — ROCKET LEAGUE",
+      "title": "RLCS 2026 Opens",
+      "game": "rl",
+      "matches": "09:00 · RLCS Open — Océanie\n17:00 · RLCS Open — Afrique Sub-Saharienne\n01:00 · RLCS Open — Amérique du Nord (22/06)",
+      "footerText": "Horaires CEST"
+    },
+    {
+      "template": "post-texte",
+      "eyebrow": "21 JUIN 2026",
+      "title": "Journée de *finales*",
+      "desc": "Deux grandes finales le même jour. Valorant à 15h, CS2 à 17h. Installez-vous confortablement, ça va être long.",
+      "showDesc": true,
+      "signature": "Macro"
+    }
+  ]
+}

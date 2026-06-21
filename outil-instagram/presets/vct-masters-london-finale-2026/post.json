@@ -1,0 +1,39 @@
+{
+  "format": "story",
+  "game": "val",
+  "watermark": true,
+  "gradient": 100,
+  "titleSize": 100,
+  "slides": [
+    {
+      "template": "post-image",
+      "eyebrow": "VCT MASTERS LONDON — GRANDE FINALE",
+      "title": "*Paper Rex* vs *LEVIATÁN*",
+      "desc": "La finale du Masters London se joue aujourd'hui. PRX invaincus en upper bracket.",
+      "showDesc": true
+    },
+    {
+      "template": "score",
+      "eyebrow": "FINALE — BO5 · 15H CEST",
+      "title": "Le choc des titans",
+      "teamA": "Paper Rex",
+      "teamB": "LEVIATÁN",
+      "score": "? - ?",
+      "showScore": true
+    },
+    {
+      "template": "statistique",
+      "eyebrow": "PAPER REX — LE PARCOURS",
+      "title": "*PRX* n'a perdu aucune série",
+      "stats": "Record · 8-2 maps\nUpper bracket · Intégral\nVs LEVIATÁN · 2-0 (groupes)\nVs Vitality · 2-1"
+    },
+    {
+      "template": "post-texte",
+      "eyebrow": "L'ENJEU",
+      "title": "PRX peut entrer dans l'histoire",
+      "desc": "Si Paper Rex gagne, ils deviennent la première équipe à enchaîner deux Masters consécutifs. LEVIATÁN veut sa revanche après le 0-2 en upper bracket. Qui soulève le trophée ?",
+      "showDesc": true,
+      "signature": "Macro"
+    }
+  ]
+}

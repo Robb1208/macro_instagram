@@ -1,0 +1,39 @@
+{
+  "format": "story",
+  "game": "cs2",
+  "watermark": true,
+  "gradient": 100,
+  "titleSize": 100,
+  "slides": [
+    {
+      "template": "post-image",
+      "eyebrow": "IEM COLOGNE MAJOR 2026 — QUARTS",
+      "title": "*Falcons* sort *Vitality*",
+      "desc": "13-11. 13-11. 13-11. Trois cartes à un round près. Vitality est out.",
+      "showDesc": true
+    },
+    {
+      "template": "score",
+      "eyebrow": "QUART DE FINALE — BO3",
+      "title": "L'upset du Major",
+      "teamA": "Falcons",
+      "teamB": "Vitality",
+      "score": "2 - 1",
+      "showScore": true
+    },
+    {
+      "template": "statistique",
+      "eyebrow": "LES 3 CARTES",
+      "title": "Chaque map à *un round* près",
+      "stats": "Anubis · 13-11 Falcons\nInferno · 13-11 Vitality\nDust 2 · 13-11 Falcons"
+    },
+    {
+      "template": "post-texte",
+      "eyebrow": "LE CONSTAT",
+      "title": "Vitality méritait mieux ?",
+      "desc": "3 cartes à 13-11. Vitality perd la dernière sur un eco de Falcons. Cruel. L'équipe la mieux cotée du tournoi tombe en quarts.",
+      "showDesc": true,
+      "signature": "Macro"
+    }
+  ]
+}

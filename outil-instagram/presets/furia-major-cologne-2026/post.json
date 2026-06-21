@@ -1,0 +1,39 @@
+{
+  "format": "story",
+  "game": "cs2",
+  "watermark": true,
+  "gradient": 100,
+  "titleSize": 100,
+  "slides": [
+    {
+      "template": "post-image",
+      "eyebrow": "IEM COLOGNE MAJOR 2026 — FINALE",
+      "title": "*FURIA* remporte le Major",
+      "desc": "3-0 face à Falcons. FalleN soulève enfin le trophée.",
+      "showDesc": true
+    },
+    {
+      "template": "score",
+      "eyebrow": "GRANDE FINALE — BO5",
+      "title": "Le score final",
+      "teamA": "FURIA",
+      "teamB": "Falcons",
+      "score": "3 - 0",
+      "showScore": true
+    },
+    {
+      "template": "statistique",
+      "eyebrow": "MVP DU MAJOR",
+      "title": "*KSCERATO* domine Cologne",
+      "stats": "Rating 3.0 · 1.32\nK-D · 68-41\nADR · 89.4\nImpact · 1.38"
+    },
+    {
+      "template": "post-texte",
+      "eyebrow": "TAKE",
+      "title": "La revanche du Brésil",
+      "desc": "FalleN, 34 ans, premier Major depuis 2016. FURIA écrase tout sur son passage — Aurora en demis, Falcons en finale. La légende n'a pas dit son dernier mot.",
+      "showDesc": true,
+      "signature": "Macro"
+    }
+  ]
+}
