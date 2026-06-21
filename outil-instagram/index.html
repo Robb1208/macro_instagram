@@ -42,6 +42,7 @@
         <button class="tpl-btn" data-tpl="spotlight"><span class="tpl-icon">★</span><span class="tpl-name">Spotlight</span></button>
         <button class="tpl-btn" data-tpl="mvp"><span class="tpl-icon">🏆</span><span class="tpl-name">MVP</span></button>
         <button class="tpl-btn" data-tpl="lineup"><span class="tpl-icon">👥</span><span class="tpl-name">Lineup</span></button>
+        <button class="tpl-btn" data-tpl="bracket"><span class="tpl-icon">🏅</span><span class="tpl-name">Bracket</span></button>
       </div>
       <div style="margin-top:10px;display:flex;gap:6px">
         <button class="btn" id="folderImport" style="flex:1;justify-content:center;font-size:11px;padding:8px">📂 Dossier</button>
@@ -237,6 +238,18 @@
         <div class="field" style="margin-top:8px">
           <label>Note équipe</label>
           <input type="text" id="lineupTeamRating" placeholder="Ex. 8" style="max-width:80px" />
+        </div>
+      </div>
+      <div id="bracketRow" style="display:none">
+        <div class="field" style="margin-top:12px">
+          <label>Bracket <span style="color:var(--fg-mute);font-weight:400">— rounds séparés par ligne vide, un match par ligne : Équipe Score</span></label>
+          <textarea id="bracket" rows="12" placeholder="Vitality 2&#10;NAVI 0&#10;MOUZ 2&#10;FaZe 1&#10;Spirit 2&#10;G2 1&#10;MongolZ 2&#10;Astralis 0&#10;&#10;Vitality 2&#10;MOUZ 1&#10;MongolZ 2&#10;Spirit 0&#10;&#10;Vitality 2&#10;MongolZ 1"></textarea>
+        </div>
+      </div>
+      <div id="bracketFormatRow" style="display:none">
+        <div class="field" style="margin-top:8px">
+          <label>Format</label>
+          <input type="text" id="bracketFormat" placeholder="Ex. BO3 / BO5 finale" />
         </div>
       </div>
       <p class="dim" style="margin-top:8px">Astuce : entoure un mot de * pour le colorer avec la couleur du jeu. Ex : Karmine *Corp*</p>

@@ -24,6 +24,7 @@ const TEMPLATES = {
   "spotlight": { label:"Spotlight", icon:"★" },
   "mvp":       { label:"MVP", icon:"🏆" },
   "lineup":    { label:"Lineup", icon:"👥" },
+  "bracket":   { label:"Bracket", icon:"🏅" },
 };
 
 // ═══ SECTION: TEAM LOGOS ═══
@@ -110,11 +111,12 @@ function newSlide(img, name, tpl){
            matches:"", footerText:"", pollOptions:"", pollWinner:0,
            tiers:"", playerName:"", playerRole:"", transferBadge:"officiel", matchResult:"",
            showBgImage: !!img, framedImage: false, photoCredit:"", dur: null, game: null,
-           lineup:"", lineupCount:5, lineupTeamRating:"", lineupPhotos:[] };
+           lineup:"", lineupCount:5, lineupTeamRating:"", lineupPhotos:[],
+           bracket:"", bracketFormat:"" };
 }
 function cur(){ return state.images[state.active] || null; }
 function curTpl(){ const it = cur(); return (it && it.template) || "post-image"; }
-const EMPTY = { template:"post-image", eyebrow:"", title:"", desc:"", showDesc:false, score:"", showScore:false, badge:"", signature:"", teamA:"", teamB:"", standings:"", relegationLine:0, stats:"", matches:"", footerText:"", pollOptions:"", pollWinner:0, tiers:"", playerName:"", playerRole:"", transferBadge:"officiel", matchResult:"", lineup:"", lineupCount:5, lineupTeamRating:"" };
+const EMPTY = { template:"post-image", eyebrow:"", title:"", desc:"", showDesc:false, score:"", showScore:false, badge:"", signature:"", teamA:"", teamB:"", standings:"", relegationLine:0, stats:"", matches:"", footerText:"", pollOptions:"", pollWinner:0, tiers:"", playerName:"", playerRole:"", transferBadge:"officiel", matchResult:"", lineup:"", lineupCount:5, lineupTeamRating:"", bracket:"", bracketFormat:"" };
 
 // ═══ SECTION: CANVAS INIT ═══
 const cv = document.getElementById("cv");
@@ -429,6 +431,7 @@ function drawOverlay(W, H, slideInfo, content, hasImage){
     case "spotlight":  drawLayoutSpotlight(W,H,c,scale,pad,maxW,acc,hi); break;
     case "mvp":        drawLayoutMVP(W,H,c,scale,pad,maxW,acc,hi); break;
     case "lineup":     drawLayoutLineup(W,H,c,scale,pad,maxW,acc,hi); break;
+    case "bracket":    drawLayoutBracket(W,H,c,scale,pad,maxW,acc,hi); break;
     default:           drawLayoutBottom(W,H,c,scale,pad,maxW,acc,hi); break;
   }
 }
@@ -1862,6 +1865,285 @@ function drawLayoutLineup(W,H,c,scale,pad,maxW,acc,hi){
   lastTextBox = null;
 }
 
+// --- T16: Bracket ---
+function parseBracket(text){
+  if(!text || !text.trim()) return [];
+  const rounds = [];
+  let current = [];
+  const lines = text.split("\n");
+  for(const raw of lines){
+    const line = raw.trim();
+    if(!line){
+      if(current.length) rounds.push(current);
+      current = [];
+      continue;
+    }
+    const m = line.match(/^(.+?)\s+(\d+)\s*$/);
+    if(m) current.push({ name: m[1].trim(), score: parseInt(m[2]) });
+    else current.push({ name: line, score: 0 });
+  }
+  if(current.length) rounds.push(current);
+  const result = [];
+  for(const round of rounds){
+    const matches = [];
+    for(let i=0; i<round.length; i+=2){
+      const a = round[i];
+      const b = round[i+1] || { name:"TBD", score:0 };
+      matches.push({ teamA: a, teamB: b, winner: a.score > b.score ? "A" : (b.score > a.score ? "B" : null) });
+    }
+    result.push(matches);
+  }
+  return result;
+}
+
+function drawLayoutBracket(W,H,c,scale,pad,maxW,acc,hi){
+  const eyeF = Math.round(22*scale);
+  const titleF = Math.round((state.format==="story"||state.reel?72:60)*scale*state.titleScale);
+  const titleLH = Math.round(titleF*1.06);
+  const titleFont = `800 ${titleF}px Sora, sans-serif`;
+  const eyebrow = (c.eyebrow||"").toUpperCase();
+  const titleLines = wrapRich(richWords(c.title), titleFont, maxW);
+  const dragOffset = ((c.textY||0)*scale) + (c.textDrag||0);
+
+  // header
+  const accentLineH = Math.round(4*scale);
+  const gapLine = Math.round(13*scale);
+  let y = Math.round(H*0.085 + 80*scale) + dragOffset;
+  ctx.fillStyle = acc;
+  ctx.fillRect(pad, y, Math.round(54*scale), accentLineH);
+  y += accentLineH + gapLine;
+  if(eyebrow){
+    ctx.font = `700 ${eyeF}px Sora, sans-serif`;
+    ctx.fillStyle = acc; ctx.textBaseline = "top";
+    drawSpaced(eyebrow, pad, y, eyeF*0.18);
+    y += eyeF + Math.round(10*scale);
+  }
+  ctx.textBaseline = "top";
+  for(const ln of titleLines){ drawRichLine(ln, pad, y, titleFont, hi, "#ffffff"); y += titleLH; }
+
+  // parse bracket
+  const rounds = parseBracket(c.bracket);
+  if(!rounds.length){ lastTextBox=null; return; }
+
+  // bracket dimensions — adaptive to fill available space
+  const isStory = state.format==="story" || state.reel;
+  const RG = Math.round(40*scale);
+  const roundLabelF = Math.round(16*scale);
+  const roundLabelH = Math.round(28*scale);
+  const cardR = Math.round(8*scale);
+  const rowPad = Math.round(10*scale);
+
+  // round labels
+  const numRounds = rounds.length;
+  const roundNames = [];
+  if(numRounds === 1) roundNames.push("FINALE");
+  else if(numRounds === 2){ roundNames.push("DEMIS"); roundNames.push("FINALE"); }
+  else if(numRounds === 3){ roundNames.push("QUARTS"); roundNames.push("DEMIS"); roundNames.push("FINALE"); }
+  else { for(let i=0;i<numRounds;i++) roundNames.push(i===numRounds-1?"FINALE":"ROUND "+(i+1)); }
+
+  // compute Y positions per round
+  const bracketTop = y + Math.round(44*scale);
+  const championBlockH = Math.round(70*scale);
+  const fmtBlockH = (c.bracketFormat||"").trim() ? Math.round(36*scale) : 0;
+  const bracketBottom = H - pad - fmtBlockH - championBlockH;
+  const availH = bracketBottom - bracketTop - roundLabelH;
+  const matchTop = bracketTop + roundLabelH;
+
+  // adaptive card height: fill available vertical space
+  const baseIdx = rounds.reduce((best,r,i) => r.length >= rounds[best].length ? i : best, 0);
+  const baseMatchCount = rounds[baseIdx].length;
+  const idealMH = Math.floor(availH * 0.85 / baseMatchCount);
+  const maxMH = Math.round(100*scale);
+  const minMH = Math.round(56*scale);
+  const MH = Math.min(maxMH, Math.max(minMH, idealMH));
+  const remainH = availH - baseMatchCount * MH;
+  const MG = Math.max(Math.round(8*scale), Math.floor(remainH / Math.max(1, baseMatchCount-1)));
+
+  // adaptive card width: fill horizontal space
+  const totalGapW = (numRounds-1)*RG;
+  const MW = Math.min(Math.round(260*scale), Math.floor((maxW - totalGapW) / numRounds));
+
+  const teamF = Math.min(Math.round(26*scale), Math.max(Math.round(18*scale), Math.round(MH*0.34)));
+  const scoreF = Math.round(teamF * 1.1);
+  const logoSize = Math.min(Math.round(28*scale), Math.max(Math.round(18*scale), Math.round(MH*0.36)));
+
+  const yPos = rounds.map(()=>[]);
+  const baseBlockH = baseMatchCount * MH + (baseMatchCount-1) * MG;
+  const baseOffset = (availH - baseBlockH) / 2;
+  yPos[baseIdx] = rounds[baseIdx].map((_,i) => matchTop + baseOffset + i * (MH + MG));
+
+  // forward (after base)
+  for(let r = baseIdx+1; r < numRounds; r++){
+    const prev = rounds[r-1];
+    const curr = rounds[r];
+    if(curr.length === 1 && prev.length >= 1){
+      const firstY = yPos[r-1][0];
+      const lastY = yPos[r-1][prev.length-1];
+      yPos[r][0] = (firstY + lastY) / 2 + (MH - MH) / 2;
+    } else {
+      for(let m=0; m<curr.length; m++){
+        const f1 = m*2, f2 = m*2+1;
+        if(f2 < prev.length) yPos[r][m] = (yPos[r-1][f1] + yPos[r-1][f2]) / 2;
+        else if(f1 < prev.length) yPos[r][m] = yPos[r-1][f1];
+        else yPos[r][m] = matchTop + m*(MH+MG);
+      }
+    }
+  }
+  // backward (before base)
+  for(let r = baseIdx-1; r >= 0; r--){
+    const next = rounds[r+1];
+    const curr = rounds[r];
+    for(let m=0; m<curr.length; m++){
+      const target = Math.floor(m/2);
+      if(target < next.length){
+        const ny = yPos[r+1][target];
+        const isTop = m%2===0;
+        yPos[r][m] = isTop ? ny - (MH+MG)/2 : ny + (MH+MG)/2;
+      } else {
+        yPos[r][m] = matchTop + m*(MH+MG);
+      }
+    }
+  }
+
+  // total bracket width
+  const totalBracketW = numRounds * MW + (numRounds-1) * RG;
+  const bracketLeft = (W - totalBracketW) / 2;
+
+  // draw round labels
+  ctx.font = `600 ${roundLabelF}px 'JetBrains Mono', monospace`;
+  ctx.textBaseline = "top";
+  for(let r=0; r<numRounds; r++){
+    const rx = bracketLeft + r * (MW + RG);
+    const isFinal = r === numRounds-1;
+    ctx.fillStyle = isFinal ? acc : "#6b7882";
+    drawSpaced(roundNames[r], rx, bracketTop, roundLabelF*0.12);
+  }
+
+  // draw connector lines
+  ctx.lineWidth = Math.max(1, 1.5*scale);
+  for(let r=0; r<numRounds-1; r++){
+    const fromX = bracketLeft + r*(MW+RG) + MW;
+    const toX = bracketLeft + (r+1)*(MW+RG);
+    const midX = fromX + RG/2;
+    const curr = rounds[r];
+    const next = rounds[r+1];
+    for(let m=0; m<curr.length; m++){
+      const fromY = yPos[r][m] + MH/2;
+      const targetM = Math.floor(m/2);
+      if(targetM >= next.length) continue;
+      const isTop = m%2===0;
+      const toY = yPos[r+1][targetM] + (curr.length===next.length ? MH/2 : (isTop ? MH*0.25 : MH*0.75));
+      const match = curr[m];
+      const isWinner = match.winner !== null;
+      ctx.strokeStyle = rgba(acc, isWinner ? 0.35 : 0.15);
+      ctx.beginPath();
+      ctx.moveTo(fromX, fromY);
+      ctx.lineTo(midX, fromY);
+      ctx.lineTo(midX, toY);
+      ctx.lineTo(toX, toY);
+      ctx.stroke();
+    }
+  }
+
+  // draw match cards
+  for(let r=0; r<numRounds; r++){
+    const rx = bracketLeft + r*(MW+RG);
+    const isFinal = r === numRounds-1;
+    for(let m=0; m<rounds[r].length; m++){
+      const match = rounds[r][m];
+      const my = yPos[r][m];
+      const halfH = MH/2;
+
+      // card bg
+      const cardBg = isFinal ? rgba(acc, 0.06) : "rgba(255,255,255,0.04)";
+      const cardStroke = isFinal ? rgba(acc, 0.30) : "rgba(255,255,255,0.08)";
+      ctx.fillStyle = cardBg;
+      roundRectPath(rx, my, MW, MH, cardR); ctx.fill();
+      ctx.strokeStyle = cardStroke; ctx.lineWidth = Math.max(1, (isFinal?2:1.5)*scale);
+      roundRectPath(rx, my, MW, MH, cardR); ctx.stroke();
+
+      // winner side accent bar
+      if(match.winner){
+        const winY = match.winner==="A" ? my : my+halfH;
+        ctx.fillStyle = rgba(acc, 0.15);
+        ctx.save();
+        ctx.beginPath(); roundRectPath(rx, my, MW, MH, cardR); ctx.clip();
+        ctx.fillRect(rx, winY, MW, halfH);
+        ctx.restore();
+        ctx.fillStyle = acc;
+        ctx.save();
+        ctx.beginPath(); roundRectPath(rx, my, MW, MH, cardR); ctx.clip();
+        ctx.fillRect(rx, winY, Math.round(3*scale), halfH);
+        ctx.restore();
+      }
+
+      // divider
+      ctx.strokeStyle = "rgba(255,255,255,0.06)"; ctx.lineWidth = Math.max(1, scale);
+      ctx.beginPath(); ctx.moveTo(rx, my+halfH); ctx.lineTo(rx+MW, my+halfH); ctx.stroke();
+
+      // team A (top)
+      const drawTeamRow = (team, isWinner, rowY) => {
+        const alpha = isWinner || match.winner===null ? 1 : 0.4;
+        ctx.globalAlpha = alpha;
+        const logoImg = findTeamLogo(team.name);
+        const textX = rx + rowPad + (logoImg ? logoSize + Math.round(8*scale) : 0);
+        if(logoImg){
+          const lx = rx + rowPad;
+          const ly = rowY + (halfH - logoSize)/2;
+          ctx.drawImage(logoImg, lx, ly, logoSize, logoSize);
+        }
+        ctx.font = `600 ${teamF}px Manrope, sans-serif`;
+        ctx.fillStyle = isWinner ? "#ffffff" : "#dfdfdf";
+        ctx.textBaseline = "middle"; ctx.textAlign = "left";
+        const maxNameW = MW - rowPad*2 - (logoImg ? logoSize + Math.round(8*scale) : 0) - Math.round(36*scale);
+        let name = team.name;
+        while(ctx.measureText(name).width > maxNameW && name.length > 3) name = name.slice(0,-1);
+        if(name !== team.name) name += "…";
+        ctx.fillText(name, textX, rowY + halfH/2);
+        // score
+        ctx.font = `800 ${scoreF}px Sora, sans-serif`;
+        ctx.fillStyle = isWinner ? acc : "#6b7882";
+        ctx.textAlign = "right";
+        ctx.fillText(String(team.score), rx + MW - rowPad, rowY + halfH/2);
+        ctx.textAlign = "left";
+        ctx.globalAlpha = 1;
+      };
+
+      drawTeamRow(match.teamA, match.winner==="A", my);
+      drawTeamRow(match.teamB, match.winner==="B", my + halfH);
+
+      // winner label under final
+      if(isFinal && match.winner){
+        const winnerName = match.winner==="A" ? match.teamA.name : match.teamB.name;
+        const champLabelF = Math.round(14*scale);
+        const champNameF = Math.round(32*scale);
+        const champY = my + MH + Math.round(16*scale);
+        const finalRx = rx;
+        const finalCx = finalRx + MW/2;
+        ctx.font = `600 ${champLabelF}px 'JetBrains Mono', monospace`;
+        ctx.fillStyle = "#6b7882"; ctx.textBaseline = "top"; ctx.textAlign = "center";
+        drawSpaced("CHAMPION", finalCx - ctx.measureText("CHAMPION").width/2, champY, champLabelF*0.2);
+        ctx.font = `800 ${champNameF}px Sora, sans-serif`;
+        ctx.fillStyle = acc; ctx.textAlign = "center";
+        ctx.fillText(winnerName, finalCx, champY + champLabelF + Math.round(8*scale));
+        ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+      }
+    }
+  }
+
+  // footer format
+  const fmt = (c.bracketFormat||"").trim();
+  if(fmt){
+    const fmtF = Math.round(18*scale);
+    ctx.font = `500 ${fmtF}px 'JetBrains Mono', monospace`;
+    ctx.fillStyle = "#6b7882"; ctx.textAlign = "center"; ctx.textBaseline = "top";
+    ctx.fillText(fmt, W/2, H - Math.round(80*scale));
+    ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+  }
+
+  lastTextBox = null;
+}
+
 // ═══ SECTION: RENDER ═══
 function render(){
   const [W,H] = state.reel ? FORMATS.story : FORMATS[state.format];
@@ -2035,6 +2317,8 @@ function syncInputs(){
   if($("matchResult")) { $("matchResult").value = has ? (it.matchResult||"") : ""; $("matchResult").disabled = !has; }
   if($("lineup")) { $("lineup").value = has ? (it.lineup||"") : ""; $("lineup").disabled = !has; }
   if($("lineupTeamRating")) { $("lineupTeamRating").value = has ? (it.lineupTeamRating||"") : ""; $("lineupTeamRating").disabled = !has; }
+  if($("bracket")) { $("bracket").value = has ? (it.bracket||"") : ""; $("bracket").disabled = !has; }
+  if($("bracketFormat")) { $("bracketFormat").value = has ? (it.bracketFormat||"") : ""; $("bracketFormat").disabled = !has; }
   if($("lineupCountSeg")) { document.querySelectorAll("#lineupCountSeg button").forEach(b=>{ b.classList.toggle("on", parseInt(b.dataset.lc)===(has ? (it.lineupCount||5) : 5)); }); }
   if($("lineupPhotoCount")) { const n = has && it.lineupPhotos ? it.lineupPhotos.filter(Boolean).length : 0; $("lineupPhotoCount").textContent = n ? n+" photo"+(n>1?"s":"") : ""; }
   if($("showBgImage")) { $("showBgImage").checked = has ? (it.showBgImage !== false) : true; $("showBgImage").disabled = !has; }
@@ -2069,6 +2353,8 @@ function syncInputs(){
   show("transferBadgeRow", tpl==="transfert");
   show("matchResultRow", tpl==="mvp");
   show("lineupRow", tpl==="lineup");
+  show("bracketRow", tpl==="bracket");
+  show("bracketFormatRow", tpl==="bracket");
 
   // for score template, force showScore on
   if(tpl==="score" && has){
@@ -2147,6 +2433,8 @@ if($("matchResult")) $("matchResult").oninput = e => setField("matchResult", e.t
 if($("photoCredit")) $("photoCredit").oninput = e => setField("photoCredit", e.target.value);
 if($("lineup")) $("lineup").oninput = e => setField("lineup", e.target.value);
 if($("lineupTeamRating")) $("lineupTeamRating").oninput = e => setField("lineupTeamRating", e.target.value);
+if($("bracket")) $("bracket").oninput = e => setField("bracket", e.target.value);
+if($("bracketFormat")) $("bracketFormat").oninput = e => setField("bracketFormat", e.target.value);
 document.querySelectorAll("#lineupCountSeg button").forEach(b=>{
   b.onclick = ()=>{
     document.querySelectorAll("#lineupCountSeg button").forEach(x=>x.classList.remove("on"));
@@ -2320,6 +2608,8 @@ function applyJsonPreset(data, imageFiles){
     slide.lineup = s.lineup || "";
     slide.lineupCount = s.lineupCount || 5;
     slide.lineupTeamRating = s.lineupTeamRating || "";
+    slide.bracket = s.bracket || "";
+    slide.bracketFormat = s.bracketFormat || "";
     state.images.push(slide);
 
     const imgName = s.image;
