@@ -2535,6 +2535,21 @@ if($("zipInput")) $("zipInput").onchange = async e => {
   e.target.value = "";
 };
 
+// JSON-only import (no images)
+if($("jsonImport")) $("jsonImport").onclick = ()=> $("jsonInput").click();
+if($("jsonInput")) $("jsonInput").onchange = e => {
+  const file = e.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try{
+      const data = JSON.parse(ev.target.result);
+      applyJsonPreset(data, []);
+    }catch(err){ alert("Erreur de lecture JSON : " + err.message); }
+  };
+  reader.readAsText(file);
+  e.target.value = "";
+};
+
 // Slide navigation buttons
 if($("prevSlide")) $("prevSlide").onclick = ()=>{ if(state.active > 0) setActive(state.active - 1); };
 if($("nextSlide")) $("nextSlide").onclick = ()=>{ if(state.active < state.images.length - 1) setActive(state.active + 1); };
