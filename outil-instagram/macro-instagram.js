@@ -275,7 +275,7 @@ function wrapRich(words, font, maxW){
   const sp = ctx.measureText(" ").width;
   const lines = []; let line = [], w = 0;
   for(const word of words){
-    const ww = ctx.measureText(word.text).width;
+    const ww = measureTextWithFlags(word.text);
     const add = (line.length ? sp : 0) + ww;
     if(line.length && w + add > maxW){ lines.push(line); line = [word]; w = ww; }
     else { line.push(word); w += add; }
@@ -290,9 +290,80 @@ function drawRichLine(line, x, y, font, hiColor, baseColor){
   line.forEach((word,i)=>{
     if(i>0) cx += sp;
     ctx.fillStyle = word.hi ? hiColor : baseColor;
-    ctx.fillText(word.text, cx, y);
-    cx += ctx.measureText(word.text).width;
+    drawTextWithFlags(word.text, cx, y);
+    cx += measureTextWithFlags(word.text);
   });
+}
+function drawRichLineCentered(line, cx, y, font, hiColor, baseColor){
+  ctx.font = font;
+  const sp = ctx.measureText(" ").width;
+  let totalW = 0;
+  line.forEach((word,i)=>{ if(i>0) totalW += sp; totalW += measureTextWithFlags(word.text); });
+  let x = cx - totalW/2;
+  line.forEach((word,i)=>{
+    if(i>0) x += sp;
+    ctx.fillStyle = word.hi ? hiColor : baseColor;
+    drawTextWithFlags(word.text, x, y);
+    x += measureTextWithFlags(word.text);
+  });
+}
+
+// ═══ FLAG EMOJI RENDERING (Twemoji fallback for Windows) ═══
+const flagCache = {};
+const FLAG_RE = /[\u{1F1E6}-\u{1F1FF}]{2}/gu;
+function measureTextWithFlags(text){
+  FLAG_RE.lastIndex = 0;
+  if(!FLAG_RE.test(text)) return ctx.measureText(text).width;
+  FLAG_RE.lastIndex = 0;
+  const fontSize = parseFloat(ctx.font.match(/(\d+(?:\.\d+)?)px/)?.[1] || 16);
+  let w = 0, lastIdx = 0, m;
+  while((m = FLAG_RE.exec(text)) !== null){
+    const before = text.slice(lastIdx, m.index);
+    if(before) w += ctx.measureText(before).width;
+    w += fontSize;
+    lastIdx = m.index + m[0].length;
+  }
+  const tail = text.slice(lastIdx);
+  if(tail) w += ctx.measureText(tail).width;
+  return w;
+}
+function isFlagEmoji(str){ return FLAG_RE.test(str); }
+function flagToCodepoints(flag){
+  const pts = [];
+  for(const c of flag) pts.push(c.codePointAt(0).toString(16));
+  return pts.join("-");
+}
+function loadFlagImage(flag){
+  const key = flagToCodepoints(flag);
+  if(flagCache[key]) return flagCache[key];
+  const img = new Image();
+  img.crossOrigin = "anonymous";
+  img.src = `https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/${key}.svg`;
+  const entry = { img, loaded:false };
+  img.onload = ()=>{ entry.loaded = true; render(); };
+  flagCache[key] = entry;
+  return entry;
+}
+function drawTextWithFlags(text, x, y){
+  FLAG_RE.lastIndex = 0;
+  if(!FLAG_RE.test(text)){ ctx.fillText(text, x, y); return; }
+  FLAG_RE.lastIndex = 0;
+  let lastIdx = 0, cx = x;
+  const fontSize = parseFloat(ctx.font.match(/(\d+(?:\.\d+)?)px/)?.[1] || 16);
+  let m;
+  while((m = FLAG_RE.exec(text)) !== null){
+    const before = text.slice(lastIdx, m.index);
+    if(before){ ctx.fillText(before, cx, y); cx += ctx.measureText(before).width; }
+    const entry = loadFlagImage(m[0]);
+    if(entry.loaded){
+      const sz = fontSize * 1.15;
+      ctx.drawImage(entry.img, cx, y - sz*0.15, sz, sz);
+    }
+    cx += fontSize;
+    lastIdx = m.index + m[0].length;
+  }
+  const tail = text.slice(lastIdx);
+  if(tail) ctx.fillText(tail, cx, y);
 }
 
 let lastTextBox = null;
@@ -448,7 +519,8 @@ function drawLayoutBottom(W,H,c,scale,pad,maxW,acc,hi){
   const titleFont = `800 ${titleF}px Sora, sans-serif`;
   const eyebrow = (c.eyebrow||"").toUpperCase();
   const titleLines = wrapRich(richWords(c.title), titleFont, maxW);
-  const descLines = (c.showDesc && c.desc.trim()) ? wrapText(c.desc, `500 ${descF}px Manrope, sans-serif`, maxW).slice(0,10) : [];
+  const descFont = `500 ${descF}px Manrope, sans-serif`;
+  const descLines = (c.showDesc && c.desc.trim()) ? wrapRich(richWords(c.desc), descFont, maxW).slice(0,10) : [];
   if(!eyebrow && !titleLines.length && !descLines.length){ lastTextBox=null; return; }
 
   const accentLineH = Math.round(4*scale);
@@ -481,9 +553,7 @@ function drawLayoutBottom(W,H,c,scale,pad,maxW,acc,hi){
   ctx.shadowColor = "transparent"; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
   if(descLines.length){
     let dy = bottomY - descLines.length*descLH;
-    ctx.font = `500 ${descF}px Manrope, sans-serif`;
-    ctx.fillStyle = "#c9d3da";
-    for(const ln of descLines){ ctx.fillText(ln, pad, dy); dy += descLH; }
+    for(const ln of descLines){ drawRichLine(ln, pad, dy, descFont, hi, "#c9d3da"); dy += descLH; }
   }
 }
 
@@ -497,7 +567,8 @@ function drawLayoutCentered(W,H,c,scale,pad,maxW,acc,hi){
   const titleFont = `800 ${titleF}px Sora, sans-serif`;
   const eyebrow = (c.eyebrow||"").toUpperCase();
   const titleLines = wrapRich(richWords(c.title), titleFont, maxW);
-  const descLines = (c.showDesc && c.desc.trim()) ? wrapText(c.desc, `500 ${descF}px Manrope, sans-serif`, Math.round(maxW*0.92)).slice(0,14) : [];
+  const descFont = `500 ${descF}px Manrope, sans-serif`;
+  const descLines = (c.showDesc && c.desc.trim()) ? wrapRich(richWords(c.desc), descFont, Math.round(maxW*0.92)).slice(0,14) : [];
 
   const accentLineH = Math.round(4*scale);
   const gap = Math.round(15*scale);
@@ -542,9 +613,7 @@ function drawLayoutCentered(W,H,c,scale,pad,maxW,acc,hi){
   // description
   if(descLines.length){
     y += Math.round(18*scale);
-    ctx.font = `500 ${descF}px Manrope, sans-serif`;
-    ctx.fillStyle = "#c9d3da";
-    for(const ln of descLines){ ctx.fillText(ln, pad, y); y += descLH; }
+    for(const ln of descLines){ drawRichLine(ln, pad, y, descFont, hi, "#c9d3da"); y += descLH; }
   }
 
   // signature at bottom
@@ -675,7 +744,8 @@ function drawLayoutScore(W,H,c,scale,pad,maxW,acc,hi){
   const descLH = Math.round(descF*1.4);
   const titleFont = `800 ${titleF}px Sora, sans-serif`;
   const titleLines = wrapRich(richWords(c.title), titleFont, maxW);
-  const descLines = (c.showDesc && c.desc.trim()) ? wrapText(c.desc, `500 ${descF}px Manrope, sans-serif`, maxW).slice(0,3) : [];
+  const descFont = `500 ${descF}px Manrope, sans-serif`;
+  const descLines = (c.showDesc && c.desc.trim()) ? wrapRich(richWords(c.desc), descFont, maxW).slice(0,3) : [];
   if(!titleLines.length && !descLines.length){ lastTextBox=null; return; }
 
   const accentLineH = Math.round(4*scale);
@@ -696,8 +766,7 @@ function drawLayoutScore(W,H,c,scale,pad,maxW,acc,hi){
   ctx.shadowColor = "transparent"; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
   if(descLines.length){
     y += Math.round(11*scale);
-    ctx.font = `500 ${descF}px Manrope, sans-serif`; ctx.fillStyle = "#c9d3da";
-    for(const ln of descLines){ ctx.fillText(ln, pad, y); y += descLH; }
+    for(const ln of descLines){ drawRichLine(ln, pad, y, descFont, hi, "#c9d3da"); y += descLH; }
   }
 }
 
@@ -714,7 +783,8 @@ function drawLayoutBreaking(W,H,c,scale,pad,maxW,hi){
   const descLH = Math.round(descF*1.5);
   const titleFont = `800 ${titleF}px Sora, sans-serif`;
   const titleLines = wrapRich(richWords(c.title), titleFont, maxW);
-  const descLines = (c.showDesc && c.desc.trim()) ? wrapText(c.desc, `500 ${descF}px Manrope, sans-serif`, Math.round(maxW*0.88)).slice(0,3) : [];
+  const descFont = `500 ${descF}px Manrope, sans-serif`;
+  const descLines = (c.showDesc && c.desc.trim()) ? wrapRich(richWords(c.desc), descFont, Math.round(maxW*0.88)).slice(0,3) : [];
 
   // calculate block height
   const badgeH = Math.round(44*scale);
@@ -783,9 +853,8 @@ function drawLayoutBreaking(W,H,c,scale,pad,maxW,hi){
   // description centered
   if(descLines.length){
     y += descGap;
-    ctx.font = `500 ${descF}px Manrope, sans-serif`;
-    ctx.fillStyle = "#c9d3da"; ctx.textAlign = "center";
-    for(const ln of descLines){ ctx.fillText(ln, W/2, y); y += descLH; }
+    ctx.textBaseline = "top";
+    for(const ln of descLines){ drawRichLineCentered(ln, W/2, y, descFont, hi, "#c9d3da"); y += descLH; }
   }
 
   ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
@@ -1304,7 +1373,8 @@ function drawLayoutTransfert(W,H,c,scale,pad,maxW,acc,hi){
   const titleFont = `800 ${titleF}px Sora, sans-serif`;
   const eyebrow = (c.eyebrow||"").toUpperCase();
   const titleLines = wrapRich(richWords(c.title), titleFont, maxW);
-  const descLines = (c.showDesc && c.desc.trim()) ? wrapText(c.desc, `500 ${descF}px Manrope, sans-serif`, maxW).slice(0,3) : [];
+  const descFont = `500 ${descF}px Manrope, sans-serif`;
+  const descLines = (c.showDesc && c.desc.trim()) ? wrapRich(richWords(c.desc), descFont, maxW).slice(0,3) : [];
 
   const accentLineH = Math.round(4*scale);
   const gapLine = Math.round(14*scale);
@@ -1332,8 +1402,7 @@ function drawLayoutTransfert(W,H,c,scale,pad,maxW,acc,hi){
   ctx.shadowColor = "transparent"; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
   if(descLines.length){
     y += gapTitle;
-    ctx.font = `500 ${descF}px Manrope, sans-serif`; ctx.fillStyle = "#c9d3da";
-    for(const ln of descLines){ ctx.fillText(ln, pad, y); y += descLH; }
+    for(const ln of descLines){ drawRichLine(ln, pad, y, descFont, hi, "#c9d3da"); y += descLH; }
   }
   lastTextBox = null;
 }
