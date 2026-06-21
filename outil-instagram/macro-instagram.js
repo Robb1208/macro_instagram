@@ -2402,7 +2402,7 @@ if($("videoFile")) $("videoFile").onchange = e => {
   const vid = document.createElement("video");
   vid.crossOrigin = "anonymous"; vid.muted = true; vid.loop = true; vid.playsInline = true;
   vid.onloadeddata = ()=>{
-    it.video = vid; it.showBgImage = true;
+    it.video = vid; it.videoFile = f; it.showBgImage = true;
     const p = vid.play();
     if(p && p.catch) p.catch(()=>{});
     startVideoLoop(); updateReelAvailability(); render();
@@ -2918,7 +2918,7 @@ function deliverVideo(blob){
 $("previewReel").onclick = ()=> playReel(false);
 $("dlReel").onclick = ()=> playReel(true);
 
-function playReel(record){
+async function playReel(record){
   if(playing) return;
   const hasVideo = state.images.some(s => s.video && s.template === "post-video");
   if(state.images.length < 2 && !hasVideo){ $("status").textContent = "⚠ Ajoute au moins 2 images ou une vidéo pour le Reel."; return; }
@@ -2935,11 +2935,20 @@ function playReel(record){
 
   if(!record){
     $("status").textContent = "▶ Lecture de l'aperçu…";
-    state.images.forEach(s => { if(s.video) s.video.play(); });
+    state.images.forEach(s => { if(s.video){ s.video.currentTime = 0; s.video.muted = true; } });
     const t0 = performance.now();
     function prevTick(){
       const t = performance.now() - t0;
-      if(t >= total){ playing = false; $("status").textContent = ""; render(); return; }
+      if(t >= total){ playing = false; state.images.forEach(s => { if(s.video){ s.video.pause(); s.video.muted = true; } }); $("status").textContent = ""; render(); return; }
+      // unmute only the active slide's video
+      const transMs = 600;
+      let acc2 = 0, activeIdx = 0;
+      for(let i=0; i<state.images.length; i++){ const d=slideDur(state.images[i]); if(acc2+d>t||i===state.images.length-1){activeIdx=i;break;} acc2+=d; }
+      state.images.forEach((s, i) => {
+        if(!s.video) return;
+        if(i === activeIdx){ s.video.muted = false; if(s.video.paused) s.video.play(); }
+        else { s.video.muted = true; }
+      });
       drawReelFrame(W, H, t);
       rafId = requestAnimationFrame(prevTick);
     }
@@ -2952,55 +2961,178 @@ function playReel(record){
 
   $("recbar").classList.add("on");
   $("dlReel").disabled = true; $("previewReel").disabled = true;
+  $("status").textContent = "● Préparation audio…";
 
   const FPS = 30;
   const frameDur = 1000 / FPS;
   const totalFrames = Math.ceil(total / frameDur);
+  const SAMPLE_RATE = 48000;
+  const CHANNELS = 2;
+
+  // Build audio timeline: decode audio from each video slide
+  async function buildAudioBuffer(){
+    const audioCtx = new OfflineAudioContext(CHANNELS, Math.ceil(total/1000 * SAMPLE_RATE), SAMPLE_RATE);
+    const slideTimings = [];
+    let acc = 0;
+    for(const s of state.images){
+      const dur = slideDur(s);
+      slideTimings.push({ slide: s, startMs: acc, durMs: dur });
+      acc += dur;
+    }
+
+    for(const { slide, startMs, durMs } of slideTimings){
+      if(!slide.videoFile || slide.template !== "post-video") continue;
+      try {
+        const arrayBuf = await slide.videoFile.arrayBuffer();
+        const audioBuf = await audioCtx.decodeAudioData(arrayBuf);
+        const source = audioCtx.createBufferSource();
+        source.buffer = audioBuf;
+        source.connect(audioCtx.destination);
+        const maxDur = durMs / 1000;
+        source.start(startMs / 1000, 0, Math.min(audioBuf.duration, maxDur));
+      } catch(e) { /* video has no audio track — skip */ }
+    }
+
+    return audioCtx.startRendering();
+  }
+
+  let mixedAudio = null;
+  try { mixedAudio = await buildAudioBuffer(); } catch(e) { /* no audio — continue without */ }
+
+  const hasAudio = mixedAudio && mixedAudio.length > 0;
 
   const muxer = new Mp4Muxer.Muxer({
     target: new Mp4Muxer.ArrayBufferTarget(),
     video: { codec: "avc", width: W, height: H },
+    ...(hasAudio ? { audio: { codec: "aac", numberOfChannels: CHANNELS, sampleRate: SAMPLE_RATE } } : {}),
     fastStart: "in-memory"
   });
 
-  const encoder = new VideoEncoder({
+  const videoEncoder = new VideoEncoder({
     output: (chunk, meta) => muxer.addVideoChunk(chunk, meta),
-    error: e => { $("status").textContent = "⚠ Erreur encodage : " + e.message; playing=false; resetReelUI(); render(); }
+    error: e => { $("status").textContent = "⚠ Erreur encodage vidéo : " + e.message; playing=false; resetReelUI(); render(); }
   });
-  encoder.configure({
+  videoEncoder.configure({
     codec: "avc1.640028",
     width: W, height: H,
     bitrate: 6_000_000,
     framerate: FPS
   });
 
+  let audioEncoder = null;
+  if(hasAudio){
+    audioEncoder = new AudioEncoder({
+      output: (chunk, meta) => muxer.addAudioChunk(chunk, meta),
+      error: e => { $("status").textContent = "⚠ Erreur encodage audio : " + e.message; }
+    });
+    audioEncoder.configure({
+      codec: "mp4a.40.2",
+      numberOfChannels: CHANNELS,
+      sampleRate: SAMPLE_RATE,
+      bitrate: 128_000
+    });
+
+    // Encode all audio in chunks of 1024 samples
+    const chunkSize = 1024;
+    const totalSamples = mixedAudio.length;
+    for(let offset = 0; offset < totalSamples; offset += chunkSize){
+      const remaining = Math.min(chunkSize, totalSamples - offset);
+      const frameData = new Float32Array(remaining * CHANNELS);
+      for(let ch = 0; ch < CHANNELS; ch++){
+        const chanData = mixedAudio.getChannelData(ch);
+        for(let i = 0; i < remaining; i++){
+          frameData[i * CHANNELS + ch] = chanData[offset + i];
+        }
+      }
+      const audioData = new AudioData({
+        format: "f32-planar",
+        sampleRate: SAMPLE_RATE,
+        numberOfFrames: remaining,
+        numberOfChannels: CHANNELS,
+        timestamp: Math.round(offset / SAMPLE_RATE * 1_000_000),
+        data: new Float32Array(remaining * CHANNELS)
+      });
+      // Fill planar data correctly
+      const planarData = new Float32Array(remaining * CHANNELS);
+      for(let ch = 0; ch < CHANNELS; ch++){
+        const chanData = mixedAudio.getChannelData(ch);
+        planarData.set(chanData.subarray(offset, offset + remaining), ch * remaining);
+      }
+      const ad = new AudioData({
+        format: "f32-planar",
+        sampleRate: SAMPLE_RATE,
+        numberOfFrames: remaining,
+        numberOfChannels: CHANNELS,
+        timestamp: Math.round(offset / SAMPLE_RATE * 1_000_000),
+        data: planarData
+      });
+      audioEncoder.encode(ad);
+      ad.close();
+    }
+  }
+
   let frame = 0;
+
+  function getActiveVideosAtTime(tMs){
+    const imgs = state.images;
+    const transMs = 600;
+    let acc = 0, idx = 0;
+    for(let i=0; i<imgs.length; i++){ const d=slideDur(imgs[i]); if(acc+d>tMs||i===imgs.length-1){idx=i;break;} acc+=d; }
+    const per = slideDur(imgs[idx]);
+    const local = tMs - acc;
+    const results = [];
+    const s = imgs[idx];
+    if(s.video && s.template === "post-video") results.push({ video: s.video, time: local / 1000 });
+    const next = imgs[idx+1];
+    if(next && next.video && next.template === "post-video" && local > per - transMs && state.trans !== "cut"){
+      results.push({ video: next.video, time: 0 });
+    }
+    return results;
+  }
+
+  function seekVideos(tMs){
+    const entries = getActiveVideosAtTime(tMs);
+    if(!entries.length) return Promise.resolve();
+    return Promise.all(entries.map(({video, time}) => {
+      if(Math.abs(video.currentTime - time) < 0.01) return Promise.resolve();
+      return new Promise(resolve => {
+        video.onseeked = () => { video.onseeked = null; resolve(); };
+        video.currentTime = time;
+      });
+    }));
+  }
 
   function renderNextFrame(){
     const tMs = frame * frameDur;
-    drawReelFrame(W, H, Math.min(tMs, total));
+    const clampedT = Math.min(tMs, total);
 
-    const vf = new VideoFrame(cv, { timestamp: frame * (1_000_000 / FPS) });
-    const isKey = frame % (FPS * 2) === 0;
-    encoder.encode(vf, { keyFrame: isKey });
-    vf.close();
+    seekVideos(clampedT).then(() => {
+      drawReelFrame(W, H, clampedT);
 
-    $("recprog").style.width = (frame / totalFrames * 100) + "%";
-    $("status").textContent = "● Encodage MP4… " + Math.round(frame/totalFrames*100) + "%";
-    frame++;
+      const vf = new VideoFrame(cv, { timestamp: frame * (1_000_000 / FPS) });
+      const isKey = frame % (FPS * 2) === 0;
+      videoEncoder.encode(vf, { keyFrame: isKey });
+      vf.close();
 
-    if(frame <= totalFrames){
-      setTimeout(renderNextFrame, 0);
-    } else {
-      encoder.flush().then(()=>{
-        muxer.finalize();
-        const blob = new Blob([muxer.target.buffer], { type: "video/mp4" });
-        resetReelUI();
-        playing = false;
-        deliverVideo(blob);
-        render();
-      });
-    }
+      $("recprog").style.width = (frame / totalFrames * 100) + "%";
+      $("status").textContent = "● Encodage MP4… " + Math.round(frame/totalFrames*100) + "%";
+      frame++;
+
+      if(frame <= totalFrames){
+        setTimeout(renderNextFrame, 0);
+      } else {
+        const flushPromises = [videoEncoder.flush()];
+        if(audioEncoder) flushPromises.push(audioEncoder.flush());
+        Promise.all(flushPromises).then(()=>{
+          muxer.finalize();
+          const blob = new Blob([muxer.target.buffer], { type: "video/mp4" });
+          resetReelUI();
+          playing = false;
+          deliverVideo(blob);
+          render();
+        });
+      }
+    });
   }
   setTimeout(renderNextFrame, 50);
 }
