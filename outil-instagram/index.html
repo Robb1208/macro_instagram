@@ -35,6 +35,7 @@
         <button class="tpl-btn" data-tpl="classement"><span class="tpl-icon">#1</span><span class="tpl-name">Classement</span></button>
         <button class="tpl-btn" data-tpl="statistique"><span class="tpl-icon">∑</span><span class="tpl-name">Statistique</span></button>
         <button class="tpl-btn" data-tpl="programme"><span class="tpl-icon">📅</span><span class="tpl-name">Programme</span></button>
+        <button class="tpl-btn" data-tpl="planning"><span class="tpl-icon">📆</span><span class="tpl-name">Planning</span></button>
         <button class="tpl-btn" data-tpl="sondage"><span class="tpl-icon">📊</span><span class="tpl-name">Sondage</span></button>
         <button class="tpl-btn" data-tpl="transfert"><span class="tpl-icon">⇄</span><span class="tpl-name">Transfert</span></button>
         <button class="tpl-btn" data-tpl="tierlist"><span class="tpl-icon">S</span><span class="tpl-name">Tier List</span></button>
@@ -167,6 +168,12 @@
         <div class="field" style="margin-top:12px">
           <label>Matchs <span style="color:var(--fg-mute);font-weight:400">— ## Jour puis Heure TeamA vs TeamB BO3</span></label>
           <textarea id="matches" rows="8" placeholder="## Samedi 21 juin&#10;18h00 Karmine Corp vs G2 Esports BO3&#10;20h00 Vitality vs Fnatic BO1&#10;&#10;## Dimanche 22 juin&#10;17h00 BDS vs SK Gaming BO3"></textarea>
+        </div>
+      </div>
+      <div id="planningRow" style="display:none">
+        <div class="field" style="margin-top:12px">
+          <label>Planning semaine <span style="color:var(--fg-mute);font-weight:400">— ## Jour Num puis HeureDebut-HeureFin Nom jeu</span></label>
+          <textarea id="planningEvents" rows="10" placeholder="## L 23&#10;14-22 Play-in MSI lol&#10;## M 24&#10;14-20 Play-in MSI lol&#10;20-23 VCT Chall. val&#10;## M 25&#10;18-22 LEC Spring lol&#10;## J 26&#10;20-23 CDL Major cod&#10;## V 27&#10;17-18 LEC lol&#10;## S 28&#10;14-15 IEM Demis cs2&#10;## D 29&#10;14-23 IEM Finale cs2"></textarea>
         </div>
       </div>
       <div id="footerRow" style="display:none">
@@ -308,6 +315,14 @@
       <div id="zoomRow" class="field">
         <label>Zoom de l'image</label>
         <div class="slider"><input type="range" id="zoom" min="100" max="260" value="100" /><span class="val" id="zoomV">100%</span></div>
+      </div>
+      <div id="imgBrightRow" class="field">
+        <label>Luminosité de l'image</label>
+        <div class="slider"><input type="range" id="imgBright" min="20" max="100" value="100" /><span class="val" id="imgBrightV">100%</span></div>
+      </div>
+      <div class="field">
+        <label>Luminosité de la description</label>
+        <div class="slider"><input type="range" id="descColor" min="30" max="100" value="75" /><span class="val" id="descColorV">75%</span></div>
       </div>
       <div id="textYRow" class="field">
         <label>Position verticale du texte</label>

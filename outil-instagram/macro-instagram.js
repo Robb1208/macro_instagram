@@ -17,6 +17,7 @@ const TEMPLATES = {
   "classement":{ label:"Classement", icon:"#1" },
   "statistique":{ label:"Statistique", icon:"∑" },
   "programme": { label:"Programme", icon:"📅" },
+  "planning":  { label:"Planning", icon:"📆" },
   "sondage":   { label:"Sondage", icon:"📊" },
   "transfert": { label:"Transfert", icon:"⇄" },
   "tierlist":  { label:"Tier List", icon:"S" },
@@ -98,6 +99,7 @@ const state = {
   game: "lol", customColor: "#00c2e0",
   watermark: true, gradient: 1,
   titleScale: 1, descScale: 1, zoom: 1,
+  descColor: 0.75, imgBright: 1,
   hiColor: "#00c2e0", // auto-synced from game color
   dur: 2.5, trans: "cut", kenburns: true,
 };
@@ -112,11 +114,11 @@ function newSlide(img, name, tpl){
            tiers:"", playerName:"", playerRole:"", transferBadge:"officiel", matchResult:"",
            showBgImage: !!img, framedImage: false, photoCredit:"", dur: null, game: null,
            lineup:"", lineupCount:5, lineupTeamRating:"", lineupPhotos:[],
-           bracket:"", bracketFormat:"" };
+           bracket:"", bracketFormat:"", planningEvents:"" };
 }
 function cur(){ return state.images[state.active] || null; }
 function curTpl(){ const it = cur(); return (it && it.template) || "post-image"; }
-const EMPTY = { template:"post-image", eyebrow:"", title:"", desc:"", showDesc:false, score:"", showScore:false, badge:"", signature:"", teamA:"", teamB:"", standings:"", relegationLine:0, stats:"", matches:"", footerText:"", pollOptions:"", pollWinner:0, tiers:"", playerName:"", playerRole:"", transferBadge:"officiel", matchResult:"", lineup:"", lineupCount:5, lineupTeamRating:"", bracket:"", bracketFormat:"" };
+const EMPTY = { template:"post-image", eyebrow:"", title:"", desc:"", showDesc:false, score:"", showScore:false, badge:"", signature:"", teamA:"", teamB:"", standings:"", relegationLine:0, stats:"", matches:"", footerText:"", pollOptions:"", pollWinner:0, tiers:"", playerName:"", playerRole:"", transferBadge:"officiel", matchResult:"", lineup:"", lineupCount:5, lineupTeamRating:"", bracket:"", bracketFormat:"", planningEvents:"" };
 
 // ═══ SECTION: CANVAS INIT ═══
 const cv = document.getElementById("cv");
@@ -141,6 +143,7 @@ noise.width = noise.height = 220;
 const noisePattern = ctx.createPattern(noise,"repeat");
 
 function accentColor(g){ const game = g || state.game; return game === "custom" ? state.customColor : GAME_COLORS[game]; }
+function descBaseColor(){ const v = Math.round(state.descColor * 255); return `rgb(${v},${v},${v})`; }
 
 // ═══ SECTION: DRAW HELPERS ═══
 function drawCover(img, x, y, w, h, zoom, ox, oy){
@@ -513,6 +516,7 @@ function drawOverlay(W, H, slideInfo, content, hasImage){
     case "mvp":        drawLayoutMVP(W,H,c,scale,pad,maxW,acc,hi); break;
     case "lineup":     drawLayoutLineup(W,H,c,scale,pad,maxW,acc,hi); break;
     case "bracket":    drawLayoutBracket(W,H,c,scale,pad,maxW,acc,hi); break;
+    case "planning":   drawLayoutPlanning(W,H,c,scale,pad,maxW,acc,hi); break;
     default:           drawLayoutBottom(W,H,c,scale,pad,maxW,acc,hi); break;
   }
 }
@@ -563,7 +567,7 @@ function drawLayoutBottom(W,H,c,scale,pad,maxW,acc,hi){
   ctx.shadowColor = "transparent"; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
   if(descLines.length){
     let dy = bottomY - descLines.length*descLH;
-    for(const ln of descLines){ drawRichLine(ln, pad, dy, descFont, hi, "#c9d3da"); dy += descLH; }
+    for(const ln of descLines){ drawRichLine(ln, pad, dy, descFont, hi, descBaseColor()); dy += descLH; }
   }
 }
 
@@ -623,7 +627,7 @@ function drawLayoutCentered(W,H,c,scale,pad,maxW,acc,hi){
   // description
   if(descLines.length){
     y += Math.round(18*scale);
-    for(const ln of descLines){ drawRichLine(ln, pad, y, descFont, hi, "#c9d3da"); y += descLH; }
+    for(const ln of descLines){ drawRichLine(ln, pad, y, descFont, hi, descBaseColor()); y += descLH; }
   }
 
   // signature at bottom
@@ -776,7 +780,7 @@ function drawLayoutScore(W,H,c,scale,pad,maxW,acc,hi){
   ctx.shadowColor = "transparent"; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
   if(descLines.length){
     y += Math.round(11*scale);
-    for(const ln of descLines){ drawRichLine(ln, pad, y, descFont, hi, "#c9d3da"); y += descLH; }
+    for(const ln of descLines){ drawRichLine(ln, pad, y, descFont, hi, descBaseColor()); y += descLH; }
   }
 }
 
@@ -864,7 +868,7 @@ function drawLayoutBreaking(W,H,c,scale,pad,maxW,hi){
   if(descLines.length){
     y += descGap;
     ctx.textBaseline = "top";
-    for(const ln of descLines){ drawRichLineCentered(ln, W/2, y, descFont, hi, "#c9d3da"); y += descLH; }
+    for(const ln of descLines){ drawRichLineCentered(ln, W/2, y, descFont, hi, descBaseColor()); y += descLH; }
   }
 
   ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
@@ -1055,7 +1059,7 @@ function drawLayoutCarousel(W,H,c,scale,pad,maxW,acc,hi){
       // label + value on same baseline
       const baseY = y + Math.round(valueF*0.8);
       ctx.font = `500 ${labelF}px Manrope, sans-serif`;
-      ctx.fillStyle = "#c9d3da"; ctx.textBaseline = "alphabetic";
+      ctx.fillStyle = descBaseColor(); ctx.textBaseline = "alphabetic";
       ctx.fillText(stat.label, pad, baseY);
       if(stat.value){
         const isFirst = i===0;
@@ -1412,7 +1416,7 @@ function drawLayoutTransfert(W,H,c,scale,pad,maxW,acc,hi){
   ctx.shadowColor = "transparent"; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
   if(descLines.length){
     y += gapTitle;
-    for(const ln of descLines){ drawRichLine(ln, pad, y, descFont, hi, "#c9d3da"); y += descLH; }
+    for(const ln of descLines){ drawRichLine(ln, pad, y, descFont, hi, descBaseColor()); y += descLH; }
   }
   lastTextBox = null;
 }
@@ -1756,7 +1760,7 @@ function drawLayoutMVP(W,H,c,scale,pad,maxW,acc,hi){
   // result line
   if(result){
     ctx.font = `500 ${descF}px Manrope, sans-serif`;
-    ctx.fillStyle = "#c9d3da"; ctx.textBaseline = "bottom";
+    ctx.fillStyle = descBaseColor(); ctx.textBaseline = "bottom";
     ctx.fillText(result, pad, bottomEdge);
     bottomEdge -= descF + Math.round(18*scale);
   }
@@ -2223,6 +2227,261 @@ function drawLayoutBracket(W,H,c,scale,pad,maxW,acc,hi){
   lastTextBox = null;
 }
 
+// --- T17: Planning hebdomadaire (weekly calendar grid) ---
+function parsePlanningEvents(text){
+  const days = []; let current = null;
+  (text||"").split("\n").forEach(line=>{
+    line = line.trim(); if(!line) return;
+    if(line.startsWith("##")){
+      const parts = line.slice(2).trim().split(/\s+/);
+      current = { abbr: parts[0]||"", date: parts[1]||"", events:[] };
+      days.push(current);
+    } else if(current){
+      const m = line.match(/^(\d{1,2})[h:]?-(\d{1,2})[h:]?\s+(.+?)\s+(lol|cs2|val|rl|cod)$/i);
+      if(m) current.events.push({ start:parseInt(m[1]), end:parseInt(m[2]), name:m[3].trim(), game:m[4].toLowerCase() });
+    }
+  });
+  return days;
+}
+function drawLayoutPlanning(W,H,c,scale,pad,maxW,acc,hi){
+  const eyeF = Math.round(20*scale);
+  const titleF = Math.round((state.format==="story"||state.reel?52:44)*scale*state.titleScale);
+  const titleLH = Math.round(titleF*1.08);
+  const titleFont = `800 ${titleF}px Sora, sans-serif`;
+  const eyebrow = (c.eyebrow||"").toUpperCase();
+  const titleLines = wrapRich(richWords(c.title), titleFont, maxW);
+
+  const accentLineH = Math.round(3*scale);
+  const gap = Math.round(10*scale);
+  const dragOffset = ((c.textY||0)*scale) + (c.textDrag||0);
+  let y = Math.round(H*0.08 + 60*scale) + dragOffset;
+
+  ctx.fillStyle = acc;
+  ctx.fillRect(pad, y, Math.round(42*scale), accentLineH);
+  y += accentLineH + gap;
+  if(eyebrow){
+    ctx.font = `700 ${eyeF}px Sora, sans-serif`;
+    ctx.fillStyle = acc; ctx.textBaseline = "top";
+    drawSpaced(eyebrow, pad, y, eyeF*0.16);
+    y += eyeF + Math.round(6*scale);
+  }
+  ctx.textBaseline = "top";
+  for(const ln of titleLines){ drawRichLine(ln, pad, y, titleFont, hi, "#ffffff"); y += titleLH; }
+
+  const days = parsePlanningEvents(c.planningEvents);
+  if(!days.length){ lastTextBox=null; return; }
+
+  // Grid layout
+  const legendH = Math.round(44*scale);
+  const gridTop = y + Math.round(20*scale);
+  const gridBottom = H - pad - legendH;
+  const timeLabelW = Math.round(44*scale);
+  const gridLeft = pad + timeLabelW;
+  const gridRight = W - pad;
+  const gridW = gridRight - gridLeft;
+  const numCols = days.length;
+  const colW = gridW / numCols;
+
+  // Time range from data
+  let minH = 24, maxH = 0;
+  for(const day of days){
+    for(const ev of day.events){
+      minH = Math.min(minH, ev.start);
+      const endH = ev.end <= ev.start ? ev.end + 24 : ev.end;
+      maxH = Math.max(maxH, endH);
+    }
+  }
+  minH = Math.max(0, Math.floor(minH/2)*2);
+  maxH = Math.min(26, Math.ceil(maxH/2)*2 + 1);
+  if(minH >= maxH){ minH = 12; maxH = 24; }
+  const timeRange = maxH - minH;
+
+  // Day headers
+  const dayAbbrF = Math.round(20*scale);
+  const dayDateF = Math.round(22*scale);
+  const headerH = Math.round(44*scale);
+  const headerY = gridTop;
+  const bodyTop = gridTop + headerH;
+  const bodyH = gridBottom - bodyTop;
+  const pxPerHour = bodyH / timeRange;
+
+  for(let i = 0; i < numCols; i++){
+    const cx = gridLeft + i*colW + colW/2;
+    ctx.font = `700 ${dayAbbrF}px Sora, sans-serif`;
+    ctx.fillStyle = "#ffffff";
+    ctx.textAlign = "center"; ctx.textBaseline = "top";
+    ctx.fillText(days[i].abbr, cx, headerY);
+    ctx.font = `400 ${dayDateF}px 'JetBrains Mono', monospace`;
+    ctx.fillStyle = "#6b7882";
+    ctx.fillText(days[i].date, cx, headerY + dayAbbrF + Math.round(2*scale));
+  }
+
+  // Horizontal grid lines + time labels
+  const timeF = Math.round(16*scale);
+  for(let h = minH; h <= maxH; h += 2){
+    const yPos = bodyTop + (h - minH) * pxPerHour;
+    ctx.font = `400 ${timeF}px 'JetBrains Mono', monospace`;
+    ctx.fillStyle = "#4d5860";
+    ctx.textAlign = "right"; ctx.textBaseline = "middle";
+    ctx.fillText((h%24)+"h", gridLeft - Math.round(10*scale), yPos);
+    ctx.strokeStyle = "rgba(255,255,255,0.04)";
+    ctx.lineWidth = Math.max(1, scale);
+    ctx.beginPath(); ctx.moveTo(gridLeft, yPos); ctx.lineTo(gridRight, yPos); ctx.stroke();
+  }
+
+  // Vertical column separators — visible lines between days
+  const colGap = Math.round(6*scale);
+  for(let i = 0; i <= numCols; i++){
+    const x = gridLeft + i*colW;
+    ctx.strokeStyle = "rgba(255,255,255,0.12)";
+    ctx.lineWidth = Math.max(1, Math.round(1.5*scale));
+    ctx.beginPath(); ctx.moveTo(x, headerY); ctx.lineTo(x, gridBottom); ctx.stroke();
+  }
+
+  // Event blocks — with side-by-side layout for overlapping events
+  const blockInset = Math.round(7*scale);
+  const blockGap = Math.round(3*scale);
+  const blockR = Math.round(8*scale);
+  const evNameF = Math.round(15*scale);
+  const evTimeF = Math.round(13*scale);
+
+  for(let i = 0; i < numCols; i++){
+    const dayX = gridLeft + i*colW + blockInset;
+    const dayW = colW - blockInset*2;
+    const evts = days[i].events.map(ev => {
+      const endH = ev.end <= ev.start ? ev.end + 24 : ev.end;
+      return { ...ev, endH };
+    }).sort((a,b) => a.start - b.start || a.endH - b.endH);
+
+    // Assign sub-columns for overlapping events
+    const placed = [];
+    for(const ev of evts){
+      let col = 0;
+      while(placed.some(p => p.col === col && p.start < ev.endH && ev.start < p.endH)) col++;
+      ev.subCol = col;
+      placed.push({ col, start: ev.start, endH: ev.endH });
+    }
+    // Per-event: count how many concurrent columns in its overlap group
+    for(const ev of evts){
+      let maxInGroup = ev.subCol + 1;
+      for(const other of evts){
+        if(other.start < ev.endH && ev.start < other.endH){
+          maxInGroup = Math.max(maxInGroup, other.subCol + 1);
+        }
+      }
+      ev.groupCols = maxInGroup;
+    }
+
+    for(const ev of evts){
+      const gc = GAME_COLORS[ev.game] || acc;
+      const nCols = ev.groupCols;
+      const bw = (dayW - (nCols-1)*blockGap) / nCols;
+      const colX = dayX + ev.subCol * (bw + blockGap);
+      const evTop = bodyTop + (ev.start - minH) * pxPerHour;
+      const evBot = bodyTop + (ev.endH - minH) * pxPerHour;
+      const evH = Math.max(evBot - evTop, Math.round(28*scale));
+
+      // Block fill
+      ctx.save();
+      const bg = ctx.createLinearGradient(0, evTop, 0, evTop + evH);
+      bg.addColorStop(0, rgba(gc, 0.18));
+      bg.addColorStop(1, rgba(gc, 0.08));
+      ctx.fillStyle = bg;
+      roundRectPath(colX, evTop, bw, evH, blockR); ctx.fill();
+      ctx.strokeStyle = rgba(gc, 0.30);
+      ctx.lineWidth = Math.max(1, 1.5*scale);
+      roundRectPath(colX, evTop, bw, evH, blockR); ctx.stroke();
+      ctx.restore();
+
+      // Text inside block — vertical when narrow
+      const tp = Math.round(7*scale);
+      const narrow = bw < Math.round(60*scale);
+
+      if(narrow){
+        // Vertical text mode
+        const vNameF = Math.round(13*scale);
+        const vTimeF = Math.round(11*scale);
+        ctx.save();
+        ctx.translate(colX + bw/2, evTop + tp);
+        ctx.rotate(-Math.PI/2);
+        // Name (reads bottom-to-top)
+        ctx.font = `700 ${vNameF}px Sora, sans-serif`;
+        ctx.fillStyle = "#ffffff";
+        ctx.textAlign = "right"; ctx.textBaseline = "middle";
+        let name = ev.name;
+        const availH = evH - tp*2;
+        while(ctx.measureText(name).width > availH && name.length > 2) name = name.slice(0,-1);
+        if(name !== ev.name) name = name.trim()+".";
+        ctx.fillText(name, 0, 0);
+        // Time below name
+        const timeStr = (ev.endH - ev.start) <= 1 ? ev.start+"h" : ev.start+"~"+(ev.end%24)+"h";
+        ctx.font = `500 ${vTimeF}px 'JetBrains Mono', monospace`;
+        ctx.fillStyle = rgba(gc, 0.85);
+        ctx.fillText(timeStr, 0, vNameF + Math.round(2*scale));
+        ctx.restore();
+      } else {
+        // Normal horizontal text
+        const availW = bw - tp*2;
+        const nameF2 = nCols >= 2 ? Math.round(13*scale) : evNameF;
+        const timeF2 = nCols >= 2 ? Math.round(11*scale) : evTimeF;
+
+        ctx.font = `700 ${nameF2}px Sora, sans-serif`;
+        ctx.fillStyle = "#ffffff";
+        ctx.textAlign = "left"; ctx.textBaseline = "top";
+        let name = ev.name;
+        while(ctx.measureText(name).width > availW && name.length > 2) name = name.slice(0,-1);
+        if(name !== ev.name) name = name.trim()+".";
+        ctx.fillText(name, colX + tp, evTop + tp);
+
+        const timeStr = (ev.endH - ev.start) <= 1 ? ev.start+"h" : ev.start+"~"+(ev.end%24)+"h";
+        ctx.font = `500 ${timeF2}px 'JetBrains Mono', monospace`;
+        ctx.fillStyle = rgba(gc, 0.85);
+        if(evH > Math.round(38*scale)){
+          ctx.fillText(timeStr, colX + tp, evTop + tp + nameF2 + Math.round(2*scale));
+        }
+      }
+
+      // Game dot
+      if(evH > Math.round(50*scale) && !narrow){
+        const dotR = Math.round(3.5*scale);
+        ctx.fillStyle = gc;
+        ctx.beginPath();
+        ctx.arc(colX + bw - tp - dotR, evTop + evH - tp - dotR, dotR, 0, Math.PI*2);
+        ctx.fill();
+      }
+    }
+  }
+
+  // Legend at bottom
+  const legendY = gridBottom + legendH/2 + Math.round(4*scale);
+  const legendGames = [
+    {key:"lol",label:"LoL"},{key:"cs2",label:"CS2"},{key:"val",label:"Valo"},{key:"rl",label:"RL"},{key:"cod",label:"CoD"}
+  ];
+  const legendF = Math.round(16*scale);
+  const dotR = Math.round(5*scale);
+  const itemGap = Math.round(30*scale);
+
+  ctx.font = `500 ${legendF}px Manrope, sans-serif`;
+  let totalLW = 0;
+  for(const g of legendGames) totalLW += dotR*2 + Math.round(6*scale) + ctx.measureText(g.label).width;
+  totalLW += (legendGames.length-1)*itemGap;
+
+  let lx = W/2 - totalLW/2;
+  for(const g of legendGames){
+    ctx.fillStyle = GAME_COLORS[g.key];
+    ctx.beginPath(); ctx.arc(lx+dotR, legendY, dotR, 0, Math.PI*2); ctx.fill();
+    lx += dotR*2 + Math.round(6*scale);
+    ctx.font = `500 ${legendF}px Manrope, sans-serif`;
+    ctx.fillStyle = "#9aa7b0";
+    ctx.textBaseline = "middle"; ctx.textAlign = "left";
+    ctx.fillText(g.label, lx, legendY);
+    lx += ctx.measureText(g.label).width + itemGap;
+  }
+
+  ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+  lastTextBox = null;
+}
+
 // ═══ SECTION: RENDER ═══
 function render(){
   const [W,H] = state.reel ? FORMATS.story : FORMATS[state.format];
@@ -2238,6 +2497,10 @@ function render(){
   if(showImg && !framed){
     if(tpl==="transfert" || tpl==="spotlight") drawStripeBackground(W,H);
     drawSlideMedia(item, W, H, state.zoom);
+    if(state.imgBright < 1){
+      ctx.fillStyle = `rgba(0,0,0,${1 - state.imgBright})`;
+      ctx.fillRect(0,0,W,H);
+    }
     applyEdgeBlur(W,H);
   } else if(framed){
     drawBaseBackground(W,H);
@@ -2398,6 +2661,7 @@ function syncInputs(){
   if($("lineupTeamRating")) { $("lineupTeamRating").value = has ? (it.lineupTeamRating||"") : ""; $("lineupTeamRating").disabled = !has; }
   if($("bracket")) { $("bracket").value = has ? (it.bracket||"") : ""; $("bracket").disabled = !has; }
   if($("bracketFormat")) { $("bracketFormat").value = has ? (it.bracketFormat||"") : ""; $("bracketFormat").disabled = !has; }
+  if($("planningEvents")) { $("planningEvents").value = has ? (it.planningEvents||"") : ""; $("planningEvents").disabled = !has; }
   if($("lineupCountSeg")) { document.querySelectorAll("#lineupCountSeg button").forEach(b=>{ b.classList.toggle("on", parseInt(b.dataset.lc)===(has ? (it.lineupCount||5) : 5)); }); }
   if($("lineupPhotoCount")) { const n = has && it.lineupPhotos ? it.lineupPhotos.filter(Boolean).length : 0; $("lineupPhotoCount").textContent = n ? n+" photo"+(n>1?"s":"") : ""; }
   if($("showBgImage")) { $("showBgImage").checked = has ? (it.showBgImage !== false) : true; $("showBgImage").disabled = !has; }
@@ -2418,12 +2682,14 @@ function syncInputs(){
   show("gradientRow", tpl==="post-image" || tpl==="post-video" || tpl==="score" || tpl==="statistique" || tpl==="transfert");
   show("videoRow", tpl==="post-video");
   show("zoomRow", hasImage);
+  show("imgBrightRow", hasImage);
   show("textYRow", true);
   show("resetView", hasImage);
   show("standingsRow", tpl==="classement");
   show("relegationRow", tpl==="classement");
   show("statsRow", tpl==="statistique" || tpl==="spotlight" || tpl==="mvp");
   show("matchesRow", tpl==="programme");
+  show("planningRow", tpl==="planning");
   show("footerRow", tpl==="programme" || tpl==="sondage" || tpl==="tierlist");
   show("pollRow", tpl==="sondage");
   show("tiersRow", tpl==="tierlist");
@@ -2514,6 +2780,7 @@ if($("lineup")) $("lineup").oninput = e => setField("lineup", e.target.value);
 if($("lineupTeamRating")) $("lineupTeamRating").oninput = e => setField("lineupTeamRating", e.target.value);
 if($("bracket")) $("bracket").oninput = e => setField("bracket", e.target.value);
 if($("bracketFormat")) $("bracketFormat").oninput = e => setField("bracketFormat", e.target.value);
+if($("planningEvents")) $("planningEvents").oninput = e => setField("planningEvents", e.target.value);
 document.querySelectorAll("#lineupCountSeg button").forEach(b=>{
   b.onclick = ()=>{
     document.querySelectorAll("#lineupCountSeg button").forEach(x=>x.classList.remove("on"));
@@ -2652,6 +2919,8 @@ function applyJsonPreset(data, imageFiles){
   if(data.gradient!=null){ state.gradient = data.gradient/100; $("gradient").value = data.gradient; $("gradientV").textContent = data.gradient+"%"; }
   if(data.titleSize!=null){ state.titleScale = data.titleSize/100; $("titleSize").value = data.titleSize; $("titleSizeV").textContent = data.titleSize+"%"; }
   if(data.descSize!=null){ state.descScale = data.descSize/100; $("descSize").value = data.descSize; $("descSizeV").textContent = data.descSize+"%"; }
+  if(data.descColor!=null){ state.descColor = data.descColor/100; $("descColor").value = data.descColor; $("descColorV").textContent = data.descColor+"%"; }
+  if(data.imgBright!=null){ state.imgBright = data.imgBright/100; $("imgBright").value = data.imgBright; $("imgBrightV").textContent = data.imgBright+"%"; }
 
   const imgMap = {};
   if(imageFiles && imageFiles.length){
@@ -2704,6 +2973,7 @@ function applyJsonPreset(data, imageFiles){
     slide.lineupTeamRating = s.lineupTeamRating || "";
     slide.bracket = s.bracket || "";
     slide.bracketFormat = s.bracketFormat || "";
+    slide.planningEvents = s.planningEvents || "";
     state.images.push(slide);
 
     const imgName = s.image;
@@ -2780,6 +3050,8 @@ bindSlider("gradient","gradient", v=>v+"%", 0.01);
 bindSlider("titleSize","titleScale", v=>v+"%", 0.01);
 bindSlider("descSize","descScale", v=>v+"%", 0.01);
 bindSlider("zoom","zoom", v=>v+"%", 0.01);
+bindSlider("imgBright","imgBright", v=>v+"%", 0.01);
+bindSlider("descColor","descColor", v=>v+"%", 0.01);
 $("textY").oninput = ()=>{ const v=parseFloat($("textY").value); $("textYV").textContent=v; setField("textY", v); };
 $("dur").oninput = ()=>{
   const v = parseFloat($("dur").value);
