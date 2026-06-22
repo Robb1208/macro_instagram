@@ -22,7 +22,6 @@ const TEMPLATES = {
   "transfert": { label:"Transfert", icon:"⇄" },
   "tierlist":  { label:"Tier List", icon:"S" },
   "citation":  { label:"Citation", icon:"❝" },
-  "spotlight": { label:"Spotlight", icon:"★" },
   "mvp":       { label:"MVP", icon:"🏆" },
   "lineup":    { label:"Lineup", icon:"👥" },
   "bracket":   { label:"Bracket", icon:"🏅" },
@@ -114,11 +113,11 @@ function newSlide(img, name, tpl){
            tiers:"", playerName:"", playerRole:"", transferBadge:"officiel", matchResult:"",
            showBgImage: !!img, framedImage: false, photoCredit:"", dur: null, game: null,
            lineup:"", lineupCount:5, lineupTeamRating:"", lineupPhotos:[],
-           bracket:"", bracketFormat:"", planningEvents:"" };
+           bracket:"", bracketFormat:"", planningEvents:"", frameY:0, statHighlight:0, mvpBadge:"mvp" };
 }
 function cur(){ return state.images[state.active] || null; }
 function curTpl(){ const it = cur(); return (it && it.template) || "post-image"; }
-const EMPTY = { template:"post-image", eyebrow:"", title:"", desc:"", showDesc:false, score:"", showScore:false, badge:"", signature:"", teamA:"", teamB:"", standings:"", relegationLine:0, stats:"", matches:"", footerText:"", pollOptions:"", pollWinner:0, tiers:"", playerName:"", playerRole:"", transferBadge:"officiel", matchResult:"", lineup:"", lineupCount:5, lineupTeamRating:"", bracket:"", bracketFormat:"", planningEvents:"" };
+const EMPTY = { template:"post-image", eyebrow:"", title:"", desc:"", showDesc:false, score:"", showScore:false, badge:"", signature:"", teamA:"", teamB:"", standings:"", relegationLine:0, stats:"", matches:"", footerText:"", pollOptions:"", pollWinner:0, tiers:"", playerName:"", playerRole:"", transferBadge:"officiel", matchResult:"", lineup:"", lineupCount:5, lineupTeamRating:"", bracket:"", bracketFormat:"", planningEvents:"", statHighlight:0, mvpBadge:"mvp" };
 
 // ═══ SECTION: CANVAS INIT ═══
 const cv = document.getElementById("cv");
@@ -193,7 +192,7 @@ function drawFramedImage(it, W, H, zoom){
   const scale = W/1080;
   const logoH = Math.round(W*0.135 * (logo.naturalHeight/logo.naturalWidth));
   const barY = Math.round(pad + logoH + 13*scale + Math.max(2, 2.5*scale));
-  const frameY = barY + Math.round(20*scale);
+  const frameY = barY + Math.round(20*scale) + (it.frameY||0)*scale;
   const frameX = pad;
   const frameW = W - pad*2;
   const frameH = Math.round(H*0.50);
@@ -512,7 +511,6 @@ function drawOverlay(W, H, slideInfo, content, hasImage){
     case "transfert":  drawLayoutTransfert(W,H,c,scale,pad,maxW,acc,hi); break;
     case "tierlist":   drawLayoutTierList(W,H,c,scale,pad,maxW,acc,hi); break;
     case "citation":   drawLayoutCitation(W,H,c,scale,pad,maxW,acc,hi); break;
-    case "spotlight":  drawLayoutSpotlight(W,H,c,scale,pad,maxW,acc,hi); break;
     case "mvp":        drawLayoutMVP(W,H,c,scale,pad,maxW,acc,hi); break;
     case "lineup":     drawLayoutLineup(W,H,c,scale,pad,maxW,acc,hi); break;
     case "bracket":    drawLayoutBracket(W,H,c,scale,pad,maxW,acc,hi); break;
@@ -586,8 +584,7 @@ function drawLayoutCentered(W,H,c,scale,pad,maxW,acc,hi){
 
   const accentLineH = Math.round(4*scale);
   const gap = Math.round(15*scale);
-  const quoteH = Math.round(60*scale);
-  let blockH = quoteH + accentLineH + gap;
+  let blockH = accentLineH + gap;
   if(eyebrow) blockH += eyeF + gap;
   blockH += titleLines.length * titleLH;
   if(descLines.length) blockH += Math.round(18*scale) + descLines.length*descLH;
@@ -596,14 +593,6 @@ function drawLayoutCentered(W,H,c,scale,pad,maxW,acc,hi){
   const centerY = H * 0.48 + dragOffset;
   let y = centerY - blockH/2;
   lastTextBox = { x:pad, y, w:maxW, h:blockH };
-
-  // decorative quote mark
-  const qf = Math.round(260*scale);
-  ctx.font = `800 ${qf}px Sora, sans-serif`;
-  ctx.fillStyle = rgba(acc, 0.16);
-  ctx.textBaseline = "top";
-  ctx.fillText("“", pad, y - qf*0.35);
-  y += quoteH;
 
   // accent tick
   ctx.fillStyle = acc;
@@ -759,7 +748,7 @@ function drawLayoutScore(W,H,c,scale,pad,maxW,acc,hi){
   const titleFont = `800 ${titleF}px Sora, sans-serif`;
   const titleLines = wrapRich(richWords(c.title), titleFont, maxW);
   const descFont = `500 ${descF}px Manrope, sans-serif`;
-  const descLines = (c.showDesc && c.desc.trim()) ? wrapRich(richWords(c.desc), descFont, maxW).slice(0,3) : [];
+  const descLines = (c.showDesc && c.desc.trim()) ? wrapRich(richWords(c.desc), descFont, maxW).slice(0,8) : [];
   if(!titleLines.length && !descLines.length){ lastTextBox=null; return; }
 
   const accentLineH = Math.round(4*scale);
@@ -798,7 +787,7 @@ function drawLayoutBreaking(W,H,c,scale,pad,maxW,hi){
   const titleFont = `800 ${titleF}px Sora, sans-serif`;
   const titleLines = wrapRich(richWords(c.title), titleFont, maxW);
   const descFont = `500 ${descF}px Manrope, sans-serif`;
-  const descLines = (c.showDesc && c.desc.trim()) ? wrapRich(richWords(c.desc), descFont, Math.round(maxW*0.88)).slice(0,3) : [];
+  const descLines = (c.showDesc && c.desc.trim()) ? wrapRich(richWords(c.desc), descFont, Math.round(maxW*0.88)).slice(0,8) : [];
 
   // calculate block height
   const badgeH = Math.round(44*scale);
@@ -824,9 +813,13 @@ function drawLayoutBreaking(W,H,c,scale,pad,maxW,hi){
   const pillX = W/2 - pillW/2, pillY = y;
 
   ctx.save();
-  ctx.fillStyle = rgba(badgeColor, 0.14);
+  ctx.shadowColor = "rgba(0,0,0,0.5)"; ctx.shadowBlur = 16*scale;
+  ctx.fillStyle = "rgba(7,10,13,0.7)";
   roundRectPath(pillX, pillY, pillW, pillH, 999); ctx.fill();
-  ctx.strokeStyle = rgba(badgeColor, 0.55); ctx.lineWidth = Math.max(1, 2*scale);
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = rgba(badgeColor, 0.18);
+  roundRectPath(pillX, pillY, pillW, pillH, 999); ctx.fill();
+  ctx.strokeStyle = rgba(badgeColor, 0.6); ctx.lineWidth = Math.max(1, 2*scale);
   roundRectPath(pillX, pillY, pillW, pillH, 999); ctx.stroke();
   // dot
   ctx.fillStyle = badgeColor;
@@ -1026,7 +1019,6 @@ function drawLayoutCarousel(W,H,c,scale,pad,maxW,acc,hi){
   const hasStats = stats.length > 0;
 
   if(hasStats){
-    // stats slide layout
     const eyeF = Math.round(22*scale);
     const titleF = Math.round((state.format==="story"||state.reel?48:42) * scale * state.titleScale);
     const titleLH = Math.round(titleF*1.08);
@@ -1034,8 +1026,13 @@ function drawLayoutCarousel(W,H,c,scale,pad,maxW,acc,hi){
     const eyebrow = (c.eyebrow||"").toUpperCase();
     const titleLines = wrapRich(richWords(c.title), titleFont, maxW);
 
+    const accentLineH = Math.round(4*scale);
+    const gapLine = Math.round(13*scale);
     const dragOffset = ((c.textY||0)*scale) + (c.textDrag||0);
     let y = Math.round(H*0.16 + 80*scale) + dragOffset;
+    ctx.fillStyle = acc;
+    ctx.fillRect(pad, y, Math.round(54*scale), accentLineH);
+    y += accentLineH + gapLine;
     if(eyebrow){
       ctx.font = `700 ${eyeF}px Sora, sans-serif`;
       ctx.fillStyle = acc; ctx.textBaseline = "top";
@@ -1045,31 +1042,45 @@ function drawLayoutCarousel(W,H,c,scale,pad,maxW,acc,hi){
     ctx.textBaseline = "top";
     for(const ln of titleLines){ drawRichLine(ln, pad, y, titleFont, hi, "#ffffff"); y += titleLH; }
 
-    // stat rows
-    y += Math.round(28*scale);
-    const labelF = Math.round(28*scale);
-    const valueF = Math.round(72*scale);
-    const rowGap = Math.round(14*scale);
+    // stat cards
+    y += Math.round(24*scale);
+    const hiIdx = (c.statHighlight || 0) - 1;
+    const cardH = Math.round(100*scale);
+    const cardGap = Math.round(12*scale);
+    const cardR = Math.round(14*scale);
+    const valueF = Math.round(44*scale);
+    const labelF = Math.round(22*scale);
 
     stats.forEach((stat,i)=>{
-      // separator line
-      ctx.strokeStyle = "#16212a"; ctx.lineWidth = Math.max(1, scale);
-      ctx.beginPath(); ctx.moveTo(pad, y); ctx.lineTo(pad+maxW, y); ctx.stroke();
-      y += Math.round(18*scale);
-      // label + value on same baseline
-      const baseY = y + Math.round(valueF*0.8);
+      const isHi = i === hiIdx;
+      // card background
+      ctx.fillStyle = isHi ? rgba(acc, 0.08) : "rgba(255,255,255,0.03)";
+      roundRectPath(pad, y, maxW, cardH, cardR); ctx.fill();
+      ctx.strokeStyle = isHi ? rgba(acc, 0.25) : "#16212a";
+      ctx.lineWidth = Math.max(1, 1.5*scale);
+      roundRectPath(pad, y, maxW, cardH, cardR); ctx.stroke();
+      // accent bar on left for highlighted
+      if(isHi){
+        ctx.fillStyle = acc;
+        const barW = Math.round(4*scale);
+        roundRectPath(pad, y, barW, cardH, barW/2); ctx.fill();
+      }
+      const innerPad = Math.round(24*scale);
+      const cy = y + cardH/2;
+      // label (left)
       ctx.font = `500 ${labelF}px Manrope, sans-serif`;
-      ctx.fillStyle = descBaseColor(); ctx.textBaseline = "alphabetic";
-      ctx.fillText(stat.label, pad, baseY);
+      ctx.fillStyle = isHi ? "#ffffff" : descBaseColor();
+      ctx.textBaseline = "middle";
+      ctx.fillText(stat.label, pad + innerPad, cy);
+      // value (right)
       if(stat.value){
-        const isFirst = i===0;
-        ctx.font = `600 ${valueF}px 'JetBrains Mono', monospace`;
-        ctx.fillStyle = isFirst ? acc : "#ffffff";
-        ctx.textAlign = "right";
-        ctx.fillText(stat.value, pad+maxW, baseY);
+        ctx.font = `700 ${valueF}px 'JetBrains Mono', monospace`;
+        ctx.fillStyle = isHi ? acc : "#ffffff";
+        ctx.textAlign = "right"; ctx.textBaseline = "middle";
+        ctx.fillText(stat.value, pad + maxW - innerPad, cy);
         ctx.textAlign = "left";
       }
-      y = baseY + rowGap;
+      y += cardH + cardGap;
     });
 
     ctx.textBaseline = "alphabetic";
@@ -1080,7 +1091,7 @@ function drawLayoutCarousel(W,H,c,scale,pad,maxW,acc,hi){
   }
 }
 
-// --- Shared: diagonal stripe background (for transfert, spotlight, mvp) ---
+// --- Shared: diagonal stripe background (for transfert, mvp) ---
 function drawStripeBackground(W,H){
   ctx.save();
   ctx.globalAlpha = 0.35;
@@ -1363,9 +1374,13 @@ function drawLayoutTransfert(W,H,c,scale,pad,maxW,acc,hi){
   const pillY = Math.round(232*scale);
 
   ctx.save();
-  ctx.fillStyle = rgba(bCol, 0.13);
+  ctx.shadowColor = "rgba(0,0,0,0.5)"; ctx.shadowBlur = 16*scale;
+  ctx.fillStyle = "rgba(7,10,13,0.7)";
   roundRectPath(pillX, pillY, pillW, pillH, 999); ctx.fill();
-  ctx.strokeStyle = rgba(bCol, 0.5); ctx.lineWidth = Math.max(1, 1.5*scale);
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = rgba(bCol, 0.18);
+  roundRectPath(pillX, pillY, pillW, pillH, 999); ctx.fill();
+  ctx.strokeStyle = rgba(bCol, 0.6); ctx.lineWidth = Math.max(1, 1.5*scale);
   roundRectPath(pillX, pillY, pillW, pillH, 999); ctx.stroke();
   ctx.fillStyle = bCol;
   ctx.shadowColor = bCol; ctx.shadowBlur = 8*scale;
@@ -1388,7 +1403,7 @@ function drawLayoutTransfert(W,H,c,scale,pad,maxW,acc,hi){
   const eyebrow = (c.eyebrow||"").toUpperCase();
   const titleLines = wrapRich(richWords(c.title), titleFont, maxW);
   const descFont = `500 ${descF}px Manrope, sans-serif`;
-  const descLines = (c.showDesc && c.desc.trim()) ? wrapRich(richWords(c.desc), descFont, maxW).slice(0,3) : [];
+  const descLines = (c.showDesc && c.desc.trim()) ? wrapRich(richWords(c.desc), descFont, maxW).slice(0,8) : [];
 
   const accentLineH = Math.round(4*scale);
   const gapLine = Math.round(14*scale);
@@ -1597,89 +1612,6 @@ function drawLayoutCitation(W,H,c,scale,pad,maxW,acc,hi){
 }
 
 // --- T12: Player Spotlight (player card with stats) ---
-function drawLayoutSpotlight(W,H,c,scale,pad,maxW,acc,hi){
-  // bottom scrim
-  const scrimH = Math.round(H*0.55);
-  const scrim = ctx.createLinearGradient(0, H-scrimH, 0, H);
-  scrim.addColorStop(0, "rgba(7,10,13,0)");
-  scrim.addColorStop(0.5, rgba(mix(acc, INK, 0.92), 0.75));
-  scrim.addColorStop(1, "rgba(7,10,13,0.98)");
-  ctx.fillStyle = scrim; ctx.fillRect(0, H-scrimH, W, scrimH);
-
-  // identity block
-  const eyeF = Math.round(22*scale);
-  const nameF = Math.round((state.format==="story"||state.reel?84:76)*scale*state.titleScale);
-  const roleF = Math.round(28*scale);
-  const accentLineH = Math.round(4*scale);
-
-  // stats at bottom
-  const stats = parseStats(c.stats);
-  const statBoxH = Math.round(110*scale);
-  const statBoxGap = Math.round(16*scale);
-  const statBoxR = Math.round(18*scale);
-  const statValueF = Math.round(48*scale);
-  const statLabelF = Math.round(21*scale);
-  const showStats = stats.length >= 1;
-
-  const dragOffset = ((c.textY||0)*scale) + (c.textDrag||0);
-  const statsBlockY = (showStats ? H - pad - statBoxH : H - pad) + dragOffset;
-  const identityBottom = statsBlockY - Math.round(28*scale);
-
-  // build identity block from bottom up
-  let y = identityBottom;
-  if(c.playerRole){
-    ctx.font = `500 ${roleF}px Manrope, sans-serif`;
-    ctx.fillStyle = "#9aa7b0"; ctx.textBaseline = "bottom";
-    ctx.fillText(c.playerRole, pad, y);
-    y -= roleF + Math.round(10*scale);
-  }
-  // player name
-  const pName = c.playerName || c.title || "";
-  const nameLines = wrapRich(richWords(pName), `800 ${nameF}px Sora, sans-serif`, maxW);
-  const nameLH = Math.round(nameF*1.02);
-  y -= nameLines.length * nameLH;
-  ctx.textBaseline = "top";
-  for(const ln of nameLines){ drawRichLine(ln, pad, y, `800 ${nameF}px Sora, sans-serif`, hi, "#ffffff"); y += nameLH; }
-  y = identityBottom - (c.playerRole ? roleF + Math.round(10*scale) : 0) - nameLines.length*nameLH - Math.round(14*scale);
-
-  // eyebrow
-  const eyebrow = (c.eyebrow||"").toUpperCase();
-  if(eyebrow){
-    y -= eyeF + Math.round(10*scale);
-    ctx.font = `700 ${eyeF}px Sora, sans-serif`;
-    ctx.fillStyle = acc; ctx.textBaseline = "top";
-    drawSpaced(eyebrow, pad, y, eyeF*0.18);
-    y -= accentLineH + Math.round(10*scale);
-  }
-  ctx.fillStyle = acc;
-  ctx.fillRect(pad, y, Math.round(54*scale), accentLineH);
-
-  // stat boxes
-  if(showStats){
-    const count = Math.min(stats.length, 3);
-    const boxW = (maxW - (count-1)*statBoxGap) / count;
-    let bx = pad;
-    for(let i=0; i<count; i++){
-      const isFirst = i===0;
-      ctx.fillStyle = isFirst ? rgba(acc, 0.06) : "rgba(255,255,255,0.03)";
-      roundRectPath(bx, statsBlockY, boxW, statBoxH, statBoxR); ctx.fill();
-      ctx.strokeStyle = isFirst ? rgba(acc, 0.2) : "#16212a"; ctx.lineWidth = Math.max(1, 1.5*scale);
-      roundRectPath(bx, statsBlockY, boxW, statBoxH, statBoxR); ctx.stroke();
-      // value
-      ctx.font = `600 ${statValueF}px 'JetBrains Mono', monospace`;
-      ctx.fillStyle = isFirst ? acc : "#ffffff";
-      ctx.textAlign = "center"; ctx.textBaseline = "top";
-      ctx.fillText(stats[i].value, bx+boxW/2, statsBlockY + Math.round(16*scale));
-      // label
-      ctx.font = `500 ${statLabelF}px Manrope, sans-serif`;
-      ctx.fillStyle = "#9aa7b0";
-      ctx.fillText(stats[i].label, bx+boxW/2, statsBlockY + statBoxH - Math.round(28*scale));
-      ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
-      bx += boxW + statBoxGap;
-    }
-  }
-  lastTextBox = null;
-}
 
 // --- T13: MVP du Match (gold badge + player photo + stats) ---
 function drawLayoutMVP(W,H,c,scale,pad,maxW,acc,hi){
@@ -1697,18 +1629,21 @@ function drawLayoutMVP(W,H,c,scale,pad,maxW,acc,hi){
   topG.addColorStop(0, "rgba(7,10,13,0.72)"); topG.addColorStop(1, "rgba(7,10,13,0)");
   ctx.fillStyle = topG; ctx.fillRect(0, 0, W, topH);
 
-  // very subtle gold radial glow behind badge only
+  // badge mode: "mvp" (gold) or "macro" (accent)
+  const isMvpBadge = (c.mvpBadge||"mvp") === "mvp";
+  const gold = isMvpBadge ? "#f0c14b" : acc;
+
+  const gc = hexToRgb(gold);
   const goldGlow = ctx.createRadialGradient(W*0.5, Math.round(240*scale), 0, W*0.5, Math.round(240*scale), W*0.22);
-  goldGlow.addColorStop(0, "rgba(240,193,75,0.06)");
-  goldGlow.addColorStop(0.7, "rgba(240,193,75,0.015)");
-  goldGlow.addColorStop(1, "rgba(240,193,75,0)");
+  goldGlow.addColorStop(0, `rgba(${gc.r},${gc.g},${gc.b},0.06)`);
+  goldGlow.addColorStop(0.7, `rgba(${gc.r},${gc.g},${gc.b},0.015)`);
+  goldGlow.addColorStop(1, `rgba(${gc.r},${gc.g},${gc.b},0)`);
   ctx.fillStyle = goldGlow; ctx.fillRect(0,0,W,H);
 
-  // MVP badge (gold pill, centered)
-  const gold = "#f0c14b";
+  // badge pill (centered)
   const pillF = Math.round(20*scale);
   ctx.font = `800 ${pillF}px Sora, sans-serif`;
-  const mvpLabel = "MVP DU MATCH";
+  const mvpLabel = isMvpBadge ? "MVP DU MATCH" : "MACRO";
   const pillTW = ctx.measureText(mvpLabel).width + mvpLabel.length*pillF*0.2;
   const pillPadX = Math.round(24*scale), pillPadY = Math.round(10*scale);
   const pillW = pillTW + pillPadX*2;
@@ -1716,18 +1651,29 @@ function drawLayoutMVP(W,H,c,scale,pad,maxW,acc,hi){
   const pillX = W/2 - pillW/2;
   const pillY = Math.round(232*scale);
 
-  const goldG = ctx.createLinearGradient(pillX, pillY, pillX+pillW, pillY+pillH);
-  goldG.addColorStop(0, "#ffe08a"); goldG.addColorStop(1, "#f0c14b");
-  ctx.fillStyle = goldG;
+  ctx.save();
+  ctx.shadowColor = "rgba(0,0,0,0.5)"; ctx.shadowBlur = 16*scale;
+  ctx.fillStyle = "rgba(7,10,13,0.55)";
+  roundRectPath(pillX, pillY, pillW, pillH, 999); ctx.fill();
+  ctx.shadowBlur = 0;
+  ctx.restore();
+  if(isMvpBadge){
+    const goldG = ctx.createLinearGradient(pillX, pillY, pillX+pillW, pillY+pillH);
+    goldG.addColorStop(0, "#ffe08a"); goldG.addColorStop(1, "#f0c14b");
+    ctx.fillStyle = goldG;
+  } else {
+    ctx.fillStyle = acc;
+  }
   roundRectPath(pillX, pillY, pillW, pillH, 999); ctx.fill();
   ctx.save();
-  ctx.shadowColor = "rgba(240,193,75,0.20)"; ctx.shadowBlur = 8*scale;
+  ctx.shadowColor = rgba(gold, 0.25); ctx.shadowBlur = 10*scale;
   roundRectPath(pillX, pillY, pillW, pillH, 999); ctx.fill();
   ctx.restore();
   ctx.font = `800 ${pillF}px Sora, sans-serif`;
-  ctx.fillStyle = "#231c08"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
-  drawSpaced(mvpLabel, pillX+pillPadX, pillY+pillH/2, pillF*0.2);
-  ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+  ctx.fillStyle = isMvpBadge ? "#231c08" : "#ffffff"; ctx.textAlign = "left"; ctx.textBaseline = "middle";
+  const spacedW = pillTW;
+  drawSpaced(mvpLabel, pillX + (pillW - spacedW)/2, pillY+pillH/2, pillF*0.2);
+  ctx.textBaseline = "alphabetic";
 
   // bottom text
   const eyeF = Math.round(22*scale);
@@ -1793,17 +1739,18 @@ function drawLayoutMVP(W,H,c,scale,pad,maxW,acc,hi){
 
   // stat boxes
   if(showStats){
+    const mvpHiIdx = (c.statHighlight || 0) - 1;
     const count = Math.min(stats.length, 3);
     const boxW = (maxW - (count-1)*statBoxGap) / count;
     let bx = pad;
     for(let i=0; i<count; i++){
-      const isFirst = i===0;
-      ctx.fillStyle = isFirst ? "rgba(240,193,75,0.06)" : "rgba(255,255,255,0.03)";
+      const isHi = i===mvpHiIdx;
+      ctx.fillStyle = isHi ? rgba(gold, 0.06) : "rgba(255,255,255,0.03)";
       roundRectPath(bx, statsY, boxW, statBoxH, statBoxR); ctx.fill();
-      ctx.strokeStyle = isFirst ? "rgba(240,193,75,0.2)" : "#16212a"; ctx.lineWidth = Math.max(1, 1.5*scale);
+      ctx.strokeStyle = isHi ? rgba(gold, 0.2) : "#16212a"; ctx.lineWidth = Math.max(1, 1.5*scale);
       roundRectPath(bx, statsY, boxW, statBoxH, statBoxR); ctx.stroke();
       ctx.font = `600 ${statValueF}px 'JetBrains Mono', monospace`;
-      ctx.fillStyle = isFirst ? gold : "#ffffff";
+      ctx.fillStyle = isHi ? gold : "#ffffff";
       ctx.textAlign = "center"; ctx.textBaseline = "top";
       ctx.fillText(stats[i].value, bx+boxW/2, statsY + Math.round(16*scale));
       ctx.font = `500 ${statLabelF}px Manrope, sans-serif`;
@@ -2495,7 +2442,7 @@ function render(){
   const showImg = (item && item.img && item.showBgImage !== false) || showVideo;
   const framed = showImg && item.framedImage && !showVideo;
   if(showImg && !framed){
-    if(tpl==="transfert" || tpl==="spotlight") drawStripeBackground(W,H);
+    if(tpl==="transfert") drawStripeBackground(W,H);
     drawSlideMedia(item, W, H, state.zoom);
     if(state.imgBright < 1){
       ctx.fillStyle = `rgba(0,0,0,${1 - state.imgBright})`;
@@ -2505,9 +2452,13 @@ function render(){
   } else if(framed){
     drawBaseBackground(W,H);
     drawFramedImage(item, W, H, state.zoom);
+    if(state.imgBright < 1){
+      ctx.fillStyle = `rgba(0,0,0,${1 - state.imgBright})`;
+      ctx.fillRect(0,0,W,H);
+    }
   } else if(item){
     if(tpl==="breaking") drawBreakingBackground(W,H);
-    else if(tpl==="transfert" || tpl==="spotlight"){ drawBaseBackground(W,H); drawStripeBackground(W,H); }
+    else if(tpl==="transfert"){ drawBaseBackground(W,H); drawStripeBackground(W,H); }
     else drawBaseBackground(W,H);
   } else {
     drawBaseBackground(W,H);
@@ -2652,11 +2603,13 @@ function syncInputs(){
   if($("footerText")) { $("footerText").value = has ? (it.footerText||"") : ""; $("footerText").disabled = !has; }
   if($("pollOptions")) { $("pollOptions").value = has ? (it.pollOptions||"") : ""; $("pollOptions").disabled = !has; }
   if($("pollWinner")) { $("pollWinner").value = has ? (it.pollWinner||0) : 0; $("pollWinnerV").textContent = has ? (it.pollWinner||0) : 0; $("pollWinner").disabled = !has; }
+  if($("statHighlight")) { const sv = has ? (it.statHighlight||0) : 0; $("statHighlight").value = sv; $("statHighlightV").textContent = sv; $("statHighlight").disabled = !has; }
   if($("tiers")) { $("tiers").value = has ? (it.tiers||"") : ""; $("tiers").disabled = !has; }
   if($("playerName")) { $("playerName").value = has ? (it.playerName||"") : ""; $("playerName").disabled = !has; }
   if($("playerRole")) { $("playerRole").value = has ? (it.playerRole||"") : ""; $("playerRole").disabled = !has; }
   if($("transferBadge")) { $("transferBadge").value = has ? (it.transferBadge||"officiel") : "officiel"; $("transferBadge").disabled = !has; }
   if($("matchResult")) { $("matchResult").value = has ? (it.matchResult||"") : ""; $("matchResult").disabled = !has; }
+  if($("mvpBadge")) { $("mvpBadge").value = has ? (it.mvpBadge||"mvp") : "mvp"; $("mvpBadge").disabled = !has; }
   if($("lineup")) { $("lineup").value = has ? (it.lineup||"") : ""; $("lineup").disabled = !has; }
   if($("lineupTeamRating")) { $("lineupTeamRating").value = has ? (it.lineupTeamRating||"") : ""; $("lineupTeamRating").disabled = !has; }
   if($("bracket")) { $("bracket").value = has ? (it.bracket||"") : ""; $("bracket").disabled = !has; }
@@ -2668,11 +2621,15 @@ function syncInputs(){
   if($("framedImage")) { $("framedImage").checked = has ? !!it.framedImage : false; $("framedImage").disabled = !has; }
   if($("photoCredit")) { $("photoCredit").value = has ? (it.photoCredit||"") : ""; $("photoCredit").disabled = !has; }
   if($("bgImageClear")) { $("bgImageClear").style.display = (has && it.img) ? "" : "none"; }
+  if($("frameY")) { $("frameY").value = has ? (it.frameY||0) : 0; $("frameYV").textContent = has ? (it.frameY||0) : 0; $("frameY").disabled = !has; }
+  const showFrameY = has && !!it.framedImage;
+  const frameYEl = document.getElementById("frameYRow");
+  if(frameYEl) frameYEl.style.display = showFrameY ? "" : "none";
   if($("bgImageBtn")) { $("bgImageBtn").disabled = !has; }
 
   // template-specific field visibility
   const show = (id, vis) => { const el = document.getElementById(id); if(el) el.style.display = vis ? "" : "none"; };
-  const hasImage = tpl==="post-image" || tpl==="post-video" || tpl==="statistique" || tpl==="transfert" || tpl==="spotlight" || tpl==="mvp";
+  const hasImage = tpl!=="post-texte" && tpl!=="planning";
   show("scoreRow", tpl==="post-image" || tpl==="post-video" || tpl==="score");
   show("scoreYRow", tpl==="post-image" || tpl==="post-video" || tpl==="score");
   show("scoreCheckRow", tpl==="post-image" || tpl==="post-video");
@@ -2687,16 +2644,17 @@ function syncInputs(){
   show("resetView", hasImage);
   show("standingsRow", tpl==="classement");
   show("relegationRow", tpl==="classement");
-  show("statsRow", tpl==="statistique" || tpl==="spotlight" || tpl==="mvp");
+  show("statsRow", tpl==="statistique" || tpl==="mvp");
   show("matchesRow", tpl==="programme");
   show("planningRow", tpl==="planning");
   show("footerRow", tpl==="programme" || tpl==="sondage" || tpl==="tierlist");
   show("pollRow", tpl==="sondage");
   show("tiersRow", tpl==="tierlist");
-  show("playerNameRow", tpl==="citation" || tpl==="spotlight" || tpl==="mvp");
-  show("playerRoleRow", tpl==="citation" || tpl==="spotlight");
+  show("playerNameRow", tpl==="citation" || tpl==="mvp");
+  show("playerRoleRow", tpl==="citation");
   show("transferBadgeRow", tpl==="transfert");
   show("matchResultRow", tpl==="mvp");
+  show("mvpBadgeRow", tpl==="mvp");
   show("lineupRow", tpl==="lineup");
   show("bracketRow", tpl==="bracket");
   show("bracketFormatRow", tpl==="bracket");
@@ -2770,17 +2728,20 @@ if($("matches")) $("matches").oninput = e => setField("matches", e.target.value)
 if($("footerText")) $("footerText").oninput = e => setField("footerText", e.target.value);
 if($("pollOptions")) $("pollOptions").oninput = e => setField("pollOptions", e.target.value);
 if($("pollWinner")) $("pollWinner").oninput = e => { const v=parseInt(e.target.value)||0; $("pollWinnerV").textContent=v; setField("pollWinner", v); };
+if($("statHighlight")) $("statHighlight").oninput = e => { const v=parseInt(e.target.value)||0; $("statHighlightV").textContent=v; setField("statHighlight", v); };
 if($("tiers")) $("tiers").oninput = e => setField("tiers", e.target.value);
 if($("playerName")) $("playerName").oninput = e => setField("playerName", e.target.value);
 if($("playerRole")) $("playerRole").oninput = e => setField("playerRole", e.target.value);
 if($("transferBadge")) $("transferBadge").onchange = e => setField("transferBadge", e.target.value);
 if($("matchResult")) $("matchResult").oninput = e => setField("matchResult", e.target.value);
+if($("mvpBadge")) $("mvpBadge").onchange = e => setField("mvpBadge", e.target.value);
 if($("photoCredit")) $("photoCredit").oninput = e => setField("photoCredit", e.target.value);
 if($("lineup")) $("lineup").oninput = e => setField("lineup", e.target.value);
 if($("lineupTeamRating")) $("lineupTeamRating").oninput = e => setField("lineupTeamRating", e.target.value);
 if($("bracket")) $("bracket").oninput = e => setField("bracket", e.target.value);
 if($("bracketFormat")) $("bracketFormat").oninput = e => setField("bracketFormat", e.target.value);
 if($("planningEvents")) $("planningEvents").oninput = e => setField("planningEvents", e.target.value);
+if($("frameY")) $("frameY").oninput = e => { const v=parseFloat(e.target.value); $("frameYV").textContent=v; setField("frameY", v); };
 document.querySelectorAll("#lineupCountSeg button").forEach(b=>{
   b.onclick = ()=>{
     document.querySelectorAll("#lineupCountSeg button").forEach(x=>x.classList.remove("on"));
@@ -2958,11 +2919,13 @@ function applyJsonPreset(data, imageFiles){
     slide.footerText = s.footerText || "";
     slide.pollOptions = s.pollOptions || "";
     slide.pollWinner = s.pollWinner || 0;
+    slide.statHighlight = s.statHighlight || 0;
     slide.tiers = s.tiers || "";
     slide.playerName = s.playerName || "";
     slide.playerRole = s.playerRole || "";
     slide.transferBadge = s.transferBadge || "officiel";
     slide.matchResult = s.matchResult || "";
+    slide.mvpBadge = s.mvpBadge || "mvp";
     slide.photoCredit = s.photoCredit || "";
     slide.showBgImage = s.showBgImage !== false;
     slide.framedImage = !!s.framedImage;
@@ -2974,6 +2937,7 @@ function applyJsonPreset(data, imageFiles){
     slide.bracket = s.bracket || "";
     slide.bracketFormat = s.bracketFormat || "";
     slide.planningEvents = s.planningEvents || "";
+    slide.frameY = s.frameY || 0;
     state.images.push(slide);
 
     const imgName = s.image;
@@ -3130,7 +3094,7 @@ window.addEventListener("touchend", endDrag);
 cv.addEventListener("wheel", e=>{
   e.preventDefault();
   let z = state.zoom + (e.deltaY<0?0.04:-0.04);
-  z = Math.max(1, Math.min(2.6, z));
+  z = Math.max(0.5, Math.min(2.6, z));
   state.zoom = z;
   $("zoom").value = Math.round(z*100); $("zoomV").textContent = Math.round(z*100)+"%";
   render();
@@ -3174,13 +3138,13 @@ function drawFullSlide(targetCtx, W, H, slide, idx, total, zoomMul){
   const framed = showImg && slide.framedImage && !showVideo;
   const tpl = slide.template;
   if(showImg && !framed){
-    if(tpl==="transfert" || tpl==="spotlight") drawStripeBackground(W,H);
+    if(tpl==="transfert") drawStripeBackground(W,H);
     drawSlideMedia(slide, W, H, state.zoom * (zoomMul||1));
   } else if(framed){
     drawBaseBackground(W,H); drawFramedImage(slide, W, H, state.zoom);
   } else {
     if(tpl==="breaking") drawBreakingBackground(W,H);
-    else if(tpl==="transfert" || tpl==="spotlight"){ drawBaseBackground(W,H); drawStripeBackground(W,H); }
+    else if(tpl==="transfert"){ drawBaseBackground(W,H); drawStripeBackground(W,H); }
     else drawBaseBackground(W,H);
   }
   drawEdgeScrims(W,H);

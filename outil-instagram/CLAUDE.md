@@ -33,9 +33,9 @@ Définis dans la constante `TEMPLATES`. Chaque slide a son propre template indé
 | `sondage` | Sondage | `drawLayoutSondage` — options de vote |
 | `tierlist` | Tierlist | `drawLayoutTierlist` — tiers S/A/B/C |
 | `transfert` | Transfert | `drawLayoutTransfert` — annonce joueur |
-| `spotlight` | Spotlight | `drawLayoutSpotlight` — focus joueur |
-| `mvp` | MVP | `drawLayoutMVP` — MVP doré |
+| `mvp` | MVP | `drawLayoutMVP` — MVP doré ou badge Macro |
 | `citation` | Citation | `drawLayoutCitation` — citation avec nom/rôle |
+| `planning` | Planning | `drawLayoutPlanning` — calendrier hebdo esport |
 
 ### Rendu canvas
 `render()` → dessine l'image de fond → `drawOverlay(W, H, slideInfo, content, hasImage)` qui dispatche vers la bonne fonction de layout selon `content.template`.

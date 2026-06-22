@@ -40,7 +40,6 @@
         <button class="tpl-btn" data-tpl="transfert"><span class="tpl-icon">⇄</span><span class="tpl-name">Transfert</span></button>
         <button class="tpl-btn" data-tpl="tierlist"><span class="tpl-icon">S</span><span class="tpl-name">Tier List</span></button>
         <button class="tpl-btn" data-tpl="citation"><span class="tpl-icon">❝</span><span class="tpl-name">Citation</span></button>
-        <button class="tpl-btn" data-tpl="spotlight"><span class="tpl-icon">★</span><span class="tpl-name">Spotlight</span></button>
         <button class="tpl-btn" data-tpl="mvp"><span class="tpl-icon">🏆</span><span class="tpl-name">MVP</span></button>
         <button class="tpl-btn" data-tpl="lineup"><span class="tpl-icon">👥</span><span class="tpl-name">Lineup</span></button>
         <button class="tpl-btn" data-tpl="bracket"><span class="tpl-icon">🏅</span><span class="tpl-name">Bracket</span></button>
@@ -77,6 +76,10 @@
           <label class="check" style="flex:1"><input type="checkbox" id="showBgImage" checked /> Afficher l'image</label>
           <label class="check" style="flex:1"><input type="checkbox" id="framedImage" /> Cadrer l'image</label>
           <button class="btn" id="bgImageClear" style="font-size:11px;padding:5px 8px;display:none">✕</button>
+        </div>
+        <div id="frameYRow" style="display:none;margin-top:8px">
+          <label>Position du cadre</label>
+          <div class="slider"><input type="range" id="frameY" min="-200" max="400" value="0" /><span class="val" id="frameYV">0</span></div>
         </div>
       </div>
       <div class="field" style="margin-top:12px">
@@ -163,6 +166,10 @@
           <label>Stats <span style="color:var(--fg-mute);font-weight:400">— une ligne par stat : Label Valeur</span></label>
           <textarea id="stats" rows="5" placeholder="Victoires consécutives 11&#10;Durée moyenne 28:14&#10;First bloods 72%"></textarea>
         </div>
+        <div class="field" style="margin-top:8px">
+          <label>Stat mise en avant <span id="statHighlightV" style="color:var(--cyan)">1</span> <span style="color:var(--fg-mute);font-weight:400">(0 = aucune)</span></label>
+          <input type="range" id="statHighlight" min="0" max="6" value="1" />
+        </div>
       </div>
       <div id="matchesRow" style="display:none">
         <div class="field" style="margin-top:12px">
@@ -217,6 +224,15 @@
             <option value="officiel">Officiel (vert)</option>
             <option value="rumeur">Rumeur (or)</option>
             <option value="negociation">En négociation (bleu)</option>
+          </select>
+        </div>
+      </div>
+      <div id="mvpBadgeRow" style="display:none">
+        <div class="field" style="margin-top:12px">
+          <label>Style de pastille</label>
+          <select id="mvpBadge">
+            <option value="mvp">MVP du match (doré)</option>
+            <option value="macro">Macro (couleur du jeu)</option>
           </select>
         </div>
       </div>
@@ -314,7 +330,7 @@
       </div>
       <div id="zoomRow" class="field">
         <label>Zoom de l'image</label>
-        <div class="slider"><input type="range" id="zoom" min="100" max="260" value="100" /><span class="val" id="zoomV">100%</span></div>
+        <div class="slider"><input type="range" id="zoom" min="50" max="260" value="100" /><span class="val" id="zoomV">100%</span></div>
       </div>
       <div id="imgBrightRow" class="field">
         <label>Luminosité de l'image</label>
