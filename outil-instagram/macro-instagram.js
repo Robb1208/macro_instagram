@@ -2029,14 +2029,14 @@ function drawLayoutBracket(W,H,c,scale,pad,maxW,acc,hi){
   };
 
   // shared sub-bracket drawing: returns { yPositions, MW, MH } for connector use
-  const drawSubBracket = (subRounds, regionTop, regionBottom, bracketLeft, MW, isFinalBracket) => {
+  const drawSubBracket = (subRounds, regionTop, regionBottom, bracketLeft, MW, isFinalBracket, deMode) => {
     const availH = regionBottom - regionTop;
     const matchTop = regionTop;
     const numR = subRounds.length;
     const baseIdx = subRounds.reduce((best,r,i) => r.length >= subRounds[best].length ? i : best, 0);
     const baseCount = subRounds[baseIdx].length;
-    const maxMH = Math.round(82*scale);
-    const minMH = Math.round(48*scale);
+    const maxMH = Math.round((deMode ? 62 : 82)*scale);
+    const minMH = Math.round((deMode ? 40 : 48)*scale);
     const idealMH = Math.floor(availH * 0.85 / Math.max(1, baseCount));
     const MH = Math.min(maxMH, Math.max(minMH, idealMH));
     const remainH = availH - baseCount * MH;
@@ -2051,7 +2051,9 @@ function drawLayoutBracket(W,H,c,scale,pad,maxW,acc,hi){
     yPos[baseIdx] = subRounds[baseIdx].map((_,i) => matchTop + baseOff + i*(MH+MG));
     for(let r=baseIdx+1; r<numR; r++){
       const prev = subRounds[r-1]; const curr = subRounds[r];
-      if(curr.length===1 && prev.length>=1){
+      if(curr.length === prev.length){
+        for(let m=0;m<curr.length;m++) yPos[r][m] = yPos[r-1][m];
+      } else if(curr.length===1 && prev.length>=1){
         yPos[r][0] = (yPos[r-1][0] + yPos[r-1][prev.length-1]) / 2;
       } else {
         for(let m=0;m<curr.length;m++){
@@ -2064,12 +2066,16 @@ function drawLayoutBracket(W,H,c,scale,pad,maxW,acc,hi){
     }
     for(let r=baseIdx-1; r>=0; r--){
       const next = subRounds[r+1]; const curr = subRounds[r];
-      for(let m=0;m<curr.length;m++){
-        const target = Math.floor(m/2);
-        if(target<next.length){
-          const ny = yPos[r+1][target];
-          yPos[r][m] = m%2===0 ? ny-(MH+MG)/2 : ny+(MH+MG)/2;
-        } else yPos[r][m] = matchTop + m*(MH+MG);
+      if(curr.length === next.length){
+        for(let m=0;m<curr.length;m++) yPos[r][m] = yPos[r+1][m];
+      } else {
+        for(let m=0;m<curr.length;m++){
+          const target = Math.floor(m/2);
+          if(target<next.length){
+            const ny = yPos[r+1][target];
+            yPos[r][m] = m%2===0 ? ny-(MH+MG)/2 : ny+(MH+MG)/2;
+          } else yPos[r][m] = matchTop + m*(MH+MG);
+        }
       }
     }
 
@@ -2080,12 +2086,13 @@ function drawLayoutBracket(W,H,c,scale,pad,maxW,acc,hi){
       const toX = bracketLeft + (r+1)*(MW+RG);
       const midX = fromX + RG/2;
       const curr = subRounds[r]; const next = subRounds[r+1];
+      const sameSize = curr.length === next.length;
       for(let m=0;m<curr.length;m++){
         const fromY = yPos[r][m]+MH/2;
-        const targetM = Math.floor(m/2);
+        const targetM = sameSize ? m : Math.floor(m/2);
         if(targetM>=next.length) continue;
         const isTop = m%2===0;
-        const toY = yPos[r+1][targetM] + (curr.length===next.length ? MH/2 : (isTop ? MH*0.25 : MH*0.75));
+        const toY = yPos[r+1][targetM] + (sameSize ? MH/2 : (isTop ? MH*0.25 : MH*0.75));
         ctx.strokeStyle = rgba(acc, curr[m].winner ? 0.35 : 0.15);
         ctx.beginPath(); ctx.moveTo(fromX, fromY); ctx.lineTo(midX, fromY);
         ctx.lineTo(midX, toY); ctx.lineTo(toX, toY); ctx.stroke();
@@ -2121,7 +2128,11 @@ function drawLayoutBracket(W,H,c,scale,pad,maxW,acc,hi){
     const bracketBottom = H - pad - fmtBlockH - Math.round(20*scale);
     const totalH = bracketBottom - bracketTop;
 
-    const dividerY = bracketTop + totalH * 0.50;
+    const uMaxCol = Math.max(...upper.map(r => r.length));
+    const lMaxCol = Math.max(...lower.map(r => r.length));
+    const uRatio = uMaxCol / Math.max(1, uMaxCol + lMaxCol);
+    const dividerGap = Math.round(40*scale);
+    const dividerY = bracketTop + (totalH - dividerGap) * Math.max(0.30, Math.min(0.72, uRatio)) + dividerGap/2;
 
     // upper section label
     ctx.font = `700 ${sectionLabelF}px 'JetBrains Mono', monospace`;
@@ -2130,8 +2141,8 @@ function drawLayoutBracket(W,H,c,scale,pad,maxW,acc,hi){
 
     // upper region (below label)
     const upperTop = bracketTop + sectionLabelH;
-    const upperBottom = dividerY - Math.round(12*scale);
-    const uResult = drawSubBracket(upper, upperTop, upperBottom, bracketLeft, MW, false);
+    const upperBottom = dividerY - Math.round(24*scale);
+    const uResult = drawSubBracket(upper, upperTop, upperBottom, bracketLeft, MW, false, true);
 
     // divider
     ctx.strokeStyle = rgba(acc, 0.12); ctx.lineWidth = Math.max(1, scale);
@@ -2140,12 +2151,12 @@ function drawLayoutBracket(W,H,c,scale,pad,maxW,acc,hi){
     // lower section label
     ctx.font = `700 ${sectionLabelF}px 'JetBrains Mono', monospace`;
     ctx.fillStyle = rgba(acc, 0.5); ctx.textBaseline = "top";
-    drawSpaced("LOWER BRACKET", pad, dividerY + Math.round(6*scale), sectionLabelF*0.08);
+    drawSpaced("LOWER BRACKET", pad, dividerY + Math.round(14*scale), sectionLabelF*0.08);
 
     // lower region (below label)
-    const lowerTop = dividerY + Math.round(6*scale) + sectionLabelH;
+    const lowerTop = dividerY + Math.round(14*scale) + sectionLabelH;
     const lowerBottom = gf.length ? bracketBottom - Math.round(10*scale) : bracketBottom;
-    const lResult = drawSubBracket(lower, lowerTop, lowerBottom, bracketLeft, MW, false);
+    const lResult = drawSubBracket(lower, lowerTop, lowerBottom, bracketLeft, MW, false, true);
 
     // drop connectors: UB losers fall into LB
     // Standard mapping: UB round i losers → LB round (i*2) for i>0, UB round 0 → LB round 0
@@ -2232,7 +2243,7 @@ function drawLayoutBracket(W,H,c,scale,pad,maxW,acc,hi){
     const MW = Math.min(Math.round(260*scale), Math.floor((maxW - totalGapW) / numRounds));
     const totalBracketW = numRounds * MW + (numRounds-1) * RG;
     const bracketLeft = (W - totalBracketW) / 2;
-    drawSubBracket(rounds, bracketTop, bracketBottom, bracketLeft, MW, true);
+    drawSubBracket(rounds, bracketTop, bracketBottom, bracketLeft, MW, true, false);
 
     // champion label for single elim
     const lastR = rounds[rounds.length-1];
@@ -2940,8 +2951,14 @@ if($("bracketFormat")) $("bracketFormat").oninput = e => setField("bracketFormat
       });
       // grand final
       lines.push("---");
-      lines.push("TBD 0");
-      lines.push("TBD 0");
+      const ubFinal = ub[ub.length-1];
+      const lbFinal = lb[lb.length-1];
+      const gfA = (ubFinal && ubFinal[0]) ? (getWinner(ubFinal[0]) || "TBD") : "TBD";
+      const gfB = (lbFinal && lbFinal[0]) ? (getWinner(lbFinal[0]) || "TBD") : "TBD";
+      const gfSa = it._gfSa || 0;
+      const gfSb = it._gfSb || 0;
+      lines.push(gfA + " " + gfSa);
+      lines.push(gfB + " " + gfSb);
     }
 
     const text = lines.join("\n");
@@ -2970,10 +2987,55 @@ if($("bracketFormat")) $("bracketFormat").oninput = e => setField("bracketFormat
     }
   }
 
+  function getLoser(m){
+    if(m.bye) return null;
+    const w = getWinner(m);
+    if(!w) return null;
+    return w === m.a ? m.b : m.a;
+  }
+
+  function advanceLB(lb){
+    for(let r = 0; r < lb.length - 1; r++){
+      const curr = lb[r];
+      const next = lb[r+1];
+      const sameSize = curr.length === next.length;
+      for(let m = 0; m < curr.length; m++){
+        const w = getWinner(curr[m]);
+        if(sameSize){
+          if(next[m]) next[m].a = w || "TBD";
+        } else {
+          const ni = Math.floor(m / 2);
+          const slot = m % 2 === 0 ? "a" : "b";
+          if(ni < next.length) next[ni][slot] = w || "TBD";
+        }
+      }
+    }
+  }
+
   function advanceWinners(it){
     if(!it._ubRounds) return;
-    advanceRounds(it._ubRounds);
-    if(it._lbRounds && it._lbRounds.length) advanceRounds(it._lbRounds);
+    const ub = it._ubRounds;
+    const lb = it._lbRounds || [];
+
+    advanceRounds(ub);
+
+    if(lb.length){
+      for(let r = 0; r < ub.length; r++){
+        for(let m = 0; m < ub[r].length; m++){
+          const loser = getLoser(ub[r][m]);
+          if(!loser || loser === "TBD" || loser === "BYE") continue;
+          if(r === 0){
+            const li = Math.floor(m / 2);
+            const slot = m % 2 === 0 ? "a" : "b";
+            if(lb[0] && lb[0][li]) lb[0][li][slot] = loser;
+          } else {
+            const lbR = 2 * r - 1;
+            if(lb[lbR] && lb[lbR][m]) lb[lbR][m].b = loser;
+          }
+        }
+      }
+      advanceLB(lb);
+    }
   }
 
   function renderMatchInputs(){
@@ -3019,12 +3081,22 @@ if($("bracketFormat")) $("bracketFormat").oninput = e => setField("bracketFormat
       });
       html += `</div>`;
       html += `<hr class="bk-divider"><div class="bk-section"><div class="bk-section-label">Grand Final</div>`;
+      const ubFinalM = ub[ub.length-1] ? ub[ub.length-1][0] : null;
+      const lbFinalM = lb[lb.length-1] ? lb[lb.length-1][0] : null;
+      const gfA = ubFinalM ? (getWinner(ubFinalM) || "TBD") : "TBD";
+      const gfB = lbFinalM ? (getWinner(lbFinalM) || "TBD") : "TBD";
+      const gfSa = it._gfSa || 0;
+      const gfSb = it._gfSb || 0;
+      const logoGfA = getTeamLogoURL(gfA);
+      const logoGfB = getTeamLogoURL(gfB);
+      const wGfA = gfSa > gfSb ? " winner" : (gfSb > gfSa ? " loser" : "");
+      const wGfB = gfSb > gfSa ? " winner" : (gfSa > gfSb ? " loser" : "");
       html += `<div class="bk-match">
-        <div class="bk-team"><span class="bk-name">TBD</span></div>
-        <input class="bk-score" type="number" min="0" value="0" data-sec="gf" data-ri="0" data-mi="0" data-side="a">
+        <div class="bk-team${wGfA}">${logoGfA ? `<img src="${logoGfA}">` : ""}<span class="bk-name">${gfA}</span></div>
+        <input class="bk-score" type="number" min="0" value="${gfSa}" data-sec="gf" data-ri="0" data-mi="0" data-side="a">
         <div class="bk-vs"></div>
-        <input class="bk-score" type="number" min="0" value="0" data-sec="gf" data-ri="0" data-mi="0" data-side="b">
-        <div class="bk-team" style="justify-content:flex-end"><span class="bk-name">TBD</span></div>
+        <input class="bk-score" type="number" min="0" value="${gfSb}" data-sec="gf" data-ri="0" data-mi="0" data-side="b">
+        <div class="bk-team${wGfB}" style="justify-content:flex-end">${logoGfB ? `<img src="${logoGfB}">` : ""}<span class="bk-name">${gfB}</span></div>
       </div></div>`;
     }
 
@@ -3042,6 +3114,8 @@ if($("bracketFormat")) $("bracketFormat").oninput = e => setField("bracketFormat
           it._ubRounds[ri][mi][side === "a" ? "sa" : "sb"] = val;
         } else if(sec === "lb" && it._lbRounds[ri] && it._lbRounds[ri][mi]){
           it._lbRounds[ri][mi][side === "a" ? "sa" : "sb"] = val;
+        } else if(sec === "gf"){
+          it[side === "a" ? "_gfSa" : "_gfSb"] = val;
         }
         advanceWinners(it);
         syncBracketText();
