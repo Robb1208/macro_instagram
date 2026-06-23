@@ -1896,7 +1896,7 @@ function drawLayoutLineup(W,H,c,scale,pad,maxW,acc,hi){
 }
 
 // --- T16: Bracket ---
-function parseBracket(text){
+function parseBracketRounds(text){
   if(!text || !text.trim()) return [];
   const rounds = [];
   let current = [];
@@ -1925,6 +1925,17 @@ function parseBracket(text){
   }
   return result;
 }
+function parseBracket(text){
+  if(!text || !text.trim()) return [];
+  if(text.includes("---")){
+    const sections = text.split(/^---$/m);
+    const upper = parseBracketRounds(sections[0]||"");
+    const lower = parseBracketRounds(sections[1]||"");
+    const gf = parseBracketRounds(sections[2]||"");
+    return { doubleElim: true, upper, lower, grandFinal: gf.length ? gf[0] : [] };
+  }
+  return parseBracketRounds(text);
+}
 
 function drawLayoutBracket(W,H,c,scale,pad,maxW,acc,hi){
   const eyeF = Math.round(22*scale);
@@ -1935,7 +1946,6 @@ function drawLayoutBracket(W,H,c,scale,pad,maxW,acc,hi){
   const titleLines = wrapRich(richWords(c.title), titleFont, maxW);
   const dragOffset = ((c.textY||0)*scale) + (c.textDrag||0);
 
-  // header
   const accentLineH = Math.round(4*scale);
   const gapLine = Math.round(13*scale);
   let y = Math.round(H*0.085 + 80*scale) + dragOffset;
@@ -1951,213 +1961,277 @@ function drawLayoutBracket(W,H,c,scale,pad,maxW,acc,hi){
   ctx.textBaseline = "top";
   for(const ln of titleLines){ drawRichLine(ln, pad, y, titleFont, hi, "#ffffff"); y += titleLH; }
 
-  // parse bracket
-  const rounds = parseBracket(c.bracket);
-  if(!rounds.length){ lastTextBox=null; return; }
+  const parsed = parseBracket(c.bracket);
+  const isDE = parsed && parsed.doubleElim;
+  const rounds = isDE ? null : (Array.isArray(parsed) ? parsed : []);
+  if(!isDE && (!rounds || !rounds.length)){ lastTextBox=null; return; }
 
-  // bracket dimensions — adaptive to fill available space
-  const isStory = state.format==="story" || state.reel;
   const RG = Math.round(40*scale);
   const roundLabelF = Math.round(16*scale);
   const roundLabelH = Math.round(28*scale);
   const cardR = Math.round(8*scale);
   const rowPad = Math.round(10*scale);
-
-  // round labels
-  const numRounds = rounds.length;
-  const roundNames = [];
-  if(numRounds === 1) roundNames.push("FINALE");
-  else if(numRounds === 2){ roundNames.push("DEMIS"); roundNames.push("FINALE"); }
-  else if(numRounds === 3){ roundNames.push("QUARTS"); roundNames.push("DEMIS"); roundNames.push("FINALE"); }
-  else { for(let i=0;i<numRounds;i++) roundNames.push(i===numRounds-1?"FINALE":"ROUND "+(i+1)); }
-
-  // compute Y positions per round
-  const bracketTop = y + Math.round(44*scale);
-  const championBlockH = Math.round(70*scale);
   const fmtBlockH = (c.bracketFormat||"").trim() ? Math.round(36*scale) : 0;
-  const bracketBottom = H - pad - fmtBlockH - championBlockH;
-  const availH = bracketBottom - bracketTop - roundLabelH;
-  const matchTop = bracketTop + roundLabelH;
 
-  // adaptive card height: fill available vertical space
-  const baseIdx = rounds.reduce((best,r,i) => r.length >= rounds[best].length ? i : best, 0);
-  const baseMatchCount = rounds[baseIdx].length;
-  const idealMH = Math.floor(availH * 0.85 / baseMatchCount);
-  const maxMH = Math.round(100*scale);
-  const minMH = Math.round(56*scale);
-  const MH = Math.min(maxMH, Math.max(minMH, idealMH));
-  const remainH = availH - baseMatchCount * MH;
-  const MG = Math.max(Math.round(8*scale), Math.floor(remainH / Math.max(1, baseMatchCount-1)));
-
-  // adaptive card width: fill horizontal space
-  const totalGapW = (numRounds-1)*RG;
-  const MW = Math.min(Math.round(260*scale), Math.floor((maxW - totalGapW) / numRounds));
-
-  const teamF = Math.min(Math.round(26*scale), Math.max(Math.round(18*scale), Math.round(MH*0.34)));
-  const scoreF = Math.round(teamF * 1.1);
-  const logoSize = Math.min(Math.round(28*scale), Math.max(Math.round(18*scale), Math.round(MH*0.36)));
-
-  const yPos = rounds.map(()=>[]);
-  const baseBlockH = baseMatchCount * MH + (baseMatchCount-1) * MG;
-  const baseOffset = (availH - baseBlockH) / 2;
-  yPos[baseIdx] = rounds[baseIdx].map((_,i) => matchTop + baseOffset + i * (MH + MG));
-
-  // forward (after base)
-  for(let r = baseIdx+1; r < numRounds; r++){
-    const prev = rounds[r-1];
-    const curr = rounds[r];
-    if(curr.length === 1 && prev.length >= 1){
-      const firstY = yPos[r-1][0];
-      const lastY = yPos[r-1][prev.length-1];
-      yPos[r][0] = (firstY + lastY) / 2 + (MH - MH) / 2;
-    } else {
-      for(let m=0; m<curr.length; m++){
-        const f1 = m*2, f2 = m*2+1;
-        if(f2 < prev.length) yPos[r][m] = (yPos[r-1][f1] + yPos[r-1][f2]) / 2;
-        else if(f1 < prev.length) yPos[r][m] = yPos[r-1][f1];
-        else yPos[r][m] = matchTop + m*(MH+MG);
-      }
+  // shared card drawing helper
+  const drawMatchCard = (rx, my, MW, MH, match, isFinal, teamF, scoreF, logoSize) => {
+    const halfH = MH/2;
+    const cardBg = isFinal ? rgba(acc, 0.06) : "rgba(255,255,255,0.04)";
+    const cardStroke = isFinal ? rgba(acc, 0.30) : "rgba(255,255,255,0.08)";
+    ctx.fillStyle = cardBg;
+    roundRectPath(rx, my, MW, MH, cardR); ctx.fill();
+    ctx.strokeStyle = cardStroke; ctx.lineWidth = Math.max(1, (isFinal?2:1.5)*scale);
+    roundRectPath(rx, my, MW, MH, cardR); ctx.stroke();
+    if(match.winner){
+      const winY = match.winner==="A" ? my : my+halfH;
+      ctx.fillStyle = rgba(acc, 0.15);
+      ctx.save(); ctx.beginPath(); roundRectPath(rx, my, MW, MH, cardR); ctx.clip();
+      ctx.fillRect(rx, winY, MW, halfH); ctx.restore();
+      ctx.fillStyle = acc;
+      ctx.save(); ctx.beginPath(); roundRectPath(rx, my, MW, MH, cardR); ctx.clip();
+      ctx.fillRect(rx, winY, Math.round(3*scale), halfH); ctx.restore();
     }
-  }
-  // backward (before base)
-  for(let r = baseIdx-1; r >= 0; r--){
-    const next = rounds[r+1];
-    const curr = rounds[r];
-    for(let m=0; m<curr.length; m++){
-      const target = Math.floor(m/2);
-      if(target < next.length){
-        const ny = yPos[r+1][target];
-        const isTop = m%2===0;
-        yPos[r][m] = isTop ? ny - (MH+MG)/2 : ny + (MH+MG)/2;
+    ctx.strokeStyle = "rgba(255,255,255,0.06)"; ctx.lineWidth = Math.max(1, scale);
+    ctx.beginPath(); ctx.moveTo(rx, my+halfH); ctx.lineTo(rx+MW, my+halfH); ctx.stroke();
+    const drawTeamRow = (team, isWinner, rowY) => {
+      const alpha = isWinner || match.winner===null ? 1 : 0.4;
+      ctx.globalAlpha = alpha;
+      const logoImg = findTeamLogo(team.name);
+      const textX = rx + rowPad + (logoImg ? logoSize + Math.round(8*scale) : 0);
+      if(logoImg){ ctx.drawImage(logoImg, rx+rowPad, rowY+(halfH-logoSize)/2, logoSize, logoSize); }
+      ctx.font = `600 ${teamF}px Manrope, sans-serif`;
+      ctx.fillStyle = isWinner ? "#ffffff" : "#dfdfdf";
+      ctx.textBaseline = "middle"; ctx.textAlign = "left";
+      const maxNameW = MW - rowPad*2 - (logoImg ? logoSize+Math.round(8*scale) : 0) - Math.round(36*scale);
+      let name = team.name;
+      while(ctx.measureText(name).width > maxNameW && name.length > 3) name = name.slice(0,-1);
+      if(name !== team.name) name += "…";
+      ctx.fillText(name, textX, rowY + halfH/2);
+      ctx.font = `800 ${scoreF}px Sora, sans-serif`;
+      ctx.fillStyle = isWinner ? acc : "#6b7882";
+      ctx.textAlign = "right";
+      ctx.fillText(String(team.score), rx+MW-rowPad, rowY+halfH/2);
+      ctx.textAlign = "left"; ctx.globalAlpha = 1;
+    };
+    drawTeamRow(match.teamA, match.winner==="A", my);
+    drawTeamRow(match.teamB, match.winner==="B", my+halfH);
+  };
+
+  // shared sub-bracket drawing: returns { yPositions, MW, MH } for connector use
+  const drawSubBracket = (subRounds, labels, regionTop, regionBottom, bracketLeft, MW, isFinalBracket) => {
+    const availH = regionBottom - regionTop - roundLabelH;
+    const matchTop = regionTop + roundLabelH;
+    const numR = subRounds.length;
+    const baseIdx = subRounds.reduce((best,r,i) => r.length >= subRounds[best].length ? i : best, 0);
+    const baseCount = subRounds[baseIdx].length;
+    const maxMH = Math.round(82*scale);
+    const minMH = Math.round(48*scale);
+    const idealMH = Math.floor(availH * 0.85 / Math.max(1, baseCount));
+    const MH = Math.min(maxMH, Math.max(minMH, idealMH));
+    const remainH = availH - baseCount * MH;
+    const MG = Math.max(Math.round(6*scale), Math.floor(remainH / Math.max(1, baseCount-1)));
+    const teamF = Math.min(Math.round(22*scale), Math.max(Math.round(14*scale), Math.round(MH*0.30)));
+    const scoreF = Math.round(teamF * 1.1);
+    const logoSize = Math.min(Math.round(24*scale), Math.max(Math.round(14*scale), Math.round(MH*0.32)));
+
+    const yPos = subRounds.map(()=>[]);
+    const baseBlockH = baseCount * MH + (baseCount-1) * MG;
+    const baseOff = (availH - baseBlockH) / 2;
+    yPos[baseIdx] = subRounds[baseIdx].map((_,i) => matchTop + baseOff + i*(MH+MG));
+    for(let r=baseIdx+1; r<numR; r++){
+      const prev = subRounds[r-1]; const curr = subRounds[r];
+      if(curr.length===1 && prev.length>=1){
+        yPos[r][0] = (yPos[r-1][0] + yPos[r-1][prev.length-1]) / 2;
       } else {
-        yPos[r][m] = matchTop + m*(MH+MG);
-      }
-    }
-  }
-
-  // total bracket width
-  const totalBracketW = numRounds * MW + (numRounds-1) * RG;
-  const bracketLeft = (W - totalBracketW) / 2;
-
-  // draw round labels
-  ctx.font = `600 ${roundLabelF}px 'JetBrains Mono', monospace`;
-  ctx.textBaseline = "top";
-  for(let r=0; r<numRounds; r++){
-    const rx = bracketLeft + r * (MW + RG);
-    const isFinal = r === numRounds-1;
-    ctx.fillStyle = isFinal ? acc : "#6b7882";
-    drawSpaced(roundNames[r], rx, bracketTop, roundLabelF*0.12);
-  }
-
-  // draw connector lines
-  ctx.lineWidth = Math.max(1, 1.5*scale);
-  for(let r=0; r<numRounds-1; r++){
-    const fromX = bracketLeft + r*(MW+RG) + MW;
-    const toX = bracketLeft + (r+1)*(MW+RG);
-    const midX = fromX + RG/2;
-    const curr = rounds[r];
-    const next = rounds[r+1];
-    for(let m=0; m<curr.length; m++){
-      const fromY = yPos[r][m] + MH/2;
-      const targetM = Math.floor(m/2);
-      if(targetM >= next.length) continue;
-      const isTop = m%2===0;
-      const toY = yPos[r+1][targetM] + (curr.length===next.length ? MH/2 : (isTop ? MH*0.25 : MH*0.75));
-      const match = curr[m];
-      const isWinner = match.winner !== null;
-      ctx.strokeStyle = rgba(acc, isWinner ? 0.35 : 0.15);
-      ctx.beginPath();
-      ctx.moveTo(fromX, fromY);
-      ctx.lineTo(midX, fromY);
-      ctx.lineTo(midX, toY);
-      ctx.lineTo(toX, toY);
-      ctx.stroke();
-    }
-  }
-
-  // draw match cards
-  for(let r=0; r<numRounds; r++){
-    const rx = bracketLeft + r*(MW+RG);
-    const isFinal = r === numRounds-1;
-    for(let m=0; m<rounds[r].length; m++){
-      const match = rounds[r][m];
-      const my = yPos[r][m];
-      const halfH = MH/2;
-
-      // card bg
-      const cardBg = isFinal ? rgba(acc, 0.06) : "rgba(255,255,255,0.04)";
-      const cardStroke = isFinal ? rgba(acc, 0.30) : "rgba(255,255,255,0.08)";
-      ctx.fillStyle = cardBg;
-      roundRectPath(rx, my, MW, MH, cardR); ctx.fill();
-      ctx.strokeStyle = cardStroke; ctx.lineWidth = Math.max(1, (isFinal?2:1.5)*scale);
-      roundRectPath(rx, my, MW, MH, cardR); ctx.stroke();
-
-      // winner side accent bar
-      if(match.winner){
-        const winY = match.winner==="A" ? my : my+halfH;
-        ctx.fillStyle = rgba(acc, 0.15);
-        ctx.save();
-        ctx.beginPath(); roundRectPath(rx, my, MW, MH, cardR); ctx.clip();
-        ctx.fillRect(rx, winY, MW, halfH);
-        ctx.restore();
-        ctx.fillStyle = acc;
-        ctx.save();
-        ctx.beginPath(); roundRectPath(rx, my, MW, MH, cardR); ctx.clip();
-        ctx.fillRect(rx, winY, Math.round(3*scale), halfH);
-        ctx.restore();
-      }
-
-      // divider
-      ctx.strokeStyle = "rgba(255,255,255,0.06)"; ctx.lineWidth = Math.max(1, scale);
-      ctx.beginPath(); ctx.moveTo(rx, my+halfH); ctx.lineTo(rx+MW, my+halfH); ctx.stroke();
-
-      // team A (top)
-      const drawTeamRow = (team, isWinner, rowY) => {
-        const alpha = isWinner || match.winner===null ? 1 : 0.4;
-        ctx.globalAlpha = alpha;
-        const logoImg = findTeamLogo(team.name);
-        const textX = rx + rowPad + (logoImg ? logoSize + Math.round(8*scale) : 0);
-        if(logoImg){
-          const lx = rx + rowPad;
-          const ly = rowY + (halfH - logoSize)/2;
-          ctx.drawImage(logoImg, lx, ly, logoSize, logoSize);
+        for(let m=0;m<curr.length;m++){
+          const f1=m*2, f2=m*2+1;
+          if(f2<prev.length) yPos[r][m] = (yPos[r-1][f1]+yPos[r-1][f2])/2;
+          else if(f1<prev.length) yPos[r][m] = yPos[r-1][f1];
+          else yPos[r][m] = matchTop + m*(MH+MG);
         }
-        ctx.font = `600 ${teamF}px Manrope, sans-serif`;
-        ctx.fillStyle = isWinner ? "#ffffff" : "#dfdfdf";
-        ctx.textBaseline = "middle"; ctx.textAlign = "left";
-        const maxNameW = MW - rowPad*2 - (logoImg ? logoSize + Math.round(8*scale) : 0) - Math.round(36*scale);
-        let name = team.name;
-        while(ctx.measureText(name).width > maxNameW && name.length > 3) name = name.slice(0,-1);
-        if(name !== team.name) name += "…";
-        ctx.fillText(name, textX, rowY + halfH/2);
-        // score
-        ctx.font = `800 ${scoreF}px Sora, sans-serif`;
-        ctx.fillStyle = isWinner ? acc : "#6b7882";
-        ctx.textAlign = "right";
-        ctx.fillText(String(team.score), rx + MW - rowPad, rowY + halfH/2);
-        ctx.textAlign = "left";
-        ctx.globalAlpha = 1;
-      };
+      }
+    }
+    for(let r=baseIdx-1; r>=0; r--){
+      const next = subRounds[r+1]; const curr = subRounds[r];
+      for(let m=0;m<curr.length;m++){
+        const target = Math.floor(m/2);
+        if(target<next.length){
+          const ny = yPos[r+1][target];
+          yPos[r][m] = m%2===0 ? ny-(MH+MG)/2 : ny+(MH+MG)/2;
+        } else yPos[r][m] = matchTop + m*(MH+MG);
+      }
+    }
 
-      drawTeamRow(match.teamA, match.winner==="A", my);
-      drawTeamRow(match.teamB, match.winner==="B", my + halfH);
+    // labels
+    ctx.font = `600 ${roundLabelF}px 'JetBrains Mono', monospace`;
+    ctx.textBaseline = "top";
+    for(let r=0; r<numR; r++){
+      const rx = bracketLeft + r*(MW+RG);
+      const isF = isFinalBracket && r===numR-1;
+      ctx.fillStyle = isF ? acc : "#6b7882";
+      drawSpaced(labels[r]||("ROUND "+(r+1)), rx, regionTop, roundLabelF*0.12);
+    }
+    // connectors
+    ctx.lineWidth = Math.max(1, 1.5*scale);
+    for(let r=0; r<numR-1; r++){
+      const fromX = bracketLeft + r*(MW+RG)+MW;
+      const toX = bracketLeft + (r+1)*(MW+RG);
+      const midX = fromX + RG/2;
+      const curr = subRounds[r]; const next = subRounds[r+1];
+      for(let m=0;m<curr.length;m++){
+        const fromY = yPos[r][m]+MH/2;
+        const targetM = Math.floor(m/2);
+        if(targetM>=next.length) continue;
+        const isTop = m%2===0;
+        const toY = yPos[r+1][targetM] + (curr.length===next.length ? MH/2 : (isTop ? MH*0.25 : MH*0.75));
+        ctx.strokeStyle = rgba(acc, curr[m].winner ? 0.35 : 0.15);
+        ctx.beginPath(); ctx.moveTo(fromX, fromY); ctx.lineTo(midX, fromY);
+        ctx.lineTo(midX, toY); ctx.lineTo(toX, toY); ctx.stroke();
+      }
+    }
+    // cards
+    for(let r=0; r<numR; r++){
+      const rx = bracketLeft + r*(MW+RG);
+      const isF = isFinalBracket && r===numR-1;
+      for(let m=0; m<subRounds[r].length; m++){
+        drawMatchCard(rx, yPos[r][m], MW, MH, subRounds[r][m], isF, teamF, scoreF, logoSize);
+      }
+    }
+    return { yPos, MH, teamF, scoreF, logoSize };
+  };
 
-      // winner label under final
-      if(isFinal && match.winner){
-        const winnerName = match.winner==="A" ? match.teamA.name : match.teamB.name;
-        const champLabelF = Math.round(14*scale);
-        const champNameF = Math.round(32*scale);
-        const champY = my + MH + Math.round(16*scale);
-        const finalRx = rx;
-        const finalCx = finalRx + MW/2;
+  if(isDE){
+    // ── DOUBLE ELIMINATION ──
+    const upper = parsed.upper;
+    const lower = parsed.lower;
+    const gf = parsed.grandFinal;
+    const uRounds = upper.length;
+    const lRounds = lower.length;
+    const maxCols = Math.max(uRounds, lRounds) + (gf.length ? 1 : 0);
+    const totalGapW = (maxCols-1)*RG;
+    const MW = Math.min(Math.round(220*scale), Math.floor((maxW - totalGapW) / maxCols));
+    const totalBracketW = maxCols * MW + (maxCols-1) * RG;
+    const bracketLeft = (W - totalBracketW) / 2;
+
+    const bracketTop = y + Math.round(30*scale);
+    const bracketBottom = H - pad - fmtBlockH - Math.round(20*scale);
+    const totalH = bracketBottom - bracketTop;
+
+    // section label
+    const sectionLabelF = Math.round(13*scale);
+    const dividerY = bracketTop + totalH * 0.50;
+
+    // upper region
+    const upperTop = bracketTop;
+    const upperBottom = dividerY - Math.round(16*scale);
+    const uLabels = [];
+    for(let i=0;i<uRounds;i++) uLabels.push(i===uRounds-1 && uRounds>1 ? "UB FINALE" : "ROUND "+(i+1));
+    const uResult = drawSubBracket(upper, uLabels, upperTop, upperBottom, bracketLeft, MW, false);
+
+    // section labels
+    ctx.font = `700 ${sectionLabelF}px 'JetBrains Mono', monospace`;
+    ctx.fillStyle = rgba(acc, 0.5); ctx.textBaseline = "middle";
+    drawSpaced("UPPER BRACKET", pad, upperTop + Math.round(6*scale), sectionLabelF*0.08);
+    // divider
+    ctx.strokeStyle = rgba(acc, 0.12); ctx.lineWidth = Math.max(1, scale);
+    ctx.beginPath(); ctx.moveTo(pad, dividerY); ctx.lineTo(W-pad, dividerY); ctx.stroke();
+
+    // lower region
+    const lowerTop = dividerY + Math.round(8*scale);
+    const lowerBottom = gf.length ? bracketBottom - Math.round(10*scale) : bracketBottom;
+    const lLabels = [];
+    for(let i=0;i<lRounds;i++) lLabels.push(i===lRounds-1 && lRounds>1 ? "LB FINALE" : "LB ROUND "+(i+1));
+    const lResult = drawSubBracket(lower, lLabels, lowerTop, lowerBottom, bracketLeft, MW, false);
+
+    ctx.font = `700 ${sectionLabelF}px 'JetBrains Mono', monospace`;
+    ctx.fillStyle = rgba(acc, 0.5); ctx.textBaseline = "middle";
+    drawSpaced("LOWER BRACKET", pad, lowerTop + Math.round(6*scale), sectionLabelF*0.08);
+
+    // grand final
+    if(gf.length){
+      const gfCol = maxCols - 1;
+      const gfX = bracketLeft + gfCol * (MW + RG);
+      const gfMH = Math.round(78*scale);
+      const gfY = bracketTop + totalH/2 - gfMH/2;
+      const gfTeamF = Math.min(Math.round(22*scale), Math.round(gfMH*0.30));
+      const gfScoreF = Math.round(gfTeamF*1.1);
+      const gfLogoSize = Math.min(Math.round(24*scale), Math.round(gfMH*0.32));
+
+      // label
+      ctx.font = `600 ${roundLabelF}px 'JetBrains Mono', monospace`;
+      ctx.fillStyle = acc; ctx.textBaseline = "top";
+      drawSpaced("QUALIFIÉ", gfX, bracketTop, roundLabelF*0.12);
+
+      // connectors from UB final and LB final to GF
+      ctx.lineWidth = Math.max(1, 1.5*scale);
+      if(uResult.yPos.length && uResult.yPos[uRounds-1] && uResult.yPos[uRounds-1].length){
+        const ubLastX = bracketLeft + (uRounds-1)*(MW+RG) + MW;
+        const ubLastY = uResult.yPos[uRounds-1][0] + uResult.MH/2;
+        const midX = ubLastX + RG/2;
+        ctx.strokeStyle = rgba(acc, 0.2);
+        ctx.beginPath(); ctx.moveTo(ubLastX, ubLastY); ctx.lineTo(midX, ubLastY);
+        ctx.lineTo(midX, gfY + gfMH*0.25); ctx.lineTo(gfX, gfY + gfMH*0.25); ctx.stroke();
+      }
+      if(lResult.yPos.length && lResult.yPos[lRounds-1] && lResult.yPos[lRounds-1].length){
+        const lbLastX = bracketLeft + (lRounds-1)*(MW+RG) + MW;
+        const lbLastY = lResult.yPos[lRounds-1][0] + lResult.MH/2;
+        const midX = lbLastX + RG/2;
+        ctx.strokeStyle = rgba(acc, 0.2);
+        ctx.beginPath(); ctx.moveTo(lbLastX, lbLastY); ctx.lineTo(midX, lbLastY);
+        ctx.lineTo(midX, gfY + gfMH*0.75); ctx.lineTo(gfX, gfY + gfMH*0.75); ctx.stroke();
+      }
+
+      drawMatchCard(gfX, gfY, MW, gfMH, gf[0], true, gfTeamF, gfScoreF, gfLogoSize);
+
+      // winner label
+      if(gf[0].winner){
+        const winnerName = gf[0].winner==="A" ? gf[0].teamA.name : gf[0].teamB.name;
+        const champLabelF = Math.round(13*scale);
+        const champNameF = Math.round(28*scale);
+        const champY = gfY + gfMH + Math.round(12*scale);
         ctx.font = `600 ${champLabelF}px 'JetBrains Mono', monospace`;
         ctx.fillStyle = "#6b7882"; ctx.textBaseline = "top"; ctx.textAlign = "center";
-        drawSpaced("CHAMPION", finalCx - ctx.measureText("CHAMPION").width/2, champY, champLabelF*0.2);
+        drawSpaced("QUALIFIÉ", gfX+MW/2 - ctx.measureText("QUALIFIÉ").width/2, champY, champLabelF*0.2);
         ctx.font = `800 ${champNameF}px Sora, sans-serif`;
         ctx.fillStyle = acc; ctx.textAlign = "center";
-        ctx.fillText(winnerName, finalCx, champY + champLabelF + Math.round(8*scale));
+        ctx.fillText(winnerName, gfX+MW/2, champY+champLabelF+Math.round(6*scale));
         ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
       }
+    }
+  } else {
+    // ── SINGLE ELIMINATION (original) ──
+    const numRounds = rounds.length;
+    const roundNames = [];
+    if(numRounds===1) roundNames.push("FINALE");
+    else if(numRounds===2){ roundNames.push("DEMIS"); roundNames.push("FINALE"); }
+    else if(numRounds===3){ roundNames.push("QUARTS"); roundNames.push("DEMIS"); roundNames.push("FINALE"); }
+    else { for(let i=0;i<numRounds;i++) roundNames.push(i===numRounds-1?"FINALE":"ROUND "+(i+1)); }
+    const bracketTop = y + Math.round(44*scale);
+    const championBlockH = Math.round(70*scale);
+    const bracketBottom = H - pad - fmtBlockH - championBlockH;
+    const totalGapW = (numRounds-1)*RG;
+    const MW = Math.min(Math.round(260*scale), Math.floor((maxW - totalGapW) / numRounds));
+    const totalBracketW = numRounds * MW + (numRounds-1) * RG;
+    const bracketLeft = (W - totalBracketW) / 2;
+    drawSubBracket(rounds, roundNames, bracketTop, bracketBottom, bracketLeft, MW, true);
+
+    // champion label for single elim
+    const lastR = rounds[rounds.length-1];
+    if(lastR && lastR.length===1 && lastR[0].winner){
+      const finalMatch = lastR[0];
+      const winnerName = finalMatch.winner==="A" ? finalMatch.teamA.name : finalMatch.teamB.name;
+      const finalRx = bracketLeft + (numRounds-1)*(MW+RG);
+      const finalCx = finalRx + MW/2;
+      const champLabelF = Math.round(14*scale);
+      const champNameF = Math.round(32*scale);
+      const champY = bracketBottom + Math.round(16*scale);
+      ctx.font = `600 ${champLabelF}px 'JetBrains Mono', monospace`;
+      ctx.fillStyle = "#6b7882"; ctx.textBaseline = "top"; ctx.textAlign = "center";
+      drawSpaced("CHAMPION", finalCx - ctx.measureText("CHAMPION").width/2, champY, champLabelF*0.2);
+      ctx.font = `800 ${champNameF}px Sora, sans-serif`;
+      ctx.fillStyle = acc; ctx.textAlign = "center";
+      ctx.fillText(winnerName, finalCx, champY+champLabelF+Math.round(8*scale));
+      ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
     }
   }
 
@@ -2170,7 +2244,6 @@ function drawLayoutBracket(W,H,c,scale,pad,maxW,acc,hi){
     ctx.fillText(fmt, W/2, H - Math.round(80*scale));
     ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
   }
-
   lastTextBox = null;
 }
 
