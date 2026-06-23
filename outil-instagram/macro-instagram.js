@@ -2115,35 +2115,37 @@ function drawLayoutBracket(W,H,c,scale,pad,maxW,acc,hi){
     const totalBracketW = maxCols * MW + (maxCols-1) * RG;
     const bracketLeft = (W - totalBracketW) / 2;
 
+    const sectionLabelF = Math.round(13*scale);
+    const sectionLabelH = Math.round(22*scale);
     const bracketTop = y + Math.round(30*scale);
     const bracketBottom = H - pad - fmtBlockH - Math.round(20*scale);
     const totalH = bracketBottom - bracketTop;
 
-    // section label
-    const sectionLabelF = Math.round(13*scale);
     const dividerY = bracketTop + totalH * 0.50;
 
-    // upper region
-    const upperTop = bracketTop;
-    const upperBottom = dividerY - Math.round(16*scale);
+    // upper section label
+    ctx.font = `700 ${sectionLabelF}px 'JetBrains Mono', monospace`;
+    ctx.fillStyle = rgba(acc, 0.5); ctx.textBaseline = "top";
+    drawSpaced("UPPER BRACKET", pad, bracketTop, sectionLabelF*0.08);
+
+    // upper region (below label)
+    const upperTop = bracketTop + sectionLabelH;
+    const upperBottom = dividerY - Math.round(12*scale);
     const uResult = drawSubBracket(upper, upperTop, upperBottom, bracketLeft, MW, false);
 
-    // section labels
-    ctx.font = `700 ${sectionLabelF}px 'JetBrains Mono', monospace`;
-    ctx.fillStyle = rgba(acc, 0.5); ctx.textBaseline = "middle";
-    drawSpaced("UPPER BRACKET", pad, upperTop + Math.round(6*scale), sectionLabelF*0.08);
     // divider
     ctx.strokeStyle = rgba(acc, 0.12); ctx.lineWidth = Math.max(1, scale);
     ctx.beginPath(); ctx.moveTo(pad, dividerY); ctx.lineTo(W-pad, dividerY); ctx.stroke();
 
-    // lower region
-    const lowerTop = dividerY + Math.round(8*scale);
+    // lower section label
+    ctx.font = `700 ${sectionLabelF}px 'JetBrains Mono', monospace`;
+    ctx.fillStyle = rgba(acc, 0.5); ctx.textBaseline = "top";
+    drawSpaced("LOWER BRACKET", pad, dividerY + Math.round(6*scale), sectionLabelF*0.08);
+
+    // lower region (below label)
+    const lowerTop = dividerY + Math.round(6*scale) + sectionLabelH;
     const lowerBottom = gf.length ? bracketBottom - Math.round(10*scale) : bracketBottom;
     const lResult = drawSubBracket(lower, lowerTop, lowerBottom, bracketLeft, MW, false);
-
-    ctx.font = `700 ${sectionLabelF}px 'JetBrains Mono', monospace`;
-    ctx.fillStyle = rgba(acc, 0.5); ctx.textBaseline = "middle";
-    drawSpaced("LOWER BRACKET", pad, lowerTop + Math.round(6*scale), sectionLabelF*0.08);
 
     // drop connectors: UB losers fall into LB
     // Standard mapping: UB round i losers → LB round (i*2) for i>0, UB round 0 → LB round 0
@@ -2844,68 +2846,57 @@ if($("bracketFormat")) $("bracketFormat").oninput = e => setField("bracketFormat
     return img ? img.src : null;
   }
 
-  function generateBracket(){
-    const names = teamsEl.value.split("\n").map(s=>s.trim()).filter(Boolean);
-    if(names.length < 2) return;
-    const isDE = deEl && deEl.checked;
-    const n = names.length;
-
-    // pad to next power of 2 for seeding
-    let size = 1;
-    while(size < n) size *= 2;
-    const seeded = [];
-    for(let i=0; i<size; i++) seeded.push(i < n ? names[i] : "BYE");
-
-    // standard seeding order
-    function seedOrder(n){
-      if(n === 1) return [0];
-      const half = seedOrder(n/2);
-      return half.flatMap((s,i) => [s, n - 1 - half[i]]);
-    }
-    const order = seedOrder(size);
-    const ordered = order.map(i => seeded[i]);
-
-    // build upper bracket rounds
-    const ubRounds = [];
+  function buildRounds(names){
+    const rounds = [];
     let curr = [];
-    for(let i=0; i<ordered.length; i+=2){
-      const a = ordered[i], b = ordered[i+1];
-      const aIsBye = a === "BYE", bIsBye = b === "BYE";
-      curr.push({ a, b, sa: 0, sb: 0, bye: aIsBye || bIsBye });
+    for(let i=0; i<names.length; i+=2){
+      const a = names[i];
+      const b = (i+1 < names.length) ? names[i+1] : "BYE";
+      curr.push({ a, b, sa: 0, sb: 0, bye: b === "BYE" });
     }
-    ubRounds.push(curr);
-
-    // check if first round is all byes (power of 2 teams) → skip
-    const r1HasReal = curr.some(m => !m.bye);
-
-    const totalRounds = Math.log2(size);
-    for(let r = 1; r < totalRounds; r++){
-      const prev = ubRounds[r-1];
+    rounds.push(curr);
+    let prevCount = curr.length;
+    while(prevCount > 1){
       const next = [];
-      for(let i=0; i<prev.length; i+=2){
-        const wA = prev[i].bye ? (prev[i].a === "BYE" ? prev[i].b : prev[i].a) : "TBD";
-        const wB = (i+1 < prev.length && prev[i+1].bye) ? (prev[i+1].a === "BYE" ? prev[i+1].b : prev[i+1].a) : "TBD";
-        next.push({ a: wA, b: wB, sa: 0, sb: 0 });
+      for(let i=0; i<prevCount; i+=2){
+        next.push({ a: "TBD", b: "TBD", sa: 0, sb: 0 });
       }
-      ubRounds.push(next);
+      rounds.push(next);
+      prevCount = next.length;
     }
+    return rounds;
+  }
 
-    // remove first round if all byes
-    if(!r1HasReal && ubRounds.length > 1){
-      // auto-advance: first round winners go to round 2
-      ubRounds.shift();
+  function generateBracket(){
+    const raw = teamsEl.value;
+    const hasSeparator = raw.includes("---");
+    if(hasSeparator && deEl) deEl.checked = true;
+    const isDE = deEl && deEl.checked;
+
+    let ubNames, lbNames = [];
+    if(isDE && hasSeparator){
+      const parts = raw.split(/^---$/m);
+      ubNames = (parts[0]||"").split("\n").map(s=>s.trim()).filter(Boolean);
+      lbNames = (parts[1]||"").split("\n").map(s=>s.trim()).filter(Boolean);
+    } else {
+      ubNames = raw.split("\n").map(s=>s.trim()).filter(Boolean);
     }
+    if(ubNames.length < 2) return;
 
-    // build lower bracket (empty TBD matches)
+    const ubRounds = buildRounds(ubNames);
+
     let lbRounds = [];
     if(isDE){
-      // LB has (totalUBRounds - 1) * 2 rounds roughly
-      const ubR = ubRounds.length;
-      for(let i = 0; i < (ubR - 1) * 2; i++){
-        const count = Math.max(1, Math.ceil(ubRounds[0].length / Math.pow(2, Math.floor(i/2 + 1))));
-        const round = [];
-        for(let m = 0; m < count; m++) round.push({ a: "TBD", b: "TBD", sa: 0, sb: 0 });
-        lbRounds.push(round);
+      if(lbNames.length >= 2){
+        lbRounds = buildRounds(lbNames);
+      } else {
+        const ubR = ubRounds.length;
+        for(let i = 0; i < (ubR - 1) * 2; i++){
+          const count = Math.max(1, Math.ceil(ubRounds[0].length / Math.pow(2, Math.floor(i/2 + 1))));
+          const round = [];
+          for(let m = 0; m < count; m++) round.push({ a: "TBD", b: "TBD", sa: 0, sb: 0 });
+          lbRounds.push(round);
+        }
       }
     }
 
@@ -2956,6 +2947,33 @@ if($("bracketFormat")) $("bracketFormat").oninput = e => setField("bracketFormat
     const text = lines.join("\n");
     $("bracket").value = text;
     setField("bracket", text);
+  }
+
+  function getWinner(m){
+    if(m.bye) return m.a === "BYE" ? m.b : m.a;
+    if(m.sa > m.sb) return m.a;
+    if(m.sb > m.sa) return m.b;
+    return null;
+  }
+
+  function advanceRounds(rounds){
+    for(let r = 0; r < rounds.length - 1; r++){
+      const curr = rounds[r];
+      const next = rounds[r+1];
+      for(let m = 0; m < curr.length; m++){
+        const w = getWinner(curr[m]);
+        const nextMi = Math.floor(m / 2);
+        if(nextMi >= next.length) continue;
+        const slot = m % 2 === 0 ? "a" : "b";
+        next[nextMi][slot] = w || "TBD";
+      }
+    }
+  }
+
+  function advanceWinners(it){
+    if(!it._ubRounds) return;
+    advanceRounds(it._ubRounds);
+    if(it._lbRounds && it._lbRounds.length) advanceRounds(it._lbRounds);
   }
 
   function renderMatchInputs(){
@@ -3025,6 +3043,7 @@ if($("bracketFormat")) $("bracketFormat").oninput = e => setField("bracketFormat
         } else if(sec === "lb" && it._lbRounds[ri] && it._lbRounds[ri][mi]){
           it._lbRounds[ri][mi][side === "a" ? "sa" : "sb"] = val;
         }
+        advanceWinners(it);
         syncBracketText();
         renderMatchInputs();
       };
