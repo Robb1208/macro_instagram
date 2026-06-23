@@ -17,6 +17,24 @@ Skill de génération de posts Instagram pour le site esport Macro.
 - Faire des recherches web sur le sujet pour avoir des infos fiables et à jour.
 - Vérifier les faits : scores, dates, noms de joueurs, résultats.
 
+#### Sourcing des matchs (programme du jour / de la semaine)
+
+**Ne JAMAIS conclure « aucun match » à partir d'une recherche web générique** (type « esport matches today »). Ces recherches ne voient que les ligues tier-1 (LEC, LCK, VCT international, CDL, RLCS) — souvent en pause — et ignorent l'écosystème tier-2 (Challengers / ERL) qui joue quasiment tous les jours. La routine doit interroger **directement les pages de calendrier faisant autorité, par jeu** :
+
+| Jeu | Source faisant autorité (calendrier) | Notes |
+|-----|--------------------------------------|-------|
+| **Valorant** | `https://www.vlr.gg/matches` puis la page de l'event (`vlr.gg/event/...`) | Inclure les Challengers EMEA + autres régions. Les matchs tier-2 n'apparaissent QUE là. |
+| **League of Legends** | `https://lol.fandom.com/wiki/...` (Leaguepedia) ou `gol.gg` | Couvrir LEC + EMEA Masters + LFL/ERL. |
+| **CS2** | `https://liquipedia.net/counterstrike/Liquipedia:Matches` | **HLTV bloque l'accès programmatique (403)** — pour les pages et le calendrier. Passer par Liquipedia ou `bo3.gg`. |
+| **Rocket League** | `https://liquipedia.net/rocketleague/Liquipedia:Matches` ou `octane.gg` | — |
+| **Call of Duty** | `https://liquipedia.net/callofduty/Liquipedia:Matches` | — |
+
+Règles :
+- Interroger **chaque jeu séparément** — l'absence de match dans un jeu ≠ absence de match partout.
+- Si une source est en échec (403, 429, page vide), **réessayer une autre source** de la même ligne avant de conclure qu'il n'y a pas de match.
+- **Convertir tous les horaires en heure de Paris (CET/CEST).** VLR affiche souvent en CDT/CST/EDT, HLTV dans le fuseau du visiteur — toujours reconvertir (ex : 10h00 CDT = 17h00 CEST, +7h l'été).
+- Une slide par jeu **uniquement** si ce jeu a au moins un match ce jour-là (sinon pas de slide).
+
 ### 3. Recherche d'images
 Chercher des photos officielles pour illustrer le post sur les galeries Flickr des compétitions.
 
