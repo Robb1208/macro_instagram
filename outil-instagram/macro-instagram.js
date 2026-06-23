@@ -2898,15 +2898,20 @@ if($("bracketFormat")) $("bracketFormat").oninput = e => setField("bracketFormat
 
     let lbRounds = [];
     if(isDE){
-      if(lbNames.length >= 2){
-        lbRounds = buildRounds(lbNames);
-      } else {
-        const ubR = ubRounds.length;
-        for(let i = 0; i < (ubR - 1) * 2; i++){
-          const count = Math.max(1, Math.ceil(ubRounds[0].length / Math.pow(2, Math.floor(i/2 + 1))));
-          const round = [];
-          for(let m = 0; m < count; m++) round.push({ a: "TBD", b: "TBD", sa: 0, sb: 0 });
-          lbRounds.push(round);
+      const ubR = ubRounds.length;
+      for(let i = 0; i < (ubR - 1) * 2; i++){
+        const count = Math.max(1, Math.ceil(ubRounds[0].length / Math.pow(2, Math.floor(i/2 + 1))));
+        const round = [];
+        for(let m = 0; m < count; m++) round.push({ a: "TBD", b: "TBD", sa: 0, sb: 0 });
+        lbRounds.push(round);
+      }
+      if(lbNames.length){
+        for(let i = 0; i < lbNames.length; i += 2){
+          const mi = Math.floor(i / 2);
+          if(lbRounds[0] && lbRounds[0][mi]){
+            lbRounds[0][mi].a = lbNames[i];
+            lbRounds[0][mi].b = (i+1 < lbNames.length) ? lbNames[i+1] : "TBD";
+          }
         }
       }
     }
