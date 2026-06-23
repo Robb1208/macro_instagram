@@ -1946,22 +1946,26 @@ function drawLayoutLineup(W,H,c,scale,pad,maxW,acc,hi){
 
 // --- T16: Bracket ---
 function parseBracket(text){
-  if(!text || !text.trim()) return [];
+  const empty = []; empty.labels = [];
+  if(!text || !text.trim()) return empty;
   const rounds = [];
+  const labels = [];
   let current = [];
+  let currentLabel = null;
+  const flush = () => {
+    if(current.length){ rounds.push(current); labels.push(currentLabel); }
+    current = []; currentLabel = null;
+  };
   const lines = text.split("\n");
   for(const raw of lines){
     const line = raw.trim();
-    if(!line){
-      if(current.length) rounds.push(current);
-      current = [];
-      continue;
-    }
+    if(!line){ flush(); continue; }
+    if(line.startsWith("##")){ currentLabel = line.replace(/^#+\s*/, "").trim(); continue; }
     const m = line.match(/^(.+?)\s+(\d+)\s*$/);
     if(m) current.push({ name: m[1].trim(), score: parseInt(m[2]) });
     else current.push({ name: line, score: 0 });
   }
-  if(current.length) rounds.push(current);
+  flush();
   const result = [];
   for(const round of rounds){
     const matches = [];
@@ -1972,6 +1976,7 @@ function parseBracket(text){
     }
     result.push(matches);
   }
+  result.labels = labels;
   return result;
 }
 
@@ -2012,13 +2017,15 @@ function drawLayoutBracket(W,H,c,scale,pad,maxW,acc,hi){
   const cardR = Math.round(8*scale);
   const rowPad = Math.round(10*scale);
 
-  // round labels
+  // round labels — auto, surchargés par un label perso "## Label" si fourni
   const numRounds = rounds.length;
   const roundNames = [];
   if(numRounds === 1) roundNames.push("FINALE");
   else if(numRounds === 2){ roundNames.push("DEMIS"); roundNames.push("FINALE"); }
   else if(numRounds === 3){ roundNames.push("QUARTS"); roundNames.push("DEMIS"); roundNames.push("FINALE"); }
   else { for(let i=0;i<numRounds;i++) roundNames.push(i===numRounds-1?"FINALE":"ROUND "+(i+1)); }
+  const customLabels = rounds.labels || [];
+  for(let i=0;i<numRounds;i++){ if(customLabels[i]) roundNames[i] = customLabels[i].toUpperCase(); }
 
   // compute Y positions per round
   const bracketTop = y + Math.round(44*scale);
