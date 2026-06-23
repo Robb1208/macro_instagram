@@ -1512,22 +1512,35 @@ function drawLayoutTierList(W,H,c,scale,pad,maxW,acc,hi){
     ctx.strokeStyle = rgba(tc.grad[1], tc.border); ctx.lineWidth = Math.max(1, 1.5*scale);
     roundRectPath(cX, y, cW, rowH, letterR); ctx.stroke();
 
-    // draw chips
+    // draw chips (logo if available, text fallback)
     ctx.font = `700 ${chipF}px Sora, sans-serif`;
     let cx = cX + Math.round(20*scale);
     const chipY = y + rowH/2;
+    const logoChipSize = Math.round(rowH * 0.65);
     for(const team of tier.teams){
-      const tw = ctx.measureText(team).width;
-      const cw = tw + chipPadX*2;
-      const ch = chipF + chipPadY*2;
-      ctx.fillStyle = "#13202a";
-      roundRectPath(cx, chipY-ch/2, cw, ch, chipR); ctx.fill();
-      ctx.strokeStyle = "#243039"; ctx.lineWidth = Math.max(1, scale);
-      roundRectPath(cx, chipY-ch/2, cw, ch, chipR); ctx.stroke();
-      ctx.fillStyle = tier.tier==="C" || tier.tier==="D" ? "#dfdfdf" : "#ffffff";
-      ctx.textBaseline = "middle";
-      ctx.fillText(team, cx+chipPadX, chipY);
-      cx += cw + chipGap;
+      const logoImg = findTeamLogo(team);
+      if(logoImg){
+        const cw = logoChipSize + chipPadX*2;
+        const ch = logoChipSize + chipPadY*2;
+        ctx.fillStyle = "#13202a";
+        roundRectPath(cx, chipY-ch/2, cw, ch, chipR); ctx.fill();
+        ctx.strokeStyle = "#243039"; ctx.lineWidth = Math.max(1, scale);
+        roundRectPath(cx, chipY-ch/2, cw, ch, chipR); ctx.stroke();
+        ctx.drawImage(logoImg, cx+chipPadX, chipY-logoChipSize/2, logoChipSize, logoChipSize);
+        cx += cw + chipGap;
+      } else {
+        const tw = ctx.measureText(team).width;
+        const cw = tw + chipPadX*2;
+        const ch = chipF + chipPadY*2;
+        ctx.fillStyle = "#13202a";
+        roundRectPath(cx, chipY-ch/2, cw, ch, chipR); ctx.fill();
+        ctx.strokeStyle = "#243039"; ctx.lineWidth = Math.max(1, scale);
+        roundRectPath(cx, chipY-ch/2, cw, ch, chipR); ctx.stroke();
+        ctx.fillStyle = tier.tier==="C" || tier.tier==="D" ? "#dfdfdf" : "#ffffff";
+        ctx.textBaseline = "middle";
+        ctx.fillText(team, cx+chipPadX, chipY);
+        cx += cw + chipGap;
+      }
     }
 
     y += rowH + rowGap;
@@ -1967,8 +1980,6 @@ function drawLayoutBracket(W,H,c,scale,pad,maxW,acc,hi){
   if(!isDE && (!rounds || !rounds.length)){ lastTextBox=null; return; }
 
   const RG = Math.round(40*scale);
-  const roundLabelF = Math.round(16*scale);
-  const roundLabelH = Math.round(28*scale);
   const cardR = Math.round(8*scale);
   const rowPad = Math.round(10*scale);
   const fmtBlockH = (c.bracketFormat||"").trim() ? Math.round(36*scale) : 0;
@@ -2018,9 +2029,9 @@ function drawLayoutBracket(W,H,c,scale,pad,maxW,acc,hi){
   };
 
   // shared sub-bracket drawing: returns { yPositions, MW, MH } for connector use
-  const drawSubBracket = (subRounds, labels, regionTop, regionBottom, bracketLeft, MW, isFinalBracket) => {
-    const availH = regionBottom - regionTop - roundLabelH;
-    const matchTop = regionTop + roundLabelH;
+  const drawSubBracket = (subRounds, regionTop, regionBottom, bracketLeft, MW, isFinalBracket) => {
+    const availH = regionBottom - regionTop;
+    const matchTop = regionTop;
     const numR = subRounds.length;
     const baseIdx = subRounds.reduce((best,r,i) => r.length >= subRounds[best].length ? i : best, 0);
     const baseCount = subRounds[baseIdx].length;
@@ -2062,15 +2073,6 @@ function drawLayoutBracket(W,H,c,scale,pad,maxW,acc,hi){
       }
     }
 
-    // labels
-    ctx.font = `600 ${roundLabelF}px 'JetBrains Mono', monospace`;
-    ctx.textBaseline = "top";
-    for(let r=0; r<numR; r++){
-      const rx = bracketLeft + r*(MW+RG);
-      const isF = isFinalBracket && r===numR-1;
-      ctx.fillStyle = isF ? acc : "#6b7882";
-      drawSpaced(labels[r]||("ROUND "+(r+1)), rx, regionTop, roundLabelF*0.12);
-    }
     // connectors
     ctx.lineWidth = Math.max(1, 1.5*scale);
     for(let r=0; r<numR-1; r++){
@@ -2124,9 +2126,7 @@ function drawLayoutBracket(W,H,c,scale,pad,maxW,acc,hi){
     // upper region
     const upperTop = bracketTop;
     const upperBottom = dividerY - Math.round(16*scale);
-    const uLabels = [];
-    for(let i=0;i<uRounds;i++) uLabels.push(i===uRounds-1 && uRounds>1 ? "UB FINALE" : "ROUND "+(i+1));
-    const uResult = drawSubBracket(upper, uLabels, upperTop, upperBottom, bracketLeft, MW, false);
+    const uResult = drawSubBracket(upper, upperTop, upperBottom, bracketLeft, MW, false);
 
     // section labels
     ctx.font = `700 ${sectionLabelF}px 'JetBrains Mono', monospace`;
@@ -2139,13 +2139,40 @@ function drawLayoutBracket(W,H,c,scale,pad,maxW,acc,hi){
     // lower region
     const lowerTop = dividerY + Math.round(8*scale);
     const lowerBottom = gf.length ? bracketBottom - Math.round(10*scale) : bracketBottom;
-    const lLabels = [];
-    for(let i=0;i<lRounds;i++) lLabels.push(i===lRounds-1 && lRounds>1 ? "LB FINALE" : "LB ROUND "+(i+1));
-    const lResult = drawSubBracket(lower, lLabels, lowerTop, lowerBottom, bracketLeft, MW, false);
+    const lResult = drawSubBracket(lower, lowerTop, lowerBottom, bracketLeft, MW, false);
 
     ctx.font = `700 ${sectionLabelF}px 'JetBrains Mono', monospace`;
     ctx.fillStyle = rgba(acc, 0.5); ctx.textBaseline = "middle";
     drawSpaced("LOWER BRACKET", pad, lowerTop + Math.round(6*scale), sectionLabelF*0.08);
+
+    // drop connectors: UB losers fall into LB
+    // Standard mapping: UB round i losers → LB round (i*2) for i>0, UB round 0 → LB round 0
+    ctx.save();
+    ctx.setLineDash([Math.round(4*scale), Math.round(4*scale)]);
+    ctx.lineWidth = Math.max(1, scale);
+    for(let r=0; r<uRounds; r++){
+      const lbTarget = r === 0 ? 0 : Math.min(r * 2 - 1, lRounds - 1);
+      if(lbTarget >= lRounds) continue;
+      const ubX = bracketLeft + r*(MW+RG);
+      const ubMidX = ubX + MW/2;
+      for(let m=0; m<upper[r].length; m++){
+        if(!uResult.yPos[r] || uResult.yPos[r][m] === undefined) continue;
+        const ubBottomY = uResult.yPos[r][m] + uResult.MH;
+        // find target LB match
+        const lbMatchIdx = r === 0 ? Math.floor(m / 2) : (m < (lower[lbTarget]||[]).length ? m : 0);
+        if(!lResult.yPos[lbTarget] || lResult.yPos[lbTarget][lbMatchIdx] === undefined) continue;
+        const lbTopY = lResult.yPos[lbTarget][lbMatchIdx];
+        const lbX = bracketLeft + lbTarget*(MW+RG) + MW/2;
+        ctx.strokeStyle = rgba(acc, 0.12);
+        ctx.beginPath();
+        ctx.moveTo(ubMidX, ubBottomY);
+        ctx.lineTo(ubMidX, dividerY);
+        ctx.lineTo(lbX, dividerY);
+        ctx.lineTo(lbX, lbTopY);
+        ctx.stroke();
+      }
+    }
+    ctx.restore();
 
     // grand final
     if(gf.length){
@@ -2156,11 +2183,6 @@ function drawLayoutBracket(W,H,c,scale,pad,maxW,acc,hi){
       const gfTeamF = Math.min(Math.round(22*scale), Math.round(gfMH*0.30));
       const gfScoreF = Math.round(gfTeamF*1.1);
       const gfLogoSize = Math.min(Math.round(24*scale), Math.round(gfMH*0.32));
-
-      // label
-      ctx.font = `600 ${roundLabelF}px 'JetBrains Mono', monospace`;
-      ctx.fillStyle = acc; ctx.textBaseline = "top";
-      drawSpaced("QUALIFIÉ", gfX, bracketTop, roundLabelF*0.12);
 
       // connectors from UB final and LB final to GF
       ctx.lineWidth = Math.max(1, 1.5*scale);
@@ -2201,11 +2223,6 @@ function drawLayoutBracket(W,H,c,scale,pad,maxW,acc,hi){
   } else {
     // ── SINGLE ELIMINATION (original) ──
     const numRounds = rounds.length;
-    const roundNames = [];
-    if(numRounds===1) roundNames.push("FINALE");
-    else if(numRounds===2){ roundNames.push("DEMIS"); roundNames.push("FINALE"); }
-    else if(numRounds===3){ roundNames.push("QUARTS"); roundNames.push("DEMIS"); roundNames.push("FINALE"); }
-    else { for(let i=0;i<numRounds;i++) roundNames.push(i===numRounds-1?"FINALE":"ROUND "+(i+1)); }
     const bracketTop = y + Math.round(44*scale);
     const championBlockH = Math.round(70*scale);
     const bracketBottom = H - pad - fmtBlockH - championBlockH;
@@ -2213,7 +2230,7 @@ function drawLayoutBracket(W,H,c,scale,pad,maxW,acc,hi){
     const MW = Math.min(Math.round(260*scale), Math.floor((maxW - totalGapW) / numRounds));
     const totalBracketW = numRounds * MW + (numRounds-1) * RG;
     const bracketLeft = (W - totalBracketW) / 2;
-    drawSubBracket(rounds, roundNames, bracketTop, bracketBottom, bracketLeft, MW, true);
+    drawSubBracket(rounds, bracketTop, bracketBottom, bracketLeft, MW, true);
 
     // champion label for single elim
     const lastR = rounds[rounds.length-1];
@@ -2813,6 +2830,230 @@ if($("lineup")) $("lineup").oninput = e => setField("lineup", e.target.value);
 if($("lineupTeamRating")) $("lineupTeamRating").oninput = e => setField("lineupTeamRating", e.target.value);
 if($("bracket")) $("bracket").oninput = e => setField("bracket", e.target.value);
 if($("bracketFormat")) $("bracketFormat").oninput = e => setField("bracketFormat", e.target.value);
+
+// ── Bracket Builder ──
+(function(){
+  const teamsEl = $("bracketTeams");
+  const deEl = $("bracketDoubleElim");
+  const genBtn = $("bracketGenerate");
+  const matchesEl = $("bracketMatches");
+  if(!teamsEl || !genBtn || !matchesEl) return;
+
+  function getTeamLogoURL(name){
+    const img = findTeamLogo(name);
+    return img ? img.src : null;
+  }
+
+  function generateBracket(){
+    const names = teamsEl.value.split("\n").map(s=>s.trim()).filter(Boolean);
+    if(names.length < 2) return;
+    const isDE = deEl && deEl.checked;
+    const n = names.length;
+
+    // pad to next power of 2 for seeding
+    let size = 1;
+    while(size < n) size *= 2;
+    const seeded = [];
+    for(let i=0; i<size; i++) seeded.push(i < n ? names[i] : "BYE");
+
+    // standard seeding order
+    function seedOrder(n){
+      if(n === 1) return [0];
+      const half = seedOrder(n/2);
+      return half.flatMap((s,i) => [s, n - 1 - half[i]]);
+    }
+    const order = seedOrder(size);
+    const ordered = order.map(i => seeded[i]);
+
+    // build upper bracket rounds
+    const ubRounds = [];
+    let curr = [];
+    for(let i=0; i<ordered.length; i+=2){
+      const a = ordered[i], b = ordered[i+1];
+      const aIsBye = a === "BYE", bIsBye = b === "BYE";
+      curr.push({ a, b, sa: 0, sb: 0, bye: aIsBye || bIsBye });
+    }
+    ubRounds.push(curr);
+
+    // check if first round is all byes (power of 2 teams) → skip
+    const r1HasReal = curr.some(m => !m.bye);
+
+    const totalRounds = Math.log2(size);
+    for(let r = 1; r < totalRounds; r++){
+      const prev = ubRounds[r-1];
+      const next = [];
+      for(let i=0; i<prev.length; i+=2){
+        const wA = prev[i].bye ? (prev[i].a === "BYE" ? prev[i].b : prev[i].a) : "TBD";
+        const wB = (i+1 < prev.length && prev[i+1].bye) ? (prev[i+1].a === "BYE" ? prev[i+1].b : prev[i+1].a) : "TBD";
+        next.push({ a: wA, b: wB, sa: 0, sb: 0 });
+      }
+      ubRounds.push(next);
+    }
+
+    // remove first round if all byes
+    if(!r1HasReal && ubRounds.length > 1){
+      // auto-advance: first round winners go to round 2
+      ubRounds.shift();
+    }
+
+    // build lower bracket (empty TBD matches)
+    let lbRounds = [];
+    if(isDE){
+      // LB has (totalUBRounds - 1) * 2 rounds roughly
+      const ubR = ubRounds.length;
+      for(let i = 0; i < (ubR - 1) * 2; i++){
+        const count = Math.max(1, Math.ceil(ubRounds[0].length / Math.pow(2, Math.floor(i/2 + 1))));
+        const round = [];
+        for(let m = 0; m < count; m++) round.push({ a: "TBD", b: "TBD", sa: 0, sb: 0 });
+        lbRounds.push(round);
+      }
+    }
+
+    // store in slide
+    const it = cur();
+    if(it){
+      it._ubRounds = ubRounds;
+      it._lbRounds = lbRounds;
+      it._isDE = isDE;
+    }
+
+    renderMatchInputs();
+    syncBracketText();
+  }
+
+  function syncBracketText(){
+    const it = cur();
+    if(!it || !it._ubRounds) return;
+    const ub = it._ubRounds;
+    const lb = it._lbRounds || [];
+    const isDE = it._isDE;
+
+    let lines = [];
+    ub.forEach((round, ri) => {
+      if(ri > 0) lines.push("");
+      round.forEach(m => {
+        if(m.bye) return;
+        lines.push(m.a + " " + m.sa);
+        lines.push(m.b + " " + m.sb);
+      });
+    });
+
+    if(isDE && lb.length){
+      lines.push("---");
+      lb.forEach((round, ri) => {
+        if(ri > 0) lines.push("");
+        round.forEach(m => {
+          lines.push(m.a + " " + m.sa);
+          lines.push(m.b + " " + m.sb);
+        });
+      });
+      // grand final
+      lines.push("---");
+      lines.push("TBD 0");
+      lines.push("TBD 0");
+    }
+
+    const text = lines.join("\n");
+    $("bracket").value = text;
+    setField("bracket", text);
+  }
+
+  function renderMatchInputs(){
+    const it = cur();
+    if(!it || !it._ubRounds){ matchesEl.innerHTML = ""; return; }
+    const ub = it._ubRounds;
+    const lb = it._lbRounds || [];
+    const isDE = it._isDE;
+    let html = "";
+
+    function matchHTML(section, ri, mi, m){
+      if(m.bye) return "";
+      const logoA = getTeamLogoURL(m.a);
+      const logoB = getTeamLogoURL(m.b);
+      const wA = m.sa > m.sb ? " winner" : (m.sb > m.sa ? " loser" : "");
+      const wB = m.sb > m.sa ? " winner" : (m.sa > m.sb ? " loser" : "");
+      return `<div class="bk-match">
+        <div class="bk-team${wA}">${logoA ? `<img src="${logoA}">` : ""}<span class="bk-name">${m.a}</span></div>
+        <input class="bk-score" type="number" min="0" value="${m.sa}" data-sec="${section}" data-ri="${ri}" data-mi="${mi}" data-side="a">
+        <div class="bk-vs"></div>
+        <input class="bk-score" type="number" min="0" value="${m.sb}" data-sec="${section}" data-ri="${ri}" data-mi="${mi}" data-side="b">
+        <div class="bk-team${wB}" style="justify-content:flex-end">${logoB ? `<img src="${logoB}">` : ""}<span class="bk-name">${m.b}</span></div>
+      </div>`;
+    }
+
+    // upper bracket
+    if(isDE) html += `<div class="bk-section"><div class="bk-section-label">Upper Bracket</div>`;
+    ub.forEach((round, ri) => {
+      const label = isDE ? `UB Round ${ri+1}` : (ub.length === 1 ? "Finale" : (ri === ub.length-1 ? "Finale" : (ri === ub.length-2 ? "Demis" : `Round ${ri+1}`)));
+      html += `<div class="bk-round"><div class="bk-round-label">${label}</div>`;
+      round.forEach((m, mi) => { html += matchHTML("ub", ri, mi, m); });
+      html += `</div>`;
+    });
+    if(isDE) html += `</div>`;
+
+    // lower bracket
+    if(isDE && lb.length){
+      html += `<hr class="bk-divider"><div class="bk-section"><div class="bk-section-label">Lower Bracket</div>`;
+      lb.forEach((round, ri) => {
+        html += `<div class="bk-round"><div class="bk-round-label">LB Round ${ri+1}</div>`;
+        round.forEach((m, mi) => { html += matchHTML("lb", ri, mi, m); });
+        html += `</div>`;
+      });
+      html += `</div>`;
+      html += `<hr class="bk-divider"><div class="bk-section"><div class="bk-section-label">Grand Final</div>`;
+      html += `<div class="bk-match">
+        <div class="bk-team"><span class="bk-name">TBD</span></div>
+        <input class="bk-score" type="number" min="0" value="0" data-sec="gf" data-ri="0" data-mi="0" data-side="a">
+        <div class="bk-vs"></div>
+        <input class="bk-score" type="number" min="0" value="0" data-sec="gf" data-ri="0" data-mi="0" data-side="b">
+        <div class="bk-team" style="justify-content:flex-end"><span class="bk-name">TBD</span></div>
+      </div></div>`;
+    }
+
+    matchesEl.innerHTML = html;
+
+    // bind score inputs
+    matchesEl.querySelectorAll(".bk-score").forEach(inp => {
+      inp.oninput = () => {
+        const sec = inp.dataset.sec;
+        const ri = parseInt(inp.dataset.ri);
+        const mi = parseInt(inp.dataset.mi);
+        const side = inp.dataset.side;
+        const val = parseInt(inp.value) || 0;
+        if(sec === "ub" && it._ubRounds[ri] && it._ubRounds[ri][mi]){
+          it._ubRounds[ri][mi][side === "a" ? "sa" : "sb"] = val;
+        } else if(sec === "lb" && it._lbRounds[ri] && it._lbRounds[ri][mi]){
+          it._lbRounds[ri][mi][side === "a" ? "sa" : "sb"] = val;
+        }
+        syncBracketText();
+        renderMatchInputs();
+      };
+    });
+  }
+
+  genBtn.onclick = generateBracket;
+
+  // Rebuild match UI when switching to bracket slide
+  const origSync = window.syncInputs;
+  window.syncInputs = function(){
+    origSync.apply(this, arguments);
+    const it = cur();
+    if(it && curTpl() === "bracket" && it._ubRounds){
+      renderMatchInputs();
+      // restore teams textarea
+      if(it._bracketTeams) teamsEl.value = it._bracketTeams;
+      if(deEl) deEl.checked = !!it._isDE;
+    } else if(curTpl() === "bracket"){
+      matchesEl.innerHTML = "";
+    }
+  };
+
+  // Save teams text
+  teamsEl.oninput = () => {
+    const it = cur();
+    if(it) it._bracketTeams = teamsEl.value;
+  };
+})();
 if($("planningEvents")) $("planningEvents").oninput = e => setField("planningEvents", e.target.value);
 if($("frameY")) $("frameY").oninput = e => { const v=parseFloat(e.target.value); $("frameYV").textContent=v; setField("frameY", v); };
 document.querySelectorAll("#lineupCountSeg button").forEach(b=>{
