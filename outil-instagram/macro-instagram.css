@@ -115,15 +115,18 @@ canvas.grabbing{cursor:grabbing}
   header h1{font-size:13px}
   header .tag{display:none}
   .wrap{grid-template-columns:1fr;min-height:auto}
-  .stage{order:-1;padding:14px 10px;gap:10px}
+  .stage{order:-1;padding:8px 8px;gap:4px;position:sticky;top:0;z-index:90;background:var(--ink)}
   .panel{border-right:none;border-top:1px solid var(--line-soft);max-height:none;overflow-y:visible;padding:16px 14px}
-  canvas{max-height:52vh}
+  canvas{max-height:42vh}
   .canvas-shell{border-radius:8px}
   .stage-hint{display:none}
-  .stage-hint.mobile-only{display:block}
-  .exportbar{gap:6px}
-  .exportbar .dim{width:100%;text-align:center}
-  .btn{padding:9px 12px;font-size:11px}
+  .stage-hint.mobile-only{display:block;font-size:10px;margin:0}
+  #slideNav{gap:6px}
+  #slideNav .btn{padding:5px 8px;font-size:10px}
+  #slideNav .dim{min-width:40px;font-size:11px}
+  .exportbar{gap:4px;flex-wrap:nowrap}
+  .exportbar .dim{width:auto;text-align:center;font-size:10px}
+  .btn{padding:6px 10px;font-size:10px}
   .tpl-grid{grid-template-columns:repeat(4,1fr);gap:4px}
   .tpl-btn{padding:7px 2px;gap:1px}
   .tpl-icon{font-size:12px}

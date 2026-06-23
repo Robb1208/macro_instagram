@@ -20,4 +20,5 @@ if (Test-Path $logoDir) {
 }
 
 # Start server
-npx -y http-server $root -p 8123 -c-1
+$port = if ($env:PORT) { $env:PORT } else { "8123" }
+npx -y http-server $root -p $port -c-1
