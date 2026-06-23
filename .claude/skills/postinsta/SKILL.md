@@ -35,6 +35,18 @@ Règles :
 - **Convertir tous les horaires en heure de Paris (CET/CEST).** VLR affiche souvent en CDT/CST/EDT, HLTV dans le fuseau du visiteur — toujours reconvertir (ex : 10h00 CDT = 17h00 CEST, +7h l'été).
 - Une slide par jeu **uniquement** si ce jeu a au moins un match ce jour-là (sinon pas de slide).
 
+##### Filtre FR obligatoire pour le tier-2
+
+Le public de Macro est français. Pour tout match **tier-2 / hors compétition internationale majeure**, ne le retenir **que si** l'un de ces critères est rempli (sinon, l'ignorer — il n'intéresse pas) :
+
+1. **Ligue française** :
+   - Valorant → **VCL France** (« VALEAGUE » / Challengers France: Revolution)
+   - League of Legends → **LFL** (Ligue Française de League of Legends)
+   - LoL (cross-régional FR-pertinent) → **EMEA Masters**
+2. **OU une équipe française joue** dans le match, quelle que soit la compétition (ex. dans l'EMEA-wide Challengers : Mandatory, Joblife, etc. sont des orgs FR → OK ; FOKUS, Misa, AlQadsiah, etc. non-FR seuls → exclus).
+
+Vérifier la nationalité de l'org sur sa page VLR/Liquipedia en cas de doute. Les tournois mineurs sans équipe FR (ex. petits cups CS2 type GamerLegion vs Acend) ne sont **pas** retenus. Les compétitions internationales majeures (Worlds, MSI, VCT international, Major CS2, CDL, RLCS) restent couvertes même sans équipe FR.
+
 ### 3. Recherche d'images
 Chercher des photos officielles pour illustrer le post sur les galeries Flickr des compétitions.
 
