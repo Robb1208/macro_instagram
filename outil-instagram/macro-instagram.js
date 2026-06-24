@@ -1911,6 +1911,7 @@ function parseBracket(text){
   for(const raw of lines){
     const line = raw.trim();
     if(!line){ flush(); continue; }
+    if(line.startsWith("###")){ current.push({ header: line.replace(/^#+\s*/, "").trim() }); continue; }
     if(line.startsWith("##")){ currentLabel = line.replace(/^#+\s*/, "").trim(); continue; }
     const m = line.match(/^(.+?)\s+(\d+)\s*$/);
     if(m) current.push({ name: m[1].trim(), score: parseInt(m[2]) });
@@ -1920,10 +1921,18 @@ function parseBracket(text){
   const result = [];
   for(const round of rounds){
     const matches = [];
-    for(let i=0; i<round.length; i+=2){
-      const a = round[i];
-      const b = round[i+1] || { name:"TBD", score:0 };
-      matches.push({ teamA: a, teamB: b, winner: a.score > b.score ? "A" : (b.score > a.score ? "B" : null) });
+    let i = 0;
+    while(i < round.length){
+      const t = round[i];
+      if(t.header){ matches.push({ header: t.header }); i += 1; continue; }
+      const next = round[i+1];
+      if(next && !next.header){
+        matches.push({ teamA: t, teamB: next, winner: t.score > next.score ? "A" : (next.score > t.score ? "B" : null) });
+        i += 2;
+      } else {
+        matches.push({ teamA: t, teamB: { name:"TBD", score:0 }, winner: null });
+        i += 1;
+      }
     }
     result.push(matches);
   }
@@ -2065,6 +2074,7 @@ function drawLayoutBracket(W,H,c,scale,pad,maxW,acc,hi){
     const curr = rounds[r];
     const next = rounds[r+1];
     for(let m=0; m<curr.length; m++){
+      if(curr[m].header) continue;
       const fromY = yPos[r][m] + MH/2;
       const targetM = Math.floor(m/2);
       if(targetM >= next.length) continue;
@@ -2090,6 +2100,23 @@ function drawLayoutBracket(W,H,c,scale,pad,maxW,acc,hi){
       const match = rounds[r][m];
       const my = yPos[r][m];
       const halfH = MH/2;
+
+      // section separator (### Label) — pill centré, type "LB Round 1"
+      if(match.header){
+        const pillH = Math.round(Math.min(MH*0.6, 46*scale));
+        const pillY = my + (MH - pillH)/2;
+        ctx.fillStyle = "rgba(255,255,255,0.05)";
+        roundRectPath(rx, pillY, MW, pillH, cardR); ctx.fill();
+        ctx.strokeStyle = rgba(acc, 0.25); ctx.lineWidth = Math.max(1, scale);
+        roundRectPath(rx, pillY, MW, pillH, cardR); ctx.stroke();
+        const hf = Math.round(15*scale);
+        ctx.font = `700 ${hf}px 'JetBrains Mono', monospace`;
+        ctx.fillStyle = acc; ctx.textBaseline = "middle"; ctx.textAlign = "left";
+        const label = match.header.toUpperCase();
+        drawSpaced(label, rx + MW/2 - ctx.measureText(label).width/2, pillY + pillH/2, hf*0.08);
+        ctx.textBaseline = "top";
+        continue;
+      }
 
       // card bg
       const cardBg = isFinal ? rgba(acc, 0.06) : "rgba(255,255,255,0.04)";
