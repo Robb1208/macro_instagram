@@ -532,7 +532,7 @@ function drawLayoutBottom(W,H,c,scale,pad,maxW,acc,hi){
   const eyebrow = (c.eyebrow||"").toUpperCase();
   const titleLines = wrapRich(richWords(c.title), titleFont, maxW);
   const descFont = `500 ${descF}px Manrope, sans-serif`;
-  const descLines = (c.showDesc && c.desc.trim()) ? wrapRich(richWords(c.desc), descFont, maxW).slice(0,10) : [];
+  const descLines = (c.showDesc && c.desc.trim()) ? wrapRich(richWords(c.desc), descFont, maxW).slice(0,16) : [];
   if(!eyebrow && !titleLines.length && !descLines.length){ lastTextBox=null; return; }
 
   const accentLineH = Math.round(4*scale);
@@ -2897,14 +2897,26 @@ if($("bracketFormat")) $("bracketFormat").oninput = e => setField("bracketFormat
     const ubRounds = buildRounds(ubNames);
 
     let lbRounds = [];
+    let lbPreseeded = false;
     if(isDE){
       const ubR = ubRounds.length;
-      for(let i = 0; i < (ubR - 1) * 2; i++){
-        const count = Math.max(1, Math.ceil(ubRounds[0].length / Math.pow(2, Math.floor(i/2 + 1))));
+      const autoR0 = Math.max(1, Math.ceil(ubRounds[0].length / 2));
+      const userR0 = lbNames.length ? Math.ceil(lbNames.length / 2) : 0;
+      const r0Count = Math.max(autoR0, userR0);
+      lbPreseeded = userR0 > 0;
+
+      let count = r0Count;
+      const minFromUB = (ubR - 1) * 2;
+      let generated = 0;
+      while(generated < minFromUB || count > 1){
         const round = [];
         for(let m = 0; m < count; m++) round.push({ a: "TBD", b: "TBD", sa: 0, sb: 0 });
         lbRounds.push(round);
+        generated++;
+        if(generated % 2 === 0) count = Math.max(1, Math.ceil(count / 2));
+        if(generated > 20) break;
       }
+
       if(lbNames.length){
         for(let i = 0; i < lbNames.length; i += 2){
           const mi = Math.floor(i / 2);
@@ -3875,4 +3887,22 @@ async function playReel(record){
   }catch(e){}
   syncInputs(); updateDimLabel(); render();
   document.fonts.ready.then(render);
+
+  // Mobile: collapse canvas when virtual keyboard opens, scroll field into view
+  if(window.matchMedia("(max-width:820px)").matches){
+    const stage = document.querySelector(".stage");
+    const isMobile = "ontouchstart" in window;
+    if(isMobile && stage){
+      document.addEventListener("focusin", e => {
+        const tag = e.target.tagName;
+        if(tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT"){
+          stage.classList.add("kb-open");
+          setTimeout(() => e.target.scrollIntoView({behavior:"smooth",block:"center"}), 120);
+        }
+      });
+      document.addEventListener("focusout", () => {
+        stage.classList.remove("kb-open");
+      });
+    }
+  }
 })();

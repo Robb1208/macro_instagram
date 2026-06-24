@@ -115,9 +115,9 @@ canvas.grabbing{cursor:grabbing}
   header h1{font-size:13px}
   header .tag{display:none}
   .wrap{grid-template-columns:1fr;min-height:auto}
-  .stage{order:-1;padding:8px 8px;gap:4px;position:sticky;top:0;z-index:90;background:var(--ink)}
+  .stage{order:-1;padding:8px 8px;gap:4px;position:sticky;top:0;z-index:90;background:var(--ink);transition:max-height .25s ease, padding .25s ease}
   .panel{border-right:none;border-top:1px solid var(--line-soft);max-height:none;overflow-y:visible;padding:16px 14px}
-  canvas{max-height:42vh}
+  canvas{max-height:22vh}
   .canvas-shell{border-radius:8px}
   .stage-hint{display:none}
   .stage-hint.mobile-only{display:block;font-size:10px;margin:0}
@@ -134,13 +134,15 @@ canvas.grabbing{cursor:grabbing}
   .group{margin-bottom:14px;padding-bottom:12px}
   .group > label.title{font-size:10px;margin-bottom:8px}
   .field label{font-size:10px}
-  input[type=text],textarea,select{padding:8px 10px;font-size:12px;border-radius:7px}
+  input[type=text],textarea,select{padding:8px 10px;font-size:16px;border-radius:7px}
   .seg button{padding:7px 2px;font-size:10px}
   .seg button small{font-size:8px}
   .slider .val{font-size:9px}
   .thumbs{gap:5px}
   .thumb{width:42px;height:42px}
   .upload{padding:12px;font-size:11px}
+  /* keyboard open: collapse canvas preview */
+  .stage.kb-open{max-height:0;padding:0 8px;overflow:hidden}
 }
 
 /* Bracket builder */
