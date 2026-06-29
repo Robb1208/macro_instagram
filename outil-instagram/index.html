@@ -42,6 +42,7 @@
         <button class="tpl-btn" data-tpl="citation"><span class="tpl-icon">❝</span><span class="tpl-name">Citation</span></button>
         <button class="tpl-btn" data-tpl="mvp"><span class="tpl-icon">🏆</span><span class="tpl-name">MVP</span></button>
         <button class="tpl-btn" data-tpl="lineup"><span class="tpl-icon">👥</span><span class="tpl-name">Lineup</span></button>
+        <button class="tpl-btn" data-tpl="groupe"><span class="tpl-icon">▦</span><span class="tpl-name">Groupes</span></button>
         <button class="tpl-btn" data-tpl="bracket"><span class="tpl-icon">🏅</span><span class="tpl-name">Bracket</span></button>
       </div>
       <div style="margin-top:10px;display:flex;gap:6px">
@@ -159,6 +160,16 @@
         <div class="field" style="margin-top:8px">
           <label>Ligne de relégation (à partir du rang…)</label>
           <div class="slider"><input type="range" id="relegationLine" min="0" max="12" value="0" /><span class="val" id="relegationLineV">0</span></div>
+        </div>
+      </div>
+      <div id="groupesRow" style="display:none">
+        <div class="field" style="margin-top:12px">
+          <label>Groupes <span style="color:var(--fg-mute);font-weight:400">— séparés par ---Nom</span></label>
+          <textarea id="groupes" rows="10" placeholder="---Groupe A&#10;Karmine Corp&#10;T1&#10;Fnatic&#10;PSG Talon&#10;---Groupe B&#10;G2 Esports&#10;Gen.G&#10;Team Liquid&#10;FunPlus Phoenix"></textarea>
+        </div>
+        <div class="field" style="margin-top:8px">
+          <label>Éliminé à partir de la place <span id="groupeElimV" style="color:var(--cyan)">3</span> <span style="color:var(--fg-mute);font-weight:400">(0 = personne)</span></label>
+          <input type="range" id="groupeElim" min="0" max="8" value="3" step="1">
         </div>
       </div>
       <div id="statsRow" style="display:none">

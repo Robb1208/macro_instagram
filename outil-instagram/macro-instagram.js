@@ -24,6 +24,7 @@ const TEMPLATES = {
   "citation":  { label:"Citation", icon:"❝" },
   "mvp":       { label:"MVP", icon:"🏆" },
   "lineup":    { label:"Lineup", icon:"👥" },
+  "groupe":    { label:"Groupes", icon:"▦" },
   "bracket":   { label:"Bracket", icon:"🏅" },
 };
 
@@ -114,12 +115,12 @@ function newSlide(img, name, tpl){
            showBgImage: !!img, framedImage: false, photoCredit:"", dur: null, game: null,
            titleScale: null, descScale: null, zoom: null, descColor: null, imgBright: null,
            lineup:"", lineupCount:5, lineupTeamRating:"", lineupPhotos:[],
-           bracket:"", bracketFormat:"", planningEvents:"", frameY:0, statHighlight:0, mvpBadge:"mvp" };
+           bracket:"", bracketFormat:"", planningEvents:"", groupes:"", groupeElim:3, frameY:0, statHighlight:0, mvpBadge:"mvp" };
 }
 function cur(){ return state.images[state.active] || null; }
 function curTpl(){ const it = cur(); return (it && it.template) || "post-image"; }
 function sVal(key){ const it = cur(); return (it && it[key] != null) ? it[key] : state[key]; }
-const EMPTY = { template:"post-image", eyebrow:"", title:"", desc:"", showDesc:false, score:"", showScore:false, badge:"", signature:"", teamA:"", teamB:"", standings:"", relegationLine:0, stats:"", matches:"", footerText:"", pollOptions:"", pollWinner:0, tiers:"", playerName:"", playerRole:"", transferBadge:"officiel", matchResult:"", lineup:"", lineupCount:5, lineupTeamRating:"", bracket:"", bracketFormat:"", planningEvents:"", statHighlight:0, mvpBadge:"mvp" };
+const EMPTY = { template:"post-image", eyebrow:"", title:"", desc:"", showDesc:false, score:"", showScore:false, badge:"", signature:"", teamA:"", teamB:"", standings:"", relegationLine:0, stats:"", matches:"", footerText:"", pollOptions:"", pollWinner:0, tiers:"", playerName:"", playerRole:"", transferBadge:"officiel", matchResult:"", lineup:"", lineupCount:5, lineupTeamRating:"", bracket:"", bracketFormat:"", planningEvents:"", groupes:"", groupeElim:3, statHighlight:0, mvpBadge:"mvp" };
 
 // ═══ SECTION: CANVAS INIT ═══
 const cv = document.getElementById("cv");
@@ -515,6 +516,7 @@ function drawOverlay(W, H, slideInfo, content, hasImage){
     case "citation":   drawLayoutCitation(W,H,c,scale,pad,maxW,acc,hi); break;
     case "mvp":        drawLayoutMVP(W,H,c,scale,pad,maxW,acc,hi); break;
     case "lineup":     drawLayoutLineup(W,H,c,scale,pad,maxW,acc,hi); break;
+    case "groupe":     drawLayoutGroupes(W,H,c,scale,pad,maxW,acc,hi); break;
     case "bracket":    drawLayoutBracket(W,H,c,scale,pad,maxW,acc,hi); break;
     case "planning":   drawLayoutPlanning(W,H,c,scale,pad,maxW,acc,hi); break;
     default:           drawLayoutBottom(W,H,c,scale,pad,maxW,acc,hi); break;
@@ -1952,6 +1954,161 @@ function parseBracket(text){
   return parseBracketRounds(text);
 }
 
+// --- Groupes ---
+function parseGroupes(text){
+  const groups = [];
+  let current = null;
+  (text||"").split("\n").forEach(line=>{
+    line = line.trim();
+    if(!line) return;
+    if(line.startsWith("---")){
+      current = { name: line.replace(/^-+\s*/, ""), teams: [] };
+      groups.push(current);
+    } else {
+      if(!current){ current = { name: "Groupe A", teams: [] }; groups.push(current); }
+      current.teams.push({ name: line });
+    }
+  });
+  return groups;
+}
+
+function drawLayoutGroupes(W,H,c,scale,pad,maxW,acc,hi){
+  const eyeF = Math.round(22*scale);
+  const titleF = Math.round((state.format==="story"||state.reel?68:58) * scale * sVal("titleScale"));
+  const titleLH = Math.round(titleF*1.06);
+  const titleFont = `800 ${titleF}px Sora, sans-serif`;
+  const eyebrow = (c.eyebrow||"").toUpperCase();
+  const titleLines = wrapRich(richWords(c.title), titleFont, maxW);
+
+  const accentLineH = Math.round(4*scale);
+  const gap = Math.round(13*scale);
+  const dragOffset = ((c.textY||0)*scale) + (c.textDrag||0);
+  let y = Math.round(H*0.10 + 50*scale) + dragOffset;
+  ctx.fillStyle = acc;
+  ctx.fillRect(pad, y, Math.round(54*scale), accentLineH);
+  y += accentLineH + gap;
+  if(eyebrow){
+    ctx.font = `700 ${eyeF}px Sora, sans-serif`;
+    ctx.fillStyle = acc; ctx.textBaseline = "top";
+    drawSpaced(eyebrow, pad, y, eyeF*0.18);
+    y += eyeF + Math.round(10*scale);
+  }
+  ctx.textBaseline = "top";
+  for(const ln of titleLines){ drawRichLine(ln, pad, y, titleFont, hi, "#ffffff"); y += titleLH; }
+
+  const groups = parseGroupes(c.groupes);
+  if(!groups.length){ lastTextBox=null; return; }
+  const elimFrom = c.groupeElim || 0;
+
+  const gridGap = Math.round(16*scale);
+  const cols = groups.length <= 2 ? groups.length : 2;
+  const rows = Math.ceil(groups.length / cols);
+  const cellW = Math.floor((maxW - gridGap*(cols-1)) / cols);
+  const gridTop = y + Math.round(22*scale);
+
+  const groupNameF = Math.round(26*scale);
+  const teamNameF = Math.round(26*scale);
+  const rowH = Math.round(42*scale);
+  const headerH = Math.round(38*scale);
+  const logoSize = Math.round(24*scale);
+  const rankF = Math.round(20*scale);
+  const cardR = Math.round(10*scale);
+  const rowR = Math.round(7*scale);
+  const innerPad = Math.round(12*scale);
+
+  const availH = H - gridTop - Math.round(100*scale);
+  const cellH = rows > 1 ? Math.floor((availH - gridGap*(rows-1)) / rows) : availH;
+
+  for(let gi = 0; gi < groups.length; gi++){
+    const g = groups[gi];
+    const col = gi % cols;
+    const row = Math.floor(gi / cols);
+    const cx = pad + col*(cellW + gridGap);
+    const cy = gridTop + row*(cellH + gridGap);
+
+    // card background
+    ctx.fillStyle = "rgba(255,255,255,0.03)";
+    roundRectPath(cx, cy, cellW, cellH, cardR); ctx.fill();
+    ctx.strokeStyle = "rgba(255,255,255,0.08)"; ctx.lineWidth = Math.max(1, scale);
+    roundRectPath(cx, cy, cellW, cellH, cardR); ctx.stroke();
+
+    // group name
+    ctx.font = `800 ${groupNameF}px Sora, sans-serif`;
+    ctx.fillStyle = "#ffffff"; ctx.textBaseline = "top";
+    ctx.fillText(g.name, cx + innerPad, cy + innerPad);
+
+    const teamsTop = cy + headerH + innerPad;
+    g.teams.forEach((team, ti)=>{
+      const rank = ti + 1;
+      const ry = teamsTop + ti*rowH;
+      const isFirst = rank === 1;
+
+      const elim = elimFrom > 0 && rank >= elimFrom;
+
+      if(isFirst){
+        ctx.fillStyle = rgba(acc, 0.10);
+        roundRectPath(cx + innerPad/2, ry, cellW - innerPad, rowH, rowR); ctx.fill();
+        ctx.strokeStyle = rgba(acc, 0.25); ctx.lineWidth = Math.max(1, 2*scale);
+        roundRectPath(cx + innerPad/2, ry, cellW - innerPad, rowH, rowR); ctx.stroke();
+      }
+      if(elim){
+        ctx.fillStyle = "rgba(255,60,60,0.05)";
+        roundRectPath(cx + innerPad/2, ry, cellW - innerPad, rowH, rowR); ctx.fill();
+        ctx.strokeStyle = "rgba(255,60,60,0.15)"; ctx.lineWidth = Math.max(1, 2*scale);
+        roundRectPath(cx + innerPad/2, ry, cellW - innerPad, rowH, rowR); ctx.stroke();
+      }
+
+      const rcy = ry + rowH/2;
+
+      // rank
+      ctx.font = `600 ${rankF}px 'JetBrains Mono', monospace`;
+      ctx.fillStyle = elim ? "#ff5050" : (isFirst ? acc : "#9aa7b0");
+      ctx.textBaseline = "middle";
+      ctx.fillText(String(rank), cx + innerPad, rcy);
+
+      // logo
+      const logoImg = findTeamLogo(team.name);
+      const logoX = cx + innerPad + Math.round(24*scale);
+      if(logoImg){
+        ctx.drawImage(logoImg, logoX, rcy - logoSize/2, logoSize, logoSize);
+      }
+      const nameX = logoX + (logoImg ? logoSize + Math.round(8*scale) : 0);
+
+      // team name
+      ctx.font = `600 ${teamNameF}px Manrope, sans-serif`;
+      ctx.fillStyle = isFirst ? "#ffffff" : "#dfdfdf";
+      const maxNameW = cx + cellW - innerPad - nameX;
+      let name = team.name;
+      while(ctx.measureText(name).width > maxNameW && name.length > 3) name = name.slice(0,-1);
+      if(name !== team.name) name += "…";
+      ctx.fillText(name, nameX, rcy);
+    });
+  }
+
+  // legend at bottom
+  const legendY = H - Math.round(60*scale);
+  const legendF = Math.round(18*scale);
+  const dotR = Math.round(6*scale);
+  ctx.font = `500 ${legendF}px Manrope, sans-serif`;
+  ctx.textBaseline = "middle"; ctx.textAlign = "center";
+
+  const legW = Math.round(240*scale);
+  const legX = W/2 - legW/2;
+
+  ctx.fillStyle = rgba(acc, 0.5);
+  ctx.beginPath(); ctx.arc(legX, legendY, dotR, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = "#9aa7b0";
+  ctx.fillText("Qualifié", legX + Math.round(50*scale), legendY);
+
+  ctx.fillStyle = "rgba(255,80,80,0.5)";
+  ctx.beginPath(); ctx.arc(legX + Math.round(140*scale), legendY, dotR, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = "#9aa7b0";
+  ctx.fillText("Éliminé", legX + Math.round(190*scale), legendY);
+
+  ctx.textAlign = "left";
+  lastTextBox = null;
+}
+
 function drawLayoutBracket(W,H,c,scale,pad,maxW,acc,hi){
   const eyeF = Math.round(22*scale);
   const titleF = Math.round((state.format==="story"||state.reel?72:60)*scale*sVal("titleScale"));
@@ -2723,6 +2880,8 @@ function syncInputs(){
   if($("mvpBadge")) { $("mvpBadge").value = has ? (it.mvpBadge||"mvp") : "mvp"; $("mvpBadge").disabled = !has; }
   if($("lineup")) { $("lineup").value = has ? (it.lineup||"") : ""; $("lineup").disabled = !has; }
   if($("lineupTeamRating")) { $("lineupTeamRating").value = has ? (it.lineupTeamRating||"") : ""; $("lineupTeamRating").disabled = !has; }
+  if($("groupes")) { $("groupes").value = has ? (it.groupes||"") : ""; $("groupes").disabled = !has; }
+  if($("groupeElim")) { $("groupeElim").value = has ? (it.groupeElim!=null ? it.groupeElim : 3) : 3; $("groupeElimV").textContent = $("groupeElim").value; }
   if($("bracket")) { $("bracket").value = has ? (it.bracket||"") : ""; $("bracket").disabled = !has; }
   if($("bracketFormat")) { $("bracketFormat").value = has ? (it.bracketFormat||"") : ""; $("bracketFormat").disabled = !has; }
   if($("planningEvents")) { $("planningEvents").value = has ? (it.planningEvents||"") : ""; $("planningEvents").disabled = !has; }
@@ -2767,6 +2926,7 @@ function syncInputs(){
   show("matchResultRow", tpl==="mvp");
   show("mvpBadgeRow", tpl==="mvp");
   show("lineupRow", tpl==="lineup");
+  show("groupesRow", tpl==="groupe");
   show("bracketRow", tpl==="bracket");
   show("bracketFormatRow", tpl==="bracket");
 
@@ -2834,6 +2994,8 @@ if($("videoAudio")) $("videoAudio").onchange = e => {
 };
 if($("standings")) $("standings").oninput = e => setField("standings", e.target.value);
 if($("relegationLine")) $("relegationLine").oninput = e => { const v=parseInt(e.target.value)||0; $("relegationLineV").textContent=v; setField("relegationLine", v); };
+if($("groupes")) $("groupes").oninput = e => setField("groupes", e.target.value);
+if($("groupeElim")) $("groupeElim").oninput = e => { const v=parseInt(e.target.value)||0; $("groupeElimV").textContent=v; setField("groupeElim", v); };
 if($("stats")) $("stats").oninput = e => setField("stats", e.target.value);
 if($("matches")) $("matches").oninput = e => setField("matches", e.target.value);
 if($("footerText")) $("footerText").oninput = e => setField("footerText", e.target.value);
@@ -3369,6 +3531,8 @@ function applyJsonPreset(data, imageFiles){
     slide.bracket = s.bracket || "";
     slide.bracketFormat = s.bracketFormat || "";
     slide.planningEvents = s.planningEvents || "";
+    slide.groupes = s.groupes || "";
+    slide.groupeElim = s.groupeElim != null ? s.groupeElim : 3;
     slide.frameY = s.frameY || 0;
     if(s.titleSize!=null) slide.titleScale = s.titleSize/100;
     if(s.descSize!=null) slide.descScale = s.descSize/100;
@@ -3576,7 +3740,7 @@ $("dlJson").onclick = ()=>{
       photoCredit: s.photoCredit, showBgImage: s.showBgImage, framedImage: s.framedImage,
       dur: s.dur, game: s.game, lineup: s.lineup, lineupCount: s.lineupCount,
       lineupTeamRating: s.lineupTeamRating, bracket: s.bracket, bracketFormat: s.bracketFormat,
-      planningEvents: s.planningEvents, frameY: s.frameY,
+      planningEvents: s.planningEvents, groupes: s.groupes, groupeElim: s.groupeElim, frameY: s.frameY,
     };
     if(s.titleScale!=null) sl.titleSize = Math.round(s.titleScale*100);
     if(s.descScale!=null) sl.descSize = Math.round(s.descScale*100);
@@ -3682,6 +3846,20 @@ function deliverVideo(blob){
   const url = URL.createObjectURL(blob);
   const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
   if(isMobile){
+    const filename = slug()+"-reel.mp4";
+    const file = new File([blob], filename, { type: "video/mp4" });
+
+    if(navigator.canShare && navigator.canShare({ files: [file] })){
+      navigator.share({ files: [file], title: filename }).then(()=>{
+        $("status").textContent = "✓ Vidéo partagée.";
+        URL.revokeObjectURL(url);
+      }).catch(()=>{
+        $("status").textContent = "Partage annulé.";
+        URL.revokeObjectURL(url);
+      });
+      return;
+    }
+
     let overlay = document.getElementById("videoOverlay");
     if(overlay) overlay.remove();
     overlay = document.createElement("div");
@@ -3690,16 +3868,20 @@ function deliverVideo(blob){
     const vid = document.createElement("video");
     vid.src = url; vid.controls = true; vid.playsInline = true; vid.autoplay = true;
     vid.style.cssText = "max-width:90%;max-height:70vh;border-radius:12px;";
+    const dlBtn = document.createElement("a");
+    dlBtn.href = url; dlBtn.download = filename;
+    dlBtn.textContent = "⬇ Télécharger la vidéo";
+    dlBtn.style.cssText = "background:var(--cyan,#00e5ff);color:#000;border:none;padding:12px 28px;border-radius:8px;font:700 16px Manrope,sans-serif;cursor:pointer;text-decoration:none;text-align:center;";
     const msg = document.createElement("p");
-    msg.textContent = "Appui long sur la vidéo → Enregistrer";
-    msg.style.cssText = "color:#fff;font:600 16px Manrope,sans-serif;text-align:center;";
+    msg.textContent = "Si le bouton ne marche pas : appui long sur la vidéo → Enregistrer";
+    msg.style.cssText = "color:#999;font:400 13px Manrope,sans-serif;text-align:center;";
     const close = document.createElement("button");
     close.textContent = "✕ Fermer";
     close.style.cssText = "background:#333;color:#fff;border:none;padding:10px 24px;border-radius:8px;font:500 14px Manrope,sans-serif;cursor:pointer;";
     close.onclick = ()=>{ overlay.remove(); URL.revokeObjectURL(url); };
-    overlay.appendChild(vid); overlay.appendChild(msg); overlay.appendChild(close);
+    overlay.appendChild(vid); overlay.appendChild(dlBtn); overlay.appendChild(msg); overlay.appendChild(close);
     document.body.appendChild(overlay);
-    $("status").textContent = "✓ Vidéo prête — appui long pour enregistrer.";
+    $("status").textContent = "✓ Vidéo prête.";
   } else {
     const a = document.createElement("a");
     a.href = url; a.download = slug()+"-reel.mp4"; a.click();
