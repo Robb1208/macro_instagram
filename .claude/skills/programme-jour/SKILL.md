@@ -5,65 +5,44 @@ description: Génère un post Instagram "Programme du jour" avec une slide par j
 
 # programme-jour
 
-Routine quotidienne : générer un post Instagram avec le programme esport du jour.
+Routine quotidienne : programme esport du jour → JSON → brouillon Gmail.
 
-## Règles de sélection des matchs
+## IMPORTANT : budget token
 
-### Tier 1 uniquement
+Maximum **2 recherches web**. Pas plus. Ne jamais vérifier le proxy, ne jamais chercher si une équipe est française, ne jamais chercher les dates d'un tournoi séparément.
+
+### Stratégie de recherche (stricte)
+
+**Recherche 1** (obligatoire) :
+```
+site:liquipedia.net matches [DATE en anglais, ex: "June 29 2026"] esports schedule
+```
+
+**Recherche 2** (obligatoire) : scène française
+```
+site:liquipedia.net LFL OR "Karmine Corp" OR "Vitality" [DATE] match
+```
+
+**STOP.** Utiliser ce qu'on a. Info manquante = omettre, pas chercher plus.
+
+## Filtres
+
+### Tier 1
 - **LoL** : Worlds, MSI, LEC, LCK, LPL, LCS
 - **CS2** : Majors, BLAST Premier, IEM, ESL Pro League, PGL
 - **Valorant** : Champions, Masters, VCT EMEA/Pacific/Americas
-- **Rocket League** : RLCS Worlds, RLCS Régionaux
-- **Call of Duty** : CDL Majors, CDL Championship
+- **RL** : RLCS Worlds, RLCS Régionaux
+- **CoD** : CDL Majors, CDL Championship
 
-### Exception française (toujours inclure)
-Tous les matchs impliquant une équipe ou ligue française, même si pas tier 1 :
-- **LoL** : LFL, EU Masters (si équipe FR), matchs d'équipes FR (KC, VIT, GM, Solary, GameWard, LDLC, BDS, Mandatory, Misa Esport)
-- **Valorant** : VCT Challengers France, matchs d'équipes FR (KC, VIT, GM, Gentle Mates, Apeks)
-- **CS2** : matchs d'équipes FR (Vitality, Falcons)
-- **Rocket League** : matchs d'équipes FR (KC, Vitality, Solary)
+### Équipes/ligues françaises (toujours inclure même si pas tier 1)
+KC, Vitality, Gentle Mates, Solary, GameWard, LDLC, BDS, Mandatory, Falcons, Apeks
+Ligues : LFL, EU Masters (si équipe FR), VCT Challengers France
 
-### Pas de matchs = pas de slide
-Si un jeu n'a aucun match aujourd'hui → ne pas créer de slide pour ce jeu.
-Si aucun jeu n'a de matchs → ne pas créer de post, prévenir Robin.
+### Pas de matchs = pas de slide. Aucun match = pas de post, prévenir Robin.
 
-## Pipeline
+## Format JSON
 
-### 1. Rechercher les matchs du jour
-Chercher sur le web les matchs esport prévus aujourd'hui (date du jour, heure de Paris CET/CEST).
-
-Sources recommandées :
-| Jeu | Sources |
-|-----|---------|
-| LoL | lolesports.com, Liquipedia |
-| CS2 | HLTV.org |
-| Valorant | VLR.gg |
-| Rocket League | Liquipedia, start.gg |
-| Call of Duty | callofdutyleague.com |
-
-### 2. Construire le JSON
-
-**Une slide par jeu** qui a des matchs, template `programme`.
-
-Structure de chaque slide :
-- **template** : `"programme"`
-- **eyebrow** : `"PROGRAMME DU JOUR"` 
-- **title** : nom du jeu avec icône (ex: `"*League of Legends*"`)
-- **showDesc** : `true`
-- **desc** : détails du tournoi ou contexte court
-- **matches** : liste des matchs, format `HH:MM Équipe A vs Équipe B · Tournoi`
-  - Horaires TOUJOURS en CET/CEST (heure de Paris)
-  - Un match par ligne
-  - Trier par heure croissante
-
-Exemple de contenu `matches` :
-```
-14:00 Karmine Corp vs T1 · MSI 2026
-16:00 G2 vs Gen.G · MSI 2026
-19:00 Vitality vs Fnatic · LEC Summer
-```
-
-### 3. JSON global
+Une slide par jeu, template `programme`. Horaires en CET/CEST.
 
 ```json
 {
@@ -81,37 +60,19 @@ Exemple de contenu `matches` :
       "matches": "14:00 KC vs T1 · MSI\n16:00 G2 vs Gen.G · MSI",
       "showBgImage": false,
       "game": "lol"
-    },
-    {
-      "template": "programme",
-      "eyebrow": "PROGRAMME DU JOUR",
-      "title": "*Counter-Strike 2*",
-      "desc": "BLAST Premier Spring Finals",
-      "showDesc": true,
-      "matches": "18:00 Vitality vs FaZe · BLAST\n20:30 Navi vs Spirit · BLAST",
-      "showBgImage": false,
-      "game": "cs2"
     }
   ]
 }
 ```
 
-Le champ `game` par slide permet de changer la couleur d'accent par jeu.
+Format matches : `HH:MM Tag1 vs Tag2 · Tournoi` (un par ligne, trié par heure). Tags courts (KC, VIT, G2, T1...).
 
-### 4. Envoyer par mail
+Ordre des slides : LoL → CS2 → Valorant → RL → autres.
 
-Créer un **brouillon Gmail** (ne pas envoyer) :
-- **Destinataire** : robinpicard@gmail.com
+## Livraison
+
+Écrire le JSON dans un fichier temporaire, puis créer un **brouillon Gmail** (pas envoyer) :
+- **À** : robinpicard@gmail.com
 - **Objet** : `📅 Programme esport du JJ/MM/AAAA`
-- **Corps** : résumé texte des matchs du jour (liste simple)
-- **Pièce jointe** : le fichier `programme-jour.json`
-
-Utiliser l'outil Gmail MCP `create_draft` pour créer le brouillon.
-
-## Règles importantes
-
-- **Horaires en CET/CEST** — jamais le fuseau de l'événement
-- **Pas de matchs = pas de slide** pour ce jeu
-- **Aucun match du tout = pas de post**, prévenir Robin
-- **Ordre des slides** : LoL → CS2 → Valorant → RL → autres
-- **Noms d'équipes** : utiliser les tags courts (KC, VIT, G2, T1...) dans le champ matches pour la lisibilité
+- **Corps** : liste texte des matchs
+- **PJ** : programme-jour.json
