@@ -5,44 +5,39 @@ description: Génère un post Instagram "Programme du jour" avec une slide par j
 
 # programme-jour
 
-Routine quotidienne : programme esport du jour → JSON → brouillon Gmail.
+Programme esport du jour → JSON → brouillon Gmail.
 
-## IMPORTANT : budget token
+## RÈGLES STRICTES
 
-Maximum **2 recherches web**. Pas plus. Ne jamais vérifier le proxy, ne jamais chercher si une équipe est française, ne jamais chercher les dates d'un tournoi séparément.
+1. **Maximum 2 recherches web.** Pas 3, pas 4. Deux.
+2. **Tous les matchs du jour** — y compris ceux déjà joués. Ne pas indiquer le résultat.
+3. **Pas de commentaires/notes** sur les sites bloqués, le proxy, les sources. Juste les matchs.
+4. **Ne jamais** vérifier le proxy, chercher si une équipe est française, chercher les dates d'un tournoi séparément.
+5. **Après 2 recherches → STOP.** Construire le JSON avec ce qu'on a. Info manquante = omettre.
 
-### Stratégie de recherche (stricte)
+## Recherches
 
-**Recherche 1** (obligatoire) :
+**Recherche 1** :
 ```
-site:liquipedia.net matches [DATE en anglais, ex: "June 29 2026"] esports schedule
+esports matches today [DATE anglais] schedule LoL CS2 Valorant Rocket League site:liquipedia.net
 ```
 
-**Recherche 2** (obligatoire) : scène française
+**Recherche 2** :
 ```
-site:liquipedia.net LFL OR "Karmine Corp" OR "Vitality" [DATE] match
+LFL OR "Karmine Corp" OR Vitality OR Mandatory match [DATE] site:liquipedia.net
 ```
-
-**STOP.** Utiliser ce qu'on a. Info manquante = omettre, pas chercher plus.
 
 ## Filtres
 
-### Tier 1
-- **LoL** : Worlds, MSI, LEC, LCK, LPL, LCS
-- **CS2** : Majors, BLAST Premier, IEM, ESL Pro League, PGL
-- **Valorant** : Champions, Masters, VCT EMEA/Pacific/Americas
-- **RL** : RLCS Worlds, RLCS Régionaux
-- **CoD** : CDL Majors, CDL Championship
+**Tier 1** : Worlds, MSI, LEC, LCK, LPL, LCS, Majors CS2, BLAST, ESL Pro League, PGL, VCT Champions/Masters/EMEA/Pacific/Americas, RLCS, CDL Majors
 
-### Équipes/ligues françaises (toujours inclure même si pas tier 1)
-KC, Vitality, Gentle Mates, Solary, GameWard, LDLC, BDS, Mandatory, Falcons, Apeks
-Ligues : LFL, EU Masters (si équipe FR), VCT Challengers France
+**Français (inclure même si pas tier 1)** : KC, Vitality, Gentle Mates, Solary, GameWard, LDLC, BDS, Mandatory, Falcons, Apeks. Ligues : LFL, EU Masters FR, VCT Challengers France.
 
-### Pas de matchs = pas de slide. Aucun match = pas de post, prévenir Robin.
+Pas de matchs pour un jeu = pas de slide. Aucun match du tout = pas de post, prévenir Robin.
 
-## Format JSON
+## JSON
 
-Une slide par jeu, template `programme`. Horaires en CET/CEST.
+Une slide par jeu, template `programme`, horaires CET/CEST, tags courts.
 
 ```json
 {
@@ -65,14 +60,12 @@ Une slide par jeu, template `programme`. Horaires en CET/CEST.
 }
 ```
 
-Format matches : `HH:MM Tag1 vs Tag2 · Tournoi` (un par ligne, trié par heure). Tags courts (KC, VIT, G2, T1...).
-
-Ordre des slides : LoL → CS2 → Valorant → RL → autres.
+Format matches : `HH:MM Tag1 vs Tag2 · Tournoi` — un par ligne, trié par heure. Ordre slides : LoL → CS2 → Valorant → RL → autres.
 
 ## Livraison
 
-Écrire le JSON dans un fichier temporaire, puis créer un **brouillon Gmail** (pas envoyer) :
+Brouillon Gmail (pas envoyer) :
 - **À** : robinpicard@gmail.com
 - **Objet** : `📅 Programme esport du JJ/MM/AAAA`
-- **Corps** : liste texte des matchs
+- **Corps** : liste texte de tous les matchs du jour
 - **PJ** : programme-jour.json
