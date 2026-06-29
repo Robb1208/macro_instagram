@@ -19,7 +19,6 @@ const TEMPLATES = {
   "programme": { label:"Programme", icon:"📅" },
   "planning":  { label:"Planning", icon:"📆" },
   "sondage":   { label:"Sondage", icon:"📊" },
-  "transfert": { label:"Transfert", icon:"⇄" },
   "tierlist":  { label:"Tier List", icon:"S" },
   "citation":  { label:"Citation", icon:"❝" },
   "mvp":       { label:"MVP", icon:"🏆" },
@@ -511,7 +510,6 @@ function drawOverlay(W, H, slideInfo, content, hasImage){
     case "statistique": drawLayoutCarousel(W,H,c,scale,pad,maxW,acc,hi); break;
     case "programme":  drawLayoutProgramme(W,H,c,scale,pad,maxW,acc,hi); break;
     case "sondage":    drawLayoutSondage(W,H,c,scale,pad,maxW,acc,hi); break;
-    case "transfert":  drawLayoutTransfert(W,H,c,scale,pad,maxW,acc,hi); break;
     case "tierlist":   drawLayoutTierList(W,H,c,scale,pad,maxW,acc,hi); break;
     case "citation":   drawLayoutCitation(W,H,c,scale,pad,maxW,acc,hi); break;
     case "mvp":        drawLayoutMVP(W,H,c,scale,pad,maxW,acc,hi); break;
@@ -536,7 +534,7 @@ function drawLayoutBottom(W,H,c,scale,pad,maxW,acc,hi){
   const eyebrow = (c.eyebrow||"").toUpperCase();
   const titleLines = wrapRich(richWords(c.title), titleFont, maxW);
   const descFont = `500 ${descF}px Manrope, sans-serif`;
-  const descLines = (c.showDesc && c.desc.trim()) ? wrapRich(richWords(c.desc), descFont, maxW).slice(0,16) : [];
+  const descLines = (c.showDesc && c.desc.trim()) ? wrapRich(richWords(c.desc), descFont, maxW).slice(0,25) : [];
   if(!eyebrow && !titleLines.length && !descLines.length){ lastTextBox=null; return; }
 
   const accentLineH = Math.round(4*scale);
@@ -584,7 +582,7 @@ function drawLayoutCentered(W,H,c,scale,pad,maxW,acc,hi){
   const eyebrow = (c.eyebrow||"").toUpperCase();
   const titleLines = wrapRich(richWords(c.title), titleFont, maxW);
   const descFont = `500 ${descF}px Manrope, sans-serif`;
-  const descLines = (c.showDesc && c.desc.trim()) ? wrapRich(richWords(c.desc), descFont, Math.round(maxW*0.92)).slice(0,14) : [];
+  const descLines = (c.showDesc && c.desc.trim()) ? wrapRich(richWords(c.desc), descFont, Math.round(maxW*0.92)).slice(0,25) : [];
 
   const accentLineH = Math.round(4*scale);
   const gap = Math.round(15*scale);
@@ -752,7 +750,7 @@ function drawLayoutScore(W,H,c,scale,pad,maxW,acc,hi){
   const titleFont = `800 ${titleF}px Sora, sans-serif`;
   const titleLines = wrapRich(richWords(c.title), titleFont, maxW);
   const descFont = `500 ${descF}px Manrope, sans-serif`;
-  const descLines = (c.showDesc && c.desc.trim()) ? wrapRich(richWords(c.desc), descFont, maxW).slice(0,8) : [];
+  const descLines = (c.showDesc && c.desc.trim()) ? wrapRich(richWords(c.desc), descFont, maxW).slice(0,25) : [];
   if(!titleLines.length && !descLines.length){ lastTextBox=null; return; }
 
   const accentLineH = Math.round(4*scale);
@@ -780,9 +778,9 @@ function drawLayoutScore(W,H,c,scale,pad,maxW,acc,hi){
 // --- T4: Breaking / Officiel (badge + centered title + signature) ---
 function drawLayoutBreaking(W,H,c,scale,pad,maxW,hi){
   const badge = c.badge || "breaking";
-  const badgeColor = badge==="officiel" ? "#f0c14b" : "#ff4d57";
-  const badgeLight = badge==="officiel" ? "#f5d06a" : "#ff6b73";
-  const badgeLabel = badge==="officiel" ? "OFFICIEL" : "BREAKING";
+  const badgeColor = badge==="officiel" ? "#f0c14b" : badge==="rumeur" ? "#4da6ff" : "#ff4d57";
+  const badgeLight = badge==="officiel" ? "#f5d06a" : badge==="rumeur" ? "#6db8ff" : "#ff6b73";
+  const badgeLabel = badge==="officiel" ? "OFFICIEL" : badge==="rumeur" ? "RUMEUR" : "BREAKING";
 
   const titleF = Math.round((state.format==="story"||state.reel?120:104) * scale * sVal("titleScale"));
   const descF = Math.round((state.format==="story"||state.reel?38:34)*scale*sVal("descScale"));
@@ -791,7 +789,7 @@ function drawLayoutBreaking(W,H,c,scale,pad,maxW,hi){
   const titleFont = `800 ${titleF}px Sora, sans-serif`;
   const titleLines = wrapRich(richWords(c.title), titleFont, maxW);
   const descFont = `500 ${descF}px Manrope, sans-serif`;
-  const descLines = (c.showDesc && c.desc.trim()) ? wrapRich(richWords(c.desc), descFont, Math.round(maxW*0.88)).slice(0,8) : [];
+  const descLines = (c.showDesc && c.desc.trim()) ? wrapRich(richWords(c.desc), descFont, Math.round(maxW*0.88)).slice(0,25) : [];
 
   // calculate block height
   const badgeH = Math.round(44*scale);
@@ -1095,7 +1093,7 @@ function drawLayoutCarousel(W,H,c,scale,pad,maxW,acc,hi){
   }
 }
 
-// --- Shared: diagonal stripe background (for transfert, mvp) ---
+// --- Shared: diagonal stripe background (for mvp) ---
 function drawStripeBackground(W,H){
   ctx.save();
   ctx.globalAlpha = 0.35;
@@ -1407,7 +1405,7 @@ function drawLayoutTransfert(W,H,c,scale,pad,maxW,acc,hi){
   const eyebrow = (c.eyebrow||"").toUpperCase();
   const titleLines = wrapRich(richWords(c.title), titleFont, maxW);
   const descFont = `500 ${descF}px Manrope, sans-serif`;
-  const descLines = (c.showDesc && c.desc.trim()) ? wrapRich(richWords(c.desc), descFont, maxW).slice(0,8) : [];
+  const descLines = (c.showDesc && c.desc.trim()) ? wrapRich(richWords(c.desc), descFont, maxW).slice(0,25) : [];
 
   const accentLineH = Math.round(4*scale);
   const gapLine = Math.round(14*scale);
@@ -2704,7 +2702,6 @@ function render(){
   const showImg = (item && item.img && item.showBgImage !== false) || showVideo;
   const framed = showImg && item.framedImage && !showVideo;
   if(showImg && !framed){
-    if(tpl==="transfert") drawStripeBackground(W,H);
     drawSlideMedia(item, W, H, sVal("zoom"));
     if(sVal("imgBright") < 1){
       ctx.fillStyle = `rgba(0,0,0,${1 - sVal("imgBright")})`;
@@ -2720,7 +2717,6 @@ function render(){
     }
   } else if(item){
     if(tpl==="breaking") drawBreakingBackground(W,H);
-    else if(tpl==="transfert"){ drawBaseBackground(W,H); drawStripeBackground(W,H); }
     else drawBaseBackground(W,H);
   } else {
     drawBaseBackground(W,H);
@@ -2906,7 +2902,7 @@ function syncInputs(){
   show("badgeRow", tpl==="breaking");
   show("signatureRow", tpl==="post-texte" || tpl==="breaking");
   show("teamRow", tpl==="score");
-  show("gradientRow", tpl==="post-image" || tpl==="post-video" || tpl==="score" || tpl==="statistique" || tpl==="transfert");
+  show("gradientRow", tpl==="post-image" || tpl==="post-video" || tpl==="score" || tpl==="statistique");
   show("videoRow", tpl==="post-video");
   show("zoomRow", hasImage);
   show("imgBrightRow", hasImage);
@@ -2922,7 +2918,6 @@ function syncInputs(){
   show("tiersRow", tpl==="tierlist");
   show("playerNameRow", tpl==="citation" || tpl==="mvp");
   show("playerRoleRow", tpl==="citation");
-  show("transferBadgeRow", tpl==="transfert");
   show("matchResultRow", tpl==="mvp");
   show("mvpBadgeRow", tpl==="mvp");
   show("lineupRow", tpl==="lineup");
@@ -3779,13 +3774,11 @@ function drawFullSlide(targetCtx, W, H, slide, idx, total, zoomMul){
   const framed = showImg && slide.framedImage && !showVideo;
   const tpl = slide.template;
   if(showImg && !framed){
-    if(tpl==="transfert") drawStripeBackground(W,H);
     drawSlideMedia(slide, W, H, slideZoom * (zoomMul||1));
   } else if(framed){
     drawBaseBackground(W,H); drawFramedImage(slide, W, H, slideZoom);
   } else {
     if(tpl==="breaking") drawBreakingBackground(W,H);
-    else if(tpl==="transfert"){ drawBaseBackground(W,H); drawStripeBackground(W,H); }
     else drawBaseBackground(W,H);
   }
   drawEdgeScrims(W,H);
