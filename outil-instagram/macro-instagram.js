@@ -112,11 +112,13 @@ function newSlide(img, name, tpl){
            matches:"", footerText:"", pollOptions:"", pollWinner:0,
            tiers:"", playerName:"", playerRole:"", transferBadge:"officiel", matchResult:"",
            showBgImage: !!img, framedImage: false, photoCredit:"", dur: null, game: null,
+           titleScale: null, descScale: null, zoom: null, descColor: null, imgBright: null,
            lineup:"", lineupCount:5, lineupTeamRating:"", lineupPhotos:[],
            bracket:"", bracketFormat:"", planningEvents:"", frameY:0, statHighlight:0, mvpBadge:"mvp" };
 }
 function cur(){ return state.images[state.active] || null; }
 function curTpl(){ const it = cur(); return (it && it.template) || "post-image"; }
+function sVal(key){ const it = cur(); return (it && it[key] != null) ? it[key] : state[key]; }
 const EMPTY = { template:"post-image", eyebrow:"", title:"", desc:"", showDesc:false, score:"", showScore:false, badge:"", signature:"", teamA:"", teamB:"", standings:"", relegationLine:0, stats:"", matches:"", footerText:"", pollOptions:"", pollWinner:0, tiers:"", playerName:"", playerRole:"", transferBadge:"officiel", matchResult:"", lineup:"", lineupCount:5, lineupTeamRating:"", bracket:"", bracketFormat:"", planningEvents:"", statHighlight:0, mvpBadge:"mvp" };
 
 // ═══ SECTION: CANVAS INIT ═══
@@ -142,7 +144,7 @@ noise.width = noise.height = 220;
 const noisePattern = ctx.createPattern(noise,"repeat");
 
 function accentColor(g){ const game = g || state.game; return game === "custom" ? state.customColor : GAME_COLORS[game]; }
-function descBaseColor(){ const v = Math.round(state.descColor * 255); return `rgb(${v},${v},${v})`; }
+function descBaseColor(){ const v = Math.round(sVal("descColor") * 255); return `rgb(${v},${v},${v})`; }
 
 // ═══ SECTION: DRAW HELPERS ═══
 function drawCover(img, x, y, w, h, zoom, ox, oy){
@@ -524,8 +526,8 @@ function drawLayoutBottom(W,H,c,scale,pad,maxW,acc,hi){
   if(c.showScore && c.score && c.score.trim()) drawScoreCenter(W,H,c,scale,maxW,hi);
 
   const eyeF = Math.round(22*scale);
-  const titleF = Math.round((state.format==="story"||state.reel?86:74) * scale * state.titleScale);
-  const descF = Math.round(30*scale*state.descScale);
+  const titleF = Math.round((state.format==="story"||state.reel?86:74) * scale * sVal("titleScale"));
+  const descF = Math.round(30*scale*sVal("descScale"));
   const titleLH = Math.round(titleF*1.04);
   const descLH = Math.round(descF*1.4);
   const titleFont = `800 ${titleF}px Sora, sans-serif`;
@@ -572,8 +574,8 @@ function drawLayoutBottom(W,H,c,scale,pad,maxW,acc,hi){
 // --- T2: Texte seul (centered vertically + quote mark + signature) ---
 function drawLayoutCentered(W,H,c,scale,pad,maxW,acc,hi){
   const eyeF = Math.round(22*scale);
-  const titleF = Math.round((state.format==="story"||state.reel?96:84) * scale * state.titleScale);
-  const descF = Math.round(30*scale*state.descScale);
+  const titleF = Math.round((state.format==="story"||state.reel?96:84) * scale * sVal("titleScale"));
+  const descF = Math.round(30*scale*sVal("descScale"));
   const titleLH = Math.round(titleF*1.06);
   const descLH = Math.round(descF*1.5);
   const titleFont = `800 ${titleF}px Sora, sans-serif`;
@@ -741,8 +743,8 @@ function drawLayoutScore(W,H,c,scale,pad,maxW,acc,hi){
   ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
 
   // title + desc at bottom
-  const titleF = Math.round((state.format==="story"||state.reel?76:68) * scale * state.titleScale);
-  const descF = Math.round(30*scale*state.descScale);
+  const titleF = Math.round((state.format==="story"||state.reel?76:68) * scale * sVal("titleScale"));
+  const descF = Math.round(30*scale*sVal("descScale"));
   const titleLH = Math.round(titleF*1.05);
   const descLH = Math.round(descF*1.4);
   const titleFont = `800 ${titleF}px Sora, sans-serif`;
@@ -780,8 +782,8 @@ function drawLayoutBreaking(W,H,c,scale,pad,maxW,hi){
   const badgeLight = badge==="officiel" ? "#f5d06a" : "#ff6b73";
   const badgeLabel = badge==="officiel" ? "OFFICIEL" : "BREAKING";
 
-  const titleF = Math.round((state.format==="story"||state.reel?120:104) * scale * state.titleScale);
-  const descF = Math.round((state.format==="story"||state.reel?38:34)*scale*state.descScale);
+  const titleF = Math.round((state.format==="story"||state.reel?120:104) * scale * sVal("titleScale"));
+  const descF = Math.round((state.format==="story"||state.reel?38:34)*scale*sVal("descScale"));
   const titleLH = Math.round(titleF*1.0);
   const descLH = Math.round(descF*1.5);
   const titleFont = `800 ${titleF}px Sora, sans-serif`;
@@ -905,7 +907,7 @@ function parseStandings(text){
 }
 function drawLayoutClassement(W,H,c,scale,pad,maxW,acc,hi){
   const eyeF = Math.round(22*scale);
-  const titleF = Math.round((state.format==="story"||state.reel?68:58) * scale * state.titleScale);
+  const titleF = Math.round((state.format==="story"||state.reel?68:58) * scale * sVal("titleScale"));
   const titleLH = Math.round(titleF*1.06);
   const titleFont = `800 ${titleF}px Sora, sans-serif`;
   const eyebrow = (c.eyebrow||"").toUpperCase();
@@ -1020,7 +1022,7 @@ function drawLayoutCarousel(W,H,c,scale,pad,maxW,acc,hi){
 
   if(hasStats){
     const eyeF = Math.round(22*scale);
-    const titleF = Math.round((state.format==="story"||state.reel?48:42) * scale * state.titleScale);
+    const titleF = Math.round((state.format==="story"||state.reel?48:42) * scale * sVal("titleScale"));
     const titleLH = Math.round(titleF*1.08);
     const titleFont = `800 ${titleF}px Sora, sans-serif`;
     const eyebrow = (c.eyebrow||"").toUpperCase();
@@ -1128,7 +1130,7 @@ function parseMatches(text){
 }
 function drawLayoutProgramme(W,H,c,scale,pad,maxW,acc,hi){
   const eyeF = Math.round(22*scale);
-  const titleF = Math.round((state.format==="story"||state.reel?64:56)*scale*state.titleScale);
+  const titleF = Math.round((state.format==="story"||state.reel?64:56)*scale*sVal("titleScale"));
   const titleLH = Math.round(titleF*1.06);
   const titleFont = `800 ${titleF}px Sora, sans-serif`;
   const eyebrow = (c.eyebrow||"").toUpperCase();
@@ -1252,7 +1254,7 @@ function parsePollOptions(text){
 }
 function drawLayoutSondage(W,H,c,scale,pad,maxW,acc,hi){
   const eyeF = Math.round(22*scale);
-  const questionF = Math.round((state.format==="story"||state.reel?72:64)*scale*state.titleScale);
+  const questionF = Math.round((state.format==="story"||state.reel?72:64)*scale*sVal("titleScale"));
   const questionLH = Math.round(questionF*1.08);
   const questionFont = `800 ${questionF}px Sora, sans-serif`;
   const eyebrow = (c.eyebrow||"").toUpperCase();
@@ -1395,8 +1397,8 @@ function drawLayoutTransfert(W,H,c,scale,pad,maxW,acc,hi){
 
   // bottom text
   const eyeF = Math.round(22*scale);
-  const titleF = Math.round((state.format==="story"||state.reel?80:72)*scale*state.titleScale);
-  const descF = Math.round(28*scale*state.descScale);
+  const titleF = Math.round((state.format==="story"||state.reel?80:72)*scale*sVal("titleScale"));
+  const descF = Math.round(28*scale*sVal("descScale"));
   const titleLH = Math.round(titleF*1.04);
   const descLH = Math.round(descF*1.4);
   const titleFont = `800 ${titleF}px Sora, sans-serif`;
@@ -1446,7 +1448,7 @@ function parseTiers(text){
 }
 function drawLayoutTierList(W,H,c,scale,pad,maxW,acc,hi){
   const eyeF = Math.round(22*scale);
-  const titleF = Math.round((state.format==="story"||state.reel?64:56)*scale*state.titleScale);
+  const titleF = Math.round((state.format==="story"||state.reel?64:56)*scale*sVal("titleScale"));
   const titleLH = Math.round(titleF*1.06);
   const titleFont = `800 ${titleF}px Sora, sans-serif`;
   const eyebrow = (c.eyebrow||"").toUpperCase();
@@ -1560,7 +1562,7 @@ function drawLayoutTierList(W,H,c,scale,pad,maxW,acc,hi){
 // --- T11: Citation (quote with attribution) ---
 function drawLayoutCitation(W,H,c,scale,pad,maxW,acc,hi){
   const eyeF = Math.round(22*scale);
-  const quoteF = Math.round((state.format==="story"||state.reel?76:68)*scale*state.titleScale);
+  const quoteF = Math.round((state.format==="story"||state.reel?76:68)*scale*sVal("titleScale"));
   const quoteLH = Math.round(quoteF*1.12);
   const quoteFont = `800 ${quoteF}px Sora, sans-serif`;
   const eyebrow = (c.eyebrow||"").toUpperCase();
@@ -1690,8 +1692,8 @@ function drawLayoutMVP(W,H,c,scale,pad,maxW,acc,hi){
 
   // bottom text
   const eyeF = Math.round(22*scale);
-  const titleF = Math.round((state.format==="story"||state.reel?80:72)*scale*state.titleScale);
-  const descF = Math.round(28*scale*state.descScale);
+  const titleF = Math.round((state.format==="story"||state.reel?80:72)*scale*sVal("titleScale"));
+  const descF = Math.round(28*scale*sVal("descScale"));
   const titleLH = Math.round(titleF*1.04);
   const titleFont = `800 ${titleF}px Sora, sans-serif`;
   const eyebrow = (c.eyebrow||"").toUpperCase();
@@ -1790,7 +1792,7 @@ function drawLayoutLineup(W,H,c,scale,pad,maxW,acc,hi){
   const showRatings = players.some(p => p.rating !== "");
 
   const eyeF = Math.round(22*scale);
-  const titleF = Math.round((state.format==="story"||state.reel?80:72)*scale*state.titleScale);
+  const titleF = Math.round((state.format==="story"||state.reel?80:72)*scale*sVal("titleScale"));
   const titleLH = Math.round(titleF*1.04);
   const titleFont = `800 ${titleF}px Sora, sans-serif`;
   const eyebrow = (c.eyebrow||"").toUpperCase();
@@ -1952,7 +1954,7 @@ function parseBracket(text){
 
 function drawLayoutBracket(W,H,c,scale,pad,maxW,acc,hi){
   const eyeF = Math.round(22*scale);
-  const titleF = Math.round((state.format==="story"||state.reel?72:60)*scale*state.titleScale);
+  const titleF = Math.round((state.format==="story"||state.reel?72:60)*scale*sVal("titleScale"));
   const titleLH = Math.round(titleF*1.06);
   const titleFont = `800 ${titleF}px Sora, sans-serif`;
   const eyebrow = (c.eyebrow||"").toUpperCase();
@@ -2295,7 +2297,7 @@ function parsePlanningEvents(text){
 }
 function drawLayoutPlanning(W,H,c,scale,pad,maxW,acc,hi){
   const eyeF = Math.round(20*scale);
-  const titleF = Math.round((state.format==="story"||state.reel?52:44)*scale*state.titleScale);
+  const titleF = Math.round((state.format==="story"||state.reel?52:44)*scale*sVal("titleScale"));
   const titleLH = Math.round(titleF*1.08);
   const titleFont = `800 ${titleF}px Sora, sans-serif`;
   const eyebrow = (c.eyebrow||"").toUpperCase();
@@ -2546,17 +2548,17 @@ function render(){
   const framed = showImg && item.framedImage && !showVideo;
   if(showImg && !framed){
     if(tpl==="transfert") drawStripeBackground(W,H);
-    drawSlideMedia(item, W, H, state.zoom);
-    if(state.imgBright < 1){
-      ctx.fillStyle = `rgba(0,0,0,${1 - state.imgBright})`;
+    drawSlideMedia(item, W, H, sVal("zoom"));
+    if(sVal("imgBright") < 1){
+      ctx.fillStyle = `rgba(0,0,0,${1 - sVal("imgBright")})`;
       ctx.fillRect(0,0,W,H);
     }
     applyEdgeBlur(W,H);
   } else if(framed){
     drawBaseBackground(W,H);
-    drawFramedImage(item, W, H, state.zoom);
-    if(state.imgBright < 1){
-      ctx.fillStyle = `rgba(0,0,0,${1 - state.imgBright})`;
+    drawFramedImage(item, W, H, sVal("zoom"));
+    if(sVal("imgBright") < 1){
+      ctx.fillStyle = `rgba(0,0,0,${1 - sVal("imgBright")})`;
       ctx.fillRect(0,0,W,H);
     }
   } else if(item){
@@ -2677,6 +2679,12 @@ function syncInputs(){
   $("textY").value = has ? (it.textY||0) : 0;
   $("textYV").textContent = has ? (it.textY||0) : 0;
   $("contentSlideTag").textContent = has && state.images.length>1 ? `· slide ${state.active+1}` : "";
+
+  const ts = sVal("titleScale"); $("titleSize").value = Math.round(ts*100); $("titleSizeV").textContent = Math.round(ts*100)+"%";
+  const ds = sVal("descScale");  $("descSize").value = Math.round(ds*100);  $("descSizeV").textContent = Math.round(ds*100)+"%";
+  const zm = sVal("zoom");       $("zoom").value = Math.round(zm*100);      $("zoomV").textContent = Math.round(zm*100)+"%";
+  const ib = sVal("imgBright");  $("imgBright").value = Math.round(ib*100);  $("imgBrightV").textContent = Math.round(ib*100)+"%";
+  const dc = sVal("descColor");  $("descColor").value = Math.round(dc*100);  $("descColorV").textContent = Math.round(dc*100)+"%";
 
   if($("dur") && $("durAll")){
     const allMode = $("durAll").checked;
@@ -3362,6 +3370,11 @@ function applyJsonPreset(data, imageFiles){
     slide.bracketFormat = s.bracketFormat || "";
     slide.planningEvents = s.planningEvents || "";
     slide.frameY = s.frameY || 0;
+    if(s.titleSize!=null) slide.titleScale = s.titleSize/100;
+    if(s.descSize!=null) slide.descScale = s.descSize/100;
+    if(s.zoom!=null) slide.zoom = s.zoom/100;
+    if(s.descColor!=null) slide.descColor = s.descColor/100;
+    if(s.imgBright!=null) slide.imgBright = s.imgBright/100;
     state.images.push(slide);
 
     const imgName = s.image;
@@ -3434,12 +3447,16 @@ function bindSlider(id, key, fmt, scale){
   const el = $(id), out = $(id+"V");
   el.oninput = ()=>{ state[key] = parseFloat(el.value)*scale; out.textContent = fmt(parseFloat(el.value)); render(); };
 }
+function bindSlideSlider(id, key, fmt, scale){
+  const el = $(id), out = $(id+"V");
+  el.oninput = ()=>{ const it = cur(); if(it) it[key] = parseFloat(el.value)*scale; out.textContent = fmt(parseFloat(el.value)); render(); };
+}
 bindSlider("gradient","gradient", v=>v+"%", 0.01);
-bindSlider("titleSize","titleScale", v=>v+"%", 0.01);
-bindSlider("descSize","descScale", v=>v+"%", 0.01);
-bindSlider("zoom","zoom", v=>v+"%", 0.01);
-bindSlider("imgBright","imgBright", v=>v+"%", 0.01);
-bindSlider("descColor","descColor", v=>v+"%", 0.01);
+bindSlideSlider("titleSize","titleScale", v=>v+"%", 0.01);
+bindSlideSlider("descSize","descScale", v=>v+"%", 0.01);
+bindSlideSlider("zoom","zoom", v=>v+"%", 0.01);
+bindSlideSlider("imgBright","imgBright", v=>v+"%", 0.01);
+bindSlideSlider("descColor","descColor", v=>v+"%", 0.01);
 $("textY").oninput = ()=>{ const v=parseFloat($("textY").value); $("textYV").textContent=v; setField("textY", v); };
 $("dur").oninput = ()=>{
   const v = parseFloat($("dur").value);
@@ -3463,8 +3480,8 @@ $("kenburns").onchange = e => state.kenburns=e.target.checked;
 
 $("resetView").onclick = ()=>{
   const it = state.images[state.active];
-  if(it){ it.tx.ox=0; it.tx.oy=0; }
-  state.zoom=1; $("zoom").value=100; $("zoomV").textContent="100%";
+  if(it){ it.tx.ox=0; it.tx.oy=0; it.zoom=1; }
+  $("zoom").value=100; $("zoomV").textContent="100%";
   const c=cur(); if(c) c.textDrag=0; render();
 };
 
@@ -3517,9 +3534,10 @@ window.addEventListener("touchmove", moveDrag, {passive:false});
 window.addEventListener("touchend", endDrag);
 cv.addEventListener("wheel", e=>{
   e.preventDefault();
-  let z = state.zoom + (e.deltaY<0?0.04:-0.04);
+  const it = cur(); if(!it) return;
+  let z = sVal("zoom") + (e.deltaY<0?0.04:-0.04);
   z = Math.max(0.5, Math.min(2.6, z));
-  state.zoom = z;
+  it.zoom = z;
   $("zoom").value = Math.round(z*100); $("zoomV").textContent = Math.round(z*100)+"%";
   render();
 }, {passive:false});
@@ -3538,6 +3556,39 @@ function slug(){
 }
 $("dlPng").onclick = ()=>{ render(); cv.toBlob(b=>download(b, slug()+".png"), "image/png"); };
 $("dlJpg").onclick = ()=>{ render(); cv.toBlob(b=>download(b, slug()+".jpg"), "image/jpeg", 0.92); };
+$("dlJson").onclick = ()=>{
+  const data = {
+    format: state.format, game: state.game,
+    watermark: state.watermark, gradient: Math.round(state.gradient*100),
+    titleSize: Math.round(state.titleScale*100), descSize: Math.round(state.descScale*100),
+    descColor: Math.round(state.descColor*100), imgBright: Math.round(state.imgBright*100),
+  };
+  if(state.game==="custom") data.customColor = state.customColor;
+  data.slides = state.images.map(s=>{
+    const sl = {
+      template: s.template, eyebrow: s.eyebrow, title: s.title, desc: s.desc,
+      showDesc: s.showDesc, score: s.score, showScore: s.showScore, scoreY: s.scoreY, textY: s.textY,
+      badge: s.badge, signature: s.signature, teamA: s.teamA, teamB: s.teamB,
+      standings: s.standings, relegationLine: s.relegationLine, stats: s.stats,
+      matches: s.matches, footerText: s.footerText, pollOptions: s.pollOptions, pollWinner: s.pollWinner,
+      statHighlight: s.statHighlight, tiers: s.tiers, playerName: s.playerName, playerRole: s.playerRole,
+      transferBadge: s.transferBadge, matchResult: s.matchResult, mvpBadge: s.mvpBadge,
+      photoCredit: s.photoCredit, showBgImage: s.showBgImage, framedImage: s.framedImage,
+      dur: s.dur, game: s.game, lineup: s.lineup, lineupCount: s.lineupCount,
+      lineupTeamRating: s.lineupTeamRating, bracket: s.bracket, bracketFormat: s.bracketFormat,
+      planningEvents: s.planningEvents, frameY: s.frameY,
+    };
+    if(s.titleScale!=null) sl.titleSize = Math.round(s.titleScale*100);
+    if(s.descScale!=null) sl.descSize = Math.round(s.descScale*100);
+    if(s.zoom!=null) sl.zoom = Math.round(s.zoom*100);
+    if(s.descColor!=null) sl.descColor = Math.round(s.descColor*100);
+    if(s.imgBright!=null) sl.imgBright = Math.round(s.imgBright*100);
+    if(s.name && s.img) sl.image = s.name;
+    return sl;
+  });
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:"application/json"});
+  download(blob, slug()+".json");
+};
 
 // ═══ SECTION: REEL ═══
 let _offCv1 = null, _offCtx1 = null, _offCv2 = null, _offCtx2 = null;
@@ -3553,19 +3604,21 @@ function getOffscreen(W, H, n){
 }
 
 function drawFullSlide(targetCtx, W, H, slide, idx, total, zoomMul){
-  const origCtx = ctx;
+  const origCtx = ctx, origActive = state.active;
   ctx = targetCtx;
+  state.active = idx;
   ctx.clearRect(0,0,W,H);
   ctx.fillStyle = INK; ctx.fillRect(0,0,W,H);
+  const slideZoom = slide.zoom != null ? slide.zoom : state.zoom;
   const showVideo = slide.video && slide.template === "post-video" && slide.showBgImage !== false;
   const showImg = (slide.img && slide.showBgImage !== false) || showVideo;
   const framed = showImg && slide.framedImage && !showVideo;
   const tpl = slide.template;
   if(showImg && !framed){
     if(tpl==="transfert") drawStripeBackground(W,H);
-    drawSlideMedia(slide, W, H, state.zoom * (zoomMul||1));
+    drawSlideMedia(slide, W, H, slideZoom * (zoomMul||1));
   } else if(framed){
-    drawBaseBackground(W,H); drawFramedImage(slide, W, H, state.zoom);
+    drawBaseBackground(W,H); drawFramedImage(slide, W, H, slideZoom);
   } else {
     if(tpl==="breaking") drawBreakingBackground(W,H);
     else if(tpl==="transfert"){ drawBaseBackground(W,H); drawStripeBackground(W,H); }
@@ -3574,6 +3627,7 @@ function drawFullSlide(targetCtx, W, H, slide, idx, total, zoomMul){
   drawEdgeScrims(W,H);
   drawOverlay(W, H, { index: idx, total: total }, slide, showImg);
   ctx = origCtx;
+  state.active = origActive;
 }
 
 function slideDur(s){ return (s.video && s.template==="post-video" && s.video.duration && isFinite(s.video.duration)) ? Math.min(s.video.duration,60)*1000 : (s.dur || state.dur)*1000; }

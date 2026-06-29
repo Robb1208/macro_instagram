@@ -256,7 +256,7 @@ Les posts résultat doivent être **visuels et chiffrés, pas des articles**. Mi
 - KAST %
 - Format : `"stats": "ACS · 312\nK-D · 45-19\nRating · 1.77\nKAST · 84%"`
 
-**League of Legends** — source : lolesports.com ou gol.gg
+**League of Legends** — source : **RFT.gg** (prioritaire), lolesports.com en fallback
 - KDA (kills/deaths/assists)
 - Damage share (DPM%)
 - Kill participation (KP%)

@@ -22,11 +22,13 @@
 # Ignorer les presets (posts générés + images = lourd)
 outil-instagram/presets/
 
-# === SKILL POST INSTA ===
+# === SKILLS ===
 !.claude/
 !.claude/skills/
 !.claude/skills/postinsta/
 !.claude/skills/postinsta/SKILL.md
+!.claude/skills/match-result/
+!.claude/skills/match-result/SKILL.md
 
 # === REDIRECTION GITHUB PAGES ===
 !index.html
