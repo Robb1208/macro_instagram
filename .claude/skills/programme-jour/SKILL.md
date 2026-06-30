@@ -65,7 +65,7 @@ Une slide par jeu, template `programme`, horaires CET/CEST, tags courts.
       "template": "programme",
       "eyebrow": "PROGRAMME DU JOUR",
       "title": "*League of Legends*",
-      "desc": "MSI 2026 · Play-In Day 3",
+      "desc": "##30 juin 2026\nMSI 2026 · Play-In Day 3",
       "showDesc": true,
       "matches": "05:00 KC vs T1 · MSI\n10:00 DCG vs TL · MSI",
       "showBgImage": false,
@@ -74,6 +74,8 @@ Une slide par jeu, template `programme`, horaires CET/CEST, tags courts.
   ]
 }
 ```
+
+**IMPORTANT** : le champ `desc` doit toujours commencer par `##JJ mois AAAA` (la date du jour) suivi d'un `\n` puis du nom du tournoi. Sans ce `##date`, rien ne s'affiche sur la slide.
 
 Format matches : `HH:MM Tag1 vs Tag2 · Tournoi` — un par ligne, trié par heure. Ordre slides : LoL → CS2 → Valorant → RL → autres.
 
