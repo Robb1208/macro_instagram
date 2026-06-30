@@ -3900,84 +3900,99 @@ function deliverVideo(blob, ext){
   $("status").textContent = "✓ Vidéo prête.";
 }
 
-async function playReelWasm(W, H, total){
+function buildMjpegMov(jpegFrames, w, h, fps){
+  const n = jpegFrames.length;
+  const timeScale = 600;
+  const frameDur = Math.round(timeScale / fps);
+  const movieDur = n * frameDur;
+  let mdatPayload = 0;
+  const frameSizes = [];
+  for(const f of jpegFrames){ frameSizes.push(f.byteLength); mdatPayload += f.byteLength; }
+  const ftypLen = 20, mdatHdr = 8;
+  const frameOffsets = [];
+  let fOff = ftypLen + mdatHdr;
+  for(const sz of frameSizes){ frameOffsets.push(fOff); fOff += sz; }
+
+  const cat = (...a) => { let l=0; for(const x of a) l+=x.byteLength; const o=new Uint8Array(l); let p=0; for(const x of a){o.set(x,p);p+=x.byteLength;} return o; };
+  const u32 = v => new Uint8Array([(v>>>24)&0xff,(v>>>16)&0xff,(v>>>8)&0xff,v&0xff]);
+  const u16 = v => new Uint8Array([(v>>>8)&0xff,v&0xff]);
+  const cc = s => { const a=new Uint8Array(s.length); for(let i=0;i<s.length;i++) a[i]=s.charCodeAt(i); return a; };
+  const zr = c => new Uint8Array(c);
+  const bx = (t,d) => cat(u32(8+d.byteLength),cc(t),d);
+  const fb = (t,v,fl,d) => bx(t, cat(new Uint8Array([v,(fl>>>16)&0xff,(fl>>>8)&0xff,fl&0xff]), d));
+
+  const mtx = cat(u32(0x00010000),u32(0),u32(0),u32(0),u32(0x00010000),u32(0),u32(0),u32(0),u32(0x40000000));
+  const ftyp = bx("ftyp", cat(cc("qt  "),u32(0),cc("qt  ")));
+  const mvhd = fb("mvhd",0,0, cat(u32(0),u32(0),u32(timeScale),u32(movieDur),u32(0x00010000),u16(0x0100),zr(10),mtx,zr(24),u32(2)));
+  const tkhd = fb("tkhd",0,3, cat(u32(0),u32(0),u32(1),u32(0),u32(movieDur),zr(8),u16(0),u16(0),u16(0),u16(0),mtx,u32(w*65536),u32(h*65536)));
+  const mdhd = fb("mdhd",0,0, cat(u32(0),u32(0),u32(timeScale),u32(movieDur),u16(0x55C4),u16(0)));
+  const hdlr = fb("hdlr",0,0, cat(u32(0),cc("vide"),zr(12),cc("VideoHandler\0")));
+  const vmhd = fb("vmhd",0,1, cat(u16(0),zr(6)));
+  const urlE = fb("url ",0,1,zr(0));
+  const dref = fb("dref",0,0, cat(u32(1),urlE));
+  const dinf = bx("dinf", dref);
+  const jpegE = bx("jpeg", cat(zr(6),u16(1),u16(0),u16(0),u32(0),u32(0),u32(0),u16(w),u16(h),u32(0x00480000),u32(0x00480000),u32(0),u16(1),zr(32),u16(24),u16(0xFFFF)));
+  const stsd = fb("stsd",0,0, cat(u32(1),jpegE));
+  const stts = fb("stts",0,0, cat(u32(1),u32(n),u32(frameDur)));
+  const stsc = fb("stsc",0,0, cat(u32(1),u32(1),u32(1),u32(1)));
+  const stsz = fb("stsz",0,0, cat(u32(0),u32(n),...frameSizes.map(s=>u32(s))));
+  const stco = fb("stco",0,0, cat(u32(n),...frameOffsets.map(o=>u32(o))));
+  const stbl = bx("stbl", cat(stsd,stts,stsc,stsz,stco));
+  const minf = bx("minf", cat(vmhd,dinf,stbl));
+  const mdia = bx("mdia", cat(mdhd,hdlr,minf));
+  const trak = bx("trak", cat(tkhd,mdia));
+  const moov = bx("moov", cat(mvhd,trak));
+  const mdH = cat(u32(mdatHdr+mdatPayload),cc("mdat"));
+
+  const file = new Uint8Array(ftypLen+mdatHdr+mdatPayload+moov.byteLength);
+  let p = 0;
+  file.set(ftyp,p); p+=ftyp.byteLength;
+  file.set(mdH,p); p+=mdH.byteLength;
+  for(const f of jpegFrames){ file.set(f,p); p+=f.byteLength; }
+  file.set(moov,p);
+  return file;
+}
+
+async function playReelMjpeg(W, H, total){
   $("recbar").classList.add("on");
   $("dlReel").disabled = true; $("previewReel").disabled = true;
-  $("status").textContent = "● Chargement de l'encodeur…";
+  const FPS = 15, frameDurMs = 1000/FPS;
+  const totalFrames = Math.ceil(total/frameDurMs);
+  const jpegFrames = [];
+  $("status").textContent = "● Capture des images… 0%";
 
-  try {
-    if(!window.HME){
-      await new Promise((resolve, reject) => {
-        const s = document.createElement("script");
-        s.src = "https://cdn.jsdelivr.net/npm/h264-mp4-encoder@1.0.12/embuild/dist/h264-mp4-encoder.web.js";
-        s.onload = resolve;
-        s.onerror = () => reject(new Error("CDN"));
-        document.head.appendChild(s);
-      });
-    }
-  } catch(e){
-    $("status").textContent = "⚠ Impossible de charger l'encodeur vidéo."; playing=false; resetReelUI(); return;
-  }
+  for(let i = 0; i <= totalFrames; i++){
+    if(!playing){ resetReelUI(); render(); return; }
+    const tMs = Math.min(i*frameDurMs, total);
 
-  let encoder;
-  const FPS = 30;
-  const frameDur = 1000 / FPS;
-  const totalFrames = Math.ceil(total / frameDur);
-
-  try {
-    encoder = await HME.createH264MP4Encoder();
-    encoder.width = W;
-    encoder.height = H;
-    encoder.frameRate = FPS;
-    encoder.quantizationParameter = 18;
-    encoder.initialize();
-  } catch(e){
-    $("status").textContent = "⚠ Erreur d'initialisation de l'encodeur : " + e.message; playing=false; resetReelUI(); return;
-  }
-
-  $("status").textContent = "● Encodage MP4… 0%";
-
-  function seekVideosForFrame(tMs){
     const imgs = state.images, transMs = 600;
-    let acc = 0, idx = 0;
-    for(let i=0; i<imgs.length; i++){ const d=slideDur(imgs[i]); if(acc+d>tMs||i===imgs.length-1){idx=i;break;} acc+=d; }
-    const per = slideDur(imgs[idx]), local = tMs - acc, entries = [];
-    const s = imgs[idx];
-    if(s.video && s.template === "post-video") entries.push({ video: s.video, time: local/1000 });
-    const next = imgs[idx+1];
-    if(next && next.video && next.template === "post-video" && local > per - transMs && state.trans !== "cut")
-      entries.push({ video: next.video, time: 0 });
-    if(!entries.length) return Promise.resolve();
-    return Promise.all(entries.map(({video, time}) => {
-      if(Math.abs(video.currentTime - time) < 0.01) return Promise.resolve();
-      return new Promise(r => { video.onseeked = () => { video.onseeked = null; r(); }; video.currentTime = time; });
-    }));
+    let acc=0, idx=0;
+    for(let j=0;j<imgs.length;j++){const d=slideDur(imgs[j]); if(acc+d>tMs||j===imgs.length-1){idx=j;break;} acc+=d;}
+    const per=slideDur(imgs[idx]), local=tMs-acc, seekP=[];
+    const s=imgs[idx];
+    if(s.video&&s.template==="post-video"){ const vt=local/1000; if(Math.abs(s.video.currentTime-vt)>=0.01) seekP.push(new Promise(r=>{s.video.onseeked=()=>{s.video.onseeked=null;r();};s.video.currentTime=vt;})); }
+    const next=imgs[idx+1];
+    if(next&&next.video&&next.template==="post-video"&&local>per-transMs&&state.trans!=="cut"&&Math.abs(next.video.currentTime)>=0.01) seekP.push(new Promise(r=>{next.video.onseeked=()=>{next.video.onseeked=null;r();};next.video.currentTime=0;}));
+    if(seekP.length) await Promise.all(seekP);
+
+    drawReelFrame(W, H, tMs);
+    const blob = await new Promise(r => cv.toBlob(r, "image/jpeg", 0.85));
+    if(!blob) continue;
+    jpegFrames.push(new Uint8Array(await blob.arrayBuffer()));
+
+    const pct = Math.round((i+1)/(totalFrames+1)*100);
+    $("recprog").style.width = pct+"%";
+    $("status").textContent = "● Capture des images… "+pct+"%";
+    await new Promise(r => setTimeout(r, 0));
   }
 
-  let frame = 0;
-  function encodeNext(){
-    if(!playing){ try { encoder.delete(); } catch(e){} resetReelUI(); render(); return; }
-    const tMs = Math.min(frame * frameDur, total);
-    seekVideosForFrame(tMs).then(() => {
-      drawReelFrame(W, H, tMs);
-      const imageData = ctx.getImageData(0, 0, W, H);
-      encoder.addFrameRgba(imageData.data);
-      frame++;
-      $("recprog").style.width = (frame / totalFrames * 100) + "%";
-      $("status").textContent = "● Encodage MP4… " + Math.round(frame/totalFrames*100) + "%";
-      if(frame <= totalFrames){
-        setTimeout(encodeNext, 0);
-      } else {
-        encoder.finalize();
-        const blob = new Blob([encoder.pes], { type: "video/mp4" });
-        encoder.delete();
-        resetReelUI(); playing = false;
-        deliverVideo(blob, "mp4");
-        render();
-      }
-    });
-  }
-  setTimeout(encodeNext, 0);
+  $("status").textContent = "● Construction de la vidéo…";
+  await new Promise(r => setTimeout(r, 50));
+  const movData = buildMjpegMov(jpegFrames, W, H, FPS);
+  const blob = new Blob([movData], {type:"video/quicktime"});
+  resetReelUI(); playing = false;
+  deliverVideo(blob, "mov");
+  render();
 }
 
 $("previewReel").onclick = ()=> playReel(false);
@@ -4023,7 +4038,7 @@ async function playReel(record){
 
   const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
   if(!window.VideoEncoder || !window.Mp4Muxer || isMobile){
-    return playReelWasm(W, H, total);
+    return playReelMjpeg(W, H, total);
   }
 
   $("recbar").classList.add("on");
@@ -4088,7 +4103,7 @@ async function playReel(record){
     });
   } catch(e){
     videoEncoder.close();
-    return playReelWasm(W, H, total);
+    return playReelMjpeg(W, H, total);
   }
 
   let audioEncoder = null;
