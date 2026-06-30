@@ -1,17 +1,17 @@
 ---
 name: Programme du jour esport
-description: Génère un post Instagram "Programme du jour" avec une slide par jeu (LoL, CS2, Valorant, RL, etc.). Tier 1 uniquement + scène française. Envoie un brouillon Gmail avec le JSON en pièce jointe.
+description: Génère un post Instagram "Programme du jour" avec une slide par jeu (LoL, CS2, Valorant, RL, etc.). Tier 1 uniquement + scène française.
 ---
 
 # programme-jour
 
-Programme esport du jour → JSON → brouillon Gmail.
+Programme esport du jour → JSON.
 
 ## RÈGLES
 
 1. **Tous les matchs du jour** — y compris ceux déjà joués. Ne pas indiquer le résultat.
 2. **TOUS les matchs d'un tournoi.** Si un tournoi est actif (ex: MSI), inclure TOUS ses matchs du jour, pas seulement ceux impliquant une équipe connue.
-3. **Pas de commentaires/notes** sur les sites bloqués, le proxy, les sources. Juste les matchs.
+3. **Pas de commentaires/notes** sur les sites bloqués, le proxy, les sources, ni d'étapes de réflexion. Juste les recherches puis le JSON.
 4. **Être exhaustif.** Faire autant de recherches et de fetches de pages que nécessaire pour couvrir tous les jeux et tous les tournois. Ne pas s'arrêter tant qu'on n'a pas vérifié chaque jeu.
 
 ## Recherches
@@ -65,9 +65,9 @@ Une slide par jeu, template `programme`, horaires CET/CEST, tags courts.
       "template": "programme",
       "eyebrow": "PROGRAMME DU JOUR",
       "title": "*League of Legends*",
-      "desc": "##30 juin 2026\nMSI 2026 · Play-In Day 3",
+      "desc": "MSI 2026 · Play-In Day 3",
       "showDesc": true,
-      "matches": "05:00 KC vs T1 · MSI\n10:00 DCG vs TL · MSI",
+      "matches": "##mardi 30 juin\n05:00 KC vs T1 · MSI\n10:00 DCG vs TL · MSI",
       "showBgImage": false,
       "game": "lol"
     }
@@ -75,14 +75,12 @@ Une slide par jeu, template `programme`, horaires CET/CEST, tags courts.
 }
 ```
 
-**IMPORTANT** : le champ `desc` doit toujours commencer par `##JJ mois AAAA` (la date du jour) suivi d'un `\n` puis du nom du tournoi. Sans ce `##date`, rien ne s'affiche sur la slide.
+**IMPORTANT** : le champ `matches` doit toujours commencer par `##jour JJ mois` (ex: `##mardi 30 juin`) suivi d'un `\n` puis de la liste des matchs. Sans ce `##date`, rien ne s'affiche sur la slide.
 
 Format matches : `HH:MM Tag1 vs Tag2 · Tournoi` — un par ligne, trié par heure. Ordre slides : LoL → CS2 → Valorant → RL → autres.
 
 ## Livraison
 
-Brouillon Gmail (pas envoyer) :
-- **À** : robinpicard@gmail.com
-- **Objet** : `📅 Programme esport du JJ/MM/AAAA`
-- **Corps** : liste texte de tous les matchs du jour
-- **PJ** : programme-jour.json
+- **Pas de mail** sauf si c'est une routine automatique.
+- **En discussion** : donner directement le JSON dans la réponse, pas d'étapes de réflexion intermédiaires. Juste les recherches puis le JSON final.
+- **En routine** : brouillon Gmail à robinpicard@gmail.com avec le JSON en PJ.
