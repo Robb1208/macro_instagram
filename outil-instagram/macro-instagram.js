@@ -3838,49 +3838,65 @@ function resetReelUI(){
 function deliverVideo(blob){
   const url = URL.createObjectURL(blob);
   const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-  if(isMobile){
-    const filename = slug()+"-reel.mp4";
-    const file = new File([blob], filename, { type: "video/mp4" });
-
-    if(navigator.canShare && navigator.canShare({ files: [file] })){
-      navigator.share({ files: [file], title: filename }).then(()=>{
-        $("status").textContent = "✓ Vidéo partagée.";
-        URL.revokeObjectURL(url);
-      }).catch(()=>{
-        $("status").textContent = "Partage annulé.";
-        URL.revokeObjectURL(url);
-      });
-      return;
-    }
-
-    let overlay = document.getElementById("videoOverlay");
-    if(overlay) overlay.remove();
-    overlay = document.createElement("div");
-    overlay.id = "videoOverlay";
-    overlay.style.cssText = "position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.9);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;gap:16px;";
-    const vid = document.createElement("video");
-    vid.src = url; vid.controls = true; vid.playsInline = true; vid.autoplay = true;
-    vid.style.cssText = "max-width:90%;max-height:70vh;border-radius:12px;";
-    const dlBtn = document.createElement("a");
-    dlBtn.href = url; dlBtn.download = filename;
-    dlBtn.textContent = "⬇ Télécharger la vidéo";
-    dlBtn.style.cssText = "background:var(--cyan,#00e5ff);color:#000;border:none;padding:12px 28px;border-radius:8px;font:700 16px Manrope,sans-serif;cursor:pointer;text-decoration:none;text-align:center;";
-    const msg = document.createElement("p");
-    msg.textContent = "Si le bouton ne marche pas : appui long sur la vidéo → Enregistrer";
-    msg.style.cssText = "color:#999;font:400 13px Manrope,sans-serif;text-align:center;";
-    const close = document.createElement("button");
-    close.textContent = "✕ Fermer";
-    close.style.cssText = "background:#333;color:#fff;border:none;padding:10px 24px;border-radius:8px;font:500 14px Manrope,sans-serif;cursor:pointer;";
-    close.onclick = ()=>{ overlay.remove(); URL.revokeObjectURL(url); };
-    overlay.appendChild(vid); overlay.appendChild(dlBtn); overlay.appendChild(msg); overlay.appendChild(close);
-    document.body.appendChild(overlay);
-    $("status").textContent = "✓ Vidéo prête.";
-  } else {
+  if(!isMobile){
     const a = document.createElement("a");
     a.href = url; a.download = slug()+"-reel.mp4"; a.click();
     setTimeout(()=>URL.revokeObjectURL(url), 5000);
     $("status").textContent = "✓ Vidéo exportée.";
+    return;
   }
+
+  const filename = slug()+"-reel.mp4";
+  const file = new File([blob], filename, { type: "video/mp4" });
+  const canShare = navigator.canShare && navigator.canShare({ files: [file] });
+
+  let overlay = document.getElementById("videoOverlay");
+  if(overlay) overlay.remove();
+  overlay = document.createElement("div");
+  overlay.id = "videoOverlay";
+  overlay.style.cssText = "position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.95);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;gap:14px;overflow-y:auto;";
+
+  const vid = document.createElement("video");
+  vid.src = url; vid.controls = true; vid.playsInline = true; vid.autoplay = true;
+  vid.style.cssText = "max-width:90%;max-height:55vh;border-radius:12px;";
+  overlay.appendChild(vid);
+
+  if(canShare){
+    const shareBtn = document.createElement("button");
+    shareBtn.textContent = "📤 Partager / Enregistrer";
+    shareBtn.style.cssText = "background:var(--cyan,#00e5ff);color:#000;border:none;padding:14px 32px;border-radius:8px;font:700 16px Manrope,sans-serif;cursor:pointer;width:80%;max-width:320px;";
+    shareBtn.onclick = ()=>{
+      navigator.share({ files: [file], title: filename }).then(()=>{
+        $("status").textContent = "✓ Vidéo enregistrée.";
+      }).catch(()=>{});
+    };
+    overlay.appendChild(shareBtn);
+  }
+
+  const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+  if(!isIOS){
+    const dlBtn = document.createElement("a");
+    dlBtn.href = url; dlBtn.download = filename;
+    dlBtn.textContent = "⬇ Télécharger";
+    dlBtn.style.cssText = "background:" + (canShare ? "#333" : "var(--cyan,#00e5ff)") + ";color:" + (canShare ? "#fff" : "#000") + ";border:none;padding:12px 28px;border-radius:8px;font:700 15px Manrope,sans-serif;cursor:pointer;text-decoration:none;text-align:center;width:80%;max-width:320px;display:block;box-sizing:border-box;";
+    overlay.appendChild(dlBtn);
+  }
+
+  const msg = document.createElement("p");
+  msg.textContent = isIOS
+    ? "Appui long sur la vidéo → Enregistrer la vidéo"
+    : "Appui long sur la vidéo → Télécharger si besoin";
+  msg.style.cssText = "color:#aaa;font:400 13px Manrope,sans-serif;text-align:center;margin:0;";
+  overlay.appendChild(msg);
+
+  const close = document.createElement("button");
+  close.textContent = "✕ Fermer";
+  close.style.cssText = "background:#333;color:#fff;border:none;padding:10px 24px;border-radius:8px;font:500 14px Manrope,sans-serif;cursor:pointer;margin-top:4px;";
+  close.onclick = ()=>{ overlay.remove(); URL.revokeObjectURL(url); };
+  overlay.appendChild(close);
+
+  document.body.appendChild(overlay);
+  $("status").textContent = "✓ Vidéo prête.";
 }
 
 $("previewReel").onclick = ()=> playReel(false);
