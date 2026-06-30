@@ -3909,7 +3909,7 @@ async function playReelWasm(W, H, total){
     if(!window.HME){
       await new Promise((resolve, reject) => {
         const s = document.createElement("script");
-        s.src = "https://cdn.jsdelivr.net/npm/h264-mp4-encoder@1.0.12/dist/h264-mp4-encoder.web.js";
+        s.src = "https://cdn.jsdelivr.net/npm/h264-mp4-encoder@1.0.12/embuild/dist/h264-mp4-encoder.web.js";
         s.onload = resolve;
         s.onerror = () => reject(new Error("CDN"));
         document.head.appendChild(s);
