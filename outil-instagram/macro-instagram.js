@@ -4015,7 +4015,8 @@ async function playReel(record){
     return;
   }
 
-  if(!window.VideoEncoder || !window.Mp4Muxer){
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  if(!window.VideoEncoder || !window.Mp4Muxer || isMobile){
     if(typeof cv.captureStream === "function" && typeof MediaRecorder !== "undefined"){
       return playReelMediaRecorder(W, H, total);
     }
