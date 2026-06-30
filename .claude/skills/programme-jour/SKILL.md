@@ -52,13 +52,18 @@ Pas de matchs pour un jeu = pas de slide. Aucun match du tout = pas de post, pr�
 
 ## JSON
 
-Une slide par jeu, template `programme`, format `reel`, horaires CET/CEST, tags courts.
+Une slide par jeu, template `programme`, format `story`, horaires CET/CEST, tags courts.
 
-**Direction artistique** : le champ `game` de chaque slide doit correspondre au jeu pour appliquer la bonne couleur d'accent. Valeurs : `lol`, `cs`, `valorant`, `rl`, `tft`, `r6`, etc.
+**Direction artistique** : le champ `game` de chaque slide doit correspondre au jeu pour appliquer la bonne couleur d'accent :
+- `lol` → League of Legends (cyan)
+- `cs2` → Counter-Strike 2 (or)
+- `val` → Valorant (rouge)
+- `rl` → Rocket League (bleu)
+- `cod` → Call of Duty (orange)
 
 ```json
 {
-  "format": "reel",
+  "format": "story",
   "game": "esport",
   "watermark": true,
   "gradient": 100,
