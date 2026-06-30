@@ -7,28 +7,40 @@ description: Génère un post Instagram "Programme du jour" avec une slide par j
 
 Programme esport du jour → JSON → brouillon Gmail.
 
-## RÈGLES STRICTES
+## RÈGLES
 
-1. **Maximum 2 recherches web.** Pas 3, pas 4. Deux.
-2. **Tous les matchs du jour** — y compris ceux déjà joués. Ne pas indiquer le résultat.
-3. **TOUS les matchs d'un tournoi.** Si un tournoi est actif (ex: MSI), inclure TOUS ses matchs du jour, pas seulement ceux impliquant une équipe connue.
-4. **Pas de commentaires/notes** sur les sites bloqués, le proxy, les sources. Juste les matchs.
-5. **Ne jamais** vérifier le proxy, chercher si une équipe est française, chercher les dates d'un tournoi séparément.
-6. **Après 2 recherches → STOP.** Construire le JSON avec ce qu'on a. Info manquante = omettre.
+1. **Tous les matchs du jour** — y compris ceux déjà joués. Ne pas indiquer le résultat.
+2. **TOUS les matchs d'un tournoi.** Si un tournoi est actif (ex: MSI), inclure TOUS ses matchs du jour, pas seulement ceux impliquant une équipe connue.
+3. **Pas de commentaires/notes** sur les sites bloqués, le proxy, les sources. Juste les matchs.
+4. **Être exhaustif.** Faire autant de recherches et de fetches de pages que nécessaire pour couvrir tous les jeux et tous les tournois. Ne pas s'arrêter tant qu'on n'a pas vérifié chaque jeu.
 
 ## Recherches
 
-**Recherche 1** — tous les matchs esport du jour :
+Pas de limite de recherches. Faire toutes les recherches nécessaires pour être complet et précis. Utiliser WebSearch pour trouver les tournois en cours, puis WebFetch sur les pages de résultats (Liquipedia, VLR.gg, HLTV, lolesports, etc.) pour récupérer les matchs exacts avec horaires.
+
+### Étape 1 — Vue d'ensemble
+Rechercher les tournois esport en cours et les matchs du jour :
 ```
-esports schedule [DATE anglais] all matches today MSI LEC LCK BLAST VCT RLCS
+esports schedule [DATE anglais] all matches today MSI LEC LCK BLAST VCT RLCS CS2 Valorant Rocket League
 ```
 
-**Recherche 2** — équipes et ligues françaises :
+### Étape 2 — Équipes françaises
+Rechercher spécifiquement les matchs d'équipes françaises :
 ```
-"Karmine Corp" OR Vitality OR Mandatory OR Solary OR "Gentle Mates" OR LFL OR "Challengers EMEA" match [DATE]
+"Karmine Corp" OR Vitality OR Mandatory OR Solary OR "Gentle Mates" OR Joblife OR 3dmax OR Falcons OR BDS OR LDLC OR Apeks OR LFL OR "Challengers EMEA" match [DATE]
 ```
 
-Lire attentivement les résultats. Si un tournoi tier 1 est mentionné (ex: MSI), chercher dans les résultats TOUS les matchs de ce tournoi ce jour-là, pas seulement le premier trouvé.
+### Étape 3 — Vérification par jeu
+Pour chaque jeu (LoL, CS2, Valorant, RL), aller chercher les matchs du jour sur les sites de référence :
+- **LoL** : lolesports.com, Liquipedia LoL, leaguepedia
+- **CS2** : HLTV.org, Liquipedia CS
+- **Valorant** : VLR.gg, Liquipedia Valorant
+- **Rocket League** : Liquipedia RL, start.gg
+
+Utiliser WebFetch sur ces pages pour récupérer les matchs exacts, horaires et équipes. Si un site est bloqué ou rate-limited, essayer un site alternatif.
+
+### Étape 4 — Équipes françaises dans les leagues secondaires
+Si des tournois secondaires sont en cours (Challengers EMEA, LFL, EMEA Masters, etc.), vérifier spécifiquement si une équipe française y joue ce jour-là. Utiliser WebFetch sur la page du tournoi pour voir le planning du jour.
 
 ## Filtres
 
