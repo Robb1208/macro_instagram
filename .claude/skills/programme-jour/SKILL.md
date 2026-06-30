@@ -52,11 +52,13 @@ Pas de matchs pour un jeu = pas de slide. Aucun match du tout = pas de post, pr�
 
 ## JSON
 
-Une slide par jeu, template `programme`, horaires CET/CEST, tags courts.
+Une slide par jeu, template `programme`, format `reel`, horaires CET/CEST, tags courts.
+
+**Direction artistique** : le champ `game` de chaque slide doit correspondre au jeu pour appliquer la bonne couleur d'accent. Valeurs : `lol`, `cs`, `valorant`, `rl`, `tft`, `r6`, etc.
 
 ```json
 {
-  "format": "portrait",
+  "format": "reel",
   "game": "esport",
   "watermark": true,
   "gradient": 100,
@@ -67,7 +69,7 @@ Une slide par jeu, template `programme`, horaires CET/CEST, tags courts.
       "title": "*League of Legends*",
       "desc": "MSI 2026 · Play-In Day 3",
       "showDesc": true,
-      "matches": "##mardi 30 juin\n05:00 KC vs T1 · MSI\n10:00 DCG vs TL · MSI",
+      "matches": "##mardi 30 juin\n05:00 KC vs T1 BO5\n10:00 DCG vs TL BO5",
       "showBgImage": false,
       "game": "lol"
     }
@@ -77,7 +79,7 @@ Une slide par jeu, template `programme`, horaires CET/CEST, tags courts.
 
 **IMPORTANT** : le champ `matches` doit toujours commencer par `##jour JJ mois` (ex: `##mardi 30 juin`) suivi d'un `\n` puis de la liste des matchs. Sans ce `##date`, rien ne s'affiche sur la slide.
 
-Format matches : `HH:MM Tag1 vs Tag2 · Tournoi` — un par ligne, trié par heure. Ordre slides : LoL → CS2 → Valorant → RL → autres.
+Format matches : `HH:MM Tag1 vs Tag2 BOx` — un par ligne, trié par heure. Ordre slides : LoL → CS2 → Valorant → RL → autres.
 
 ## Livraison
 
