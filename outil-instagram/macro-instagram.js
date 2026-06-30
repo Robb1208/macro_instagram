@@ -3900,78 +3900,84 @@ function deliverVideo(blob, ext){
   $("status").textContent = "✓ Vidéo prête.";
 }
 
-function playReelMediaRecorder(W, H, total){
-  const mimeType = ["video/mp4;codecs=avc1","video/mp4","video/webm;codecs=vp9,opus","video/webm;codecs=vp8,opus","video/webm;codecs=vp8","video/webm"]
-    .find(t => MediaRecorder.isTypeSupported(t)) || "";
-  if(!mimeType){ $("status").textContent = "⚠ Ce navigateur ne supporte pas l'export vidéo."; playing=false; return; }
-  const isMP4 = mimeType.includes("mp4");
-
+async function playReelWasm(W, H, total){
   $("recbar").classList.add("on");
   $("dlReel").disabled = true; $("previewReel").disabled = true;
-  $("status").textContent = "● Enregistrement en cours…";
+  $("status").textContent = "● Chargement de l'encodeur…";
 
-  const canvasStream = cv.captureStream(30);
-  const tracks = [...canvasStream.getVideoTracks()];
-
-  let audioCtx = null, audioDest = null;
-  const hasVideoSlides = state.images.some(s => s.video && s.template === "post-video");
-  if(hasVideoSlides){
-    try {
-      audioCtx = new AudioContext();
-      audioDest = audioCtx.createMediaStreamDestination();
-      state.images.forEach(s => {
-        if(!s.video || s.template !== "post-video") return;
-        if(!s.video._macroSrc){
-          s.video._macroSrc = audioCtx.createMediaElementSource(s.video);
-        }
-        s.video._macroSrc.connect(audioDest);
-        s.video._macroSrc.connect(audioCtx.destination);
+  try {
+    if(!window.HME){
+      await new Promise((resolve, reject) => {
+        const s = document.createElement("script");
+        s.src = "https://cdn.jsdelivr.net/npm/h264-mp4-encoder@1.0.12/dist/h264-mp4-encoder.web.js";
+        s.onload = resolve;
+        s.onerror = () => reject(new Error("CDN"));
+        document.head.appendChild(s);
       });
-      const aTracks = audioDest.stream.getAudioTracks();
-      if(aTracks.length) tracks.push(...aTracks);
-    } catch(e){ /* audio capture failed — record without audio */ }
+    }
+  } catch(e){
+    $("status").textContent = "⚠ Impossible de charger l'encodeur vidéo."; playing=false; resetReelUI(); return;
   }
 
-  const combined = new MediaStream(tracks);
-  const recorder = new MediaRecorder(combined, { mimeType, videoBitsPerSecond: 6_000_000 });
-  const chunks = [];
-  recorder.ondataavailable = e => { if(e.data.size) chunks.push(e.data); };
-  recorder.onstop = ()=>{
-    if(audioCtx){
-      state.images.forEach(s => { if(s.video && s.video._macroSrc) try { s.video._macroSrc.disconnect(); } catch(e){} });
-      audioCtx.close().catch(()=>{});
-    }
-    const blob = new Blob(chunks, { type: mimeType });
-    resetReelUI(); playing = false;
-    deliverVideo(blob, isMP4 ? "mp4" : "webm");
-    render();
-  };
+  let encoder;
+  const FPS = 30;
+  const frameDur = 1000 / FPS;
+  const totalFrames = Math.ceil(total / frameDur);
 
-  state.images.forEach(s => { if(s.video){ s.video.currentTime = 0; s.video.muted = true; } });
-  recorder.start(100);
+  try {
+    encoder = await HME.createH264MP4Encoder();
+    encoder.width = W;
+    encoder.height = H;
+    encoder.frameRate = FPS;
+    encoder.quantizationParameter = 18;
+    encoder.initialize();
+  } catch(e){
+    $("status").textContent = "⚠ Erreur d'initialisation de l'encodeur : " + e.message; playing=false; resetReelUI(); return;
+  }
 
-  const t0 = performance.now();
-  function tick(){
-    const t = performance.now() - t0;
-    if(t >= total){
-      state.images.forEach(s => { if(s.video){ s.video.pause(); s.video.muted = true; } });
-      recorder.stop();
-      $("status").textContent = "● Finalisation…";
-      return;
-    }
-    let acc2 = 0, activeIdx = 0;
-    for(let i=0; i<state.images.length; i++){ const d=slideDur(state.images[i]); if(acc2+d>t||i===state.images.length-1){activeIdx=i;break;} acc2+=d; }
-    state.images.forEach((s, i) => {
-      if(!s.video) return;
-      if(i === activeIdx){ s.video.muted = false; if(s.video.paused) s.video.play(); }
-      else { s.video.muted = true; }
+  $("status").textContent = "● Encodage MP4… 0%";
+
+  function seekVideosForFrame(tMs){
+    const imgs = state.images, transMs = 600;
+    let acc = 0, idx = 0;
+    for(let i=0; i<imgs.length; i++){ const d=slideDur(imgs[i]); if(acc+d>tMs||i===imgs.length-1){idx=i;break;} acc+=d; }
+    const per = slideDur(imgs[idx]), local = tMs - acc, entries = [];
+    const s = imgs[idx];
+    if(s.video && s.template === "post-video") entries.push({ video: s.video, time: local/1000 });
+    const next = imgs[idx+1];
+    if(next && next.video && next.template === "post-video" && local > per - transMs && state.trans !== "cut")
+      entries.push({ video: next.video, time: 0 });
+    if(!entries.length) return Promise.resolve();
+    return Promise.all(entries.map(({video, time}) => {
+      if(Math.abs(video.currentTime - time) < 0.01) return Promise.resolve();
+      return new Promise(r => { video.onseeked = () => { video.onseeked = null; r(); }; video.currentTime = time; });
+    }));
+  }
+
+  let frame = 0;
+  function encodeNext(){
+    if(!playing){ try { encoder.delete(); } catch(e){} resetReelUI(); render(); return; }
+    const tMs = Math.min(frame * frameDur, total);
+    seekVideosForFrame(tMs).then(() => {
+      drawReelFrame(W, H, tMs);
+      const imageData = ctx.getImageData(0, 0, W, H);
+      encoder.addFrameRgba(imageData.data);
+      frame++;
+      $("recprog").style.width = (frame / totalFrames * 100) + "%";
+      $("status").textContent = "● Encodage MP4… " + Math.round(frame/totalFrames*100) + "%";
+      if(frame <= totalFrames){
+        setTimeout(encodeNext, 0);
+      } else {
+        encoder.finalize();
+        const blob = new Blob([encoder.pes], { type: "video/mp4" });
+        encoder.delete();
+        resetReelUI(); playing = false;
+        deliverVideo(blob, "mp4");
+        render();
+      }
     });
-    drawReelFrame(W, H, t);
-    $("recprog").style.width = (t / total * 100) + "%";
-    $("status").textContent = "● Enregistrement… " + Math.round(t/total*100) + "%";
-    rafId = requestAnimationFrame(tick);
   }
-  rafId = requestAnimationFrame(tick);
+  setTimeout(encodeNext, 0);
 }
 
 $("previewReel").onclick = ()=> playReel(false);
@@ -4017,10 +4023,7 @@ async function playReel(record){
 
   const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
   if(!window.VideoEncoder || !window.Mp4Muxer || isMobile){
-    if(typeof cv.captureStream === "function" && typeof MediaRecorder !== "undefined"){
-      return playReelMediaRecorder(W, H, total);
-    }
-    $("status").textContent = "⚠ Ce navigateur ne supporte pas l'export vidéo."; playing=false; return;
+    return playReelWasm(W, H, total);
   }
 
   $("recbar").classList.add("on");
@@ -4085,10 +4088,7 @@ async function playReel(record){
     });
   } catch(e){
     videoEncoder.close();
-    if(typeof cv.captureStream === "function" && typeof MediaRecorder !== "undefined"){
-      return playReelMediaRecorder(W, H, total);
-    }
-    $("status").textContent = "⚠ Codec vidéo non supporté sur ce navigateur."; playing=false; resetReelUI(); return;
+    return playReelWasm(W, H, total);
   }
 
   let audioEncoder = null;
