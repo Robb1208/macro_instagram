@@ -82,5 +82,5 @@ Format matches : `HH:MM Tag1 vs Tag2 · Tournoi` — un par ligne, trié par heu
 ## Livraison
 
 - **Pas de mail** sauf si c'est une routine automatique.
-- **En discussion** : donner directement le JSON dans la réponse, pas d'étapes de réflexion intermédiaires. Juste les recherches puis le JSON final.
+- **En discussion** : envoyer le fichier JSON téléchargeable via SendUserFile (pas de bloc de code JSON dans la réponse). Pas d'étapes de réflexion intermédiaires.
 - **En routine** : brouillon Gmail à robinpicard@gmail.com avec le JSON en PJ.
