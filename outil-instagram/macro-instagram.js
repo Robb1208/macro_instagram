@@ -3835,19 +3835,20 @@ function resetReelUI(){
   $("dlReel").disabled = false; $("previewReel").disabled = false;
 }
 
-function deliverVideo(blob){
+function deliverVideo(blob, ext){
+  ext = ext || "mp4";
   const url = URL.createObjectURL(blob);
   const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
   if(!isMobile){
     const a = document.createElement("a");
-    a.href = url; a.download = slug()+"-reel.mp4"; a.click();
+    a.href = url; a.download = slug()+"-reel."+ext; a.click();
     setTimeout(()=>URL.revokeObjectURL(url), 5000);
     $("status").textContent = "✓ Vidéo exportée.";
     return;
   }
 
-  const filename = slug()+"-reel.mp4";
-  const file = new File([blob], filename, { type: "video/mp4" });
+  const filename = slug()+"-reel."+ext;
+  const file = new File([blob], filename, { type: blob.type || "video/"+ext });
   const canShare = navigator.canShare && navigator.canShare({ files: [file] });
 
   let overlay = document.getElementById("videoOverlay");
@@ -3899,6 +3900,80 @@ function deliverVideo(blob){
   $("status").textContent = "✓ Vidéo prête.";
 }
 
+function playReelMediaRecorder(W, H, total){
+  const mimeType = ["video/mp4;codecs=avc1","video/mp4","video/webm;codecs=vp9,opus","video/webm;codecs=vp8,opus","video/webm;codecs=vp8","video/webm"]
+    .find(t => MediaRecorder.isTypeSupported(t)) || "";
+  if(!mimeType){ $("status").textContent = "⚠ Ce navigateur ne supporte pas l'export vidéo."; playing=false; return; }
+  const isMP4 = mimeType.includes("mp4");
+
+  $("recbar").classList.add("on");
+  $("dlReel").disabled = true; $("previewReel").disabled = true;
+  $("status").textContent = "● Enregistrement en cours…";
+
+  const canvasStream = cv.captureStream(30);
+  const tracks = [...canvasStream.getVideoTracks()];
+
+  let audioCtx = null, audioDest = null;
+  const hasVideoSlides = state.images.some(s => s.video && s.template === "post-video");
+  if(hasVideoSlides){
+    try {
+      audioCtx = new AudioContext();
+      audioDest = audioCtx.createMediaStreamDestination();
+      state.images.forEach(s => {
+        if(!s.video || s.template !== "post-video") return;
+        if(!s.video._macroSrc){
+          s.video._macroSrc = audioCtx.createMediaElementSource(s.video);
+        }
+        s.video._macroSrc.connect(audioDest);
+        s.video._macroSrc.connect(audioCtx.destination);
+      });
+      const aTracks = audioDest.stream.getAudioTracks();
+      if(aTracks.length) tracks.push(...aTracks);
+    } catch(e){ /* audio capture failed — record without audio */ }
+  }
+
+  const combined = new MediaStream(tracks);
+  const recorder = new MediaRecorder(combined, { mimeType, videoBitsPerSecond: 6_000_000 });
+  const chunks = [];
+  recorder.ondataavailable = e => { if(e.data.size) chunks.push(e.data); };
+  recorder.onstop = ()=>{
+    if(audioCtx){
+      state.images.forEach(s => { if(s.video && s.video._macroSrc) try { s.video._macroSrc.disconnect(); } catch(e){} });
+      audioCtx.close().catch(()=>{});
+    }
+    const blob = new Blob(chunks, { type: mimeType });
+    resetReelUI(); playing = false;
+    deliverVideo(blob, isMP4 ? "mp4" : "webm");
+    render();
+  };
+
+  state.images.forEach(s => { if(s.video){ s.video.currentTime = 0; s.video.muted = true; } });
+  recorder.start(100);
+
+  const t0 = performance.now();
+  function tick(){
+    const t = performance.now() - t0;
+    if(t >= total){
+      state.images.forEach(s => { if(s.video){ s.video.pause(); s.video.muted = true; } });
+      recorder.stop();
+      $("status").textContent = "● Finalisation…";
+      return;
+    }
+    let acc2 = 0, activeIdx = 0;
+    for(let i=0; i<state.images.length; i++){ const d=slideDur(state.images[i]); if(acc2+d>t||i===state.images.length-1){activeIdx=i;break;} acc2+=d; }
+    state.images.forEach((s, i) => {
+      if(!s.video) return;
+      if(i === activeIdx){ s.video.muted = false; if(s.video.paused) s.video.play(); }
+      else { s.video.muted = true; }
+    });
+    drawReelFrame(W, H, t);
+    $("recprog").style.width = (t / total * 100) + "%";
+    $("status").textContent = "● Enregistrement… " + Math.round(t/total*100) + "%";
+    rafId = requestAnimationFrame(tick);
+  }
+  rafId = requestAnimationFrame(tick);
+}
+
 $("previewReel").onclick = ()=> playReel(false);
 $("dlReel").onclick = ()=> playReel(true);
 
@@ -3940,8 +4015,12 @@ async function playReel(record){
     return;
   }
 
-  if(!window.VideoEncoder){ $("status").textContent = "⚠ Ce navigateur ne supporte pas VideoEncoder (Chrome 94+ requis)."; playing=false; return; }
-  if(!window.Mp4Muxer){ $("status").textContent = "⚠ mp4-muxer non chargé."; playing=false; return; }
+  if(!window.VideoEncoder || !window.Mp4Muxer){
+    if(typeof cv.captureStream === "function" && typeof MediaRecorder !== "undefined"){
+      return playReelMediaRecorder(W, H, total);
+    }
+    $("status").textContent = "⚠ Ce navigateur ne supporte pas l'export vidéo."; playing=false; return;
+  }
 
   $("recbar").classList.add("on");
   $("dlReel").disabled = true; $("previewReel").disabled = true;
@@ -3996,12 +4075,20 @@ async function playReel(record){
     output: (chunk, meta) => muxer.addVideoChunk(chunk, meta),
     error: e => { $("status").textContent = "⚠ Erreur encodage vidéo : " + e.message; playing=false; resetReelUI(); render(); }
   });
-  videoEncoder.configure({
-    codec: "avc1.640028",
-    width: W, height: H,
-    bitrate: 6_000_000,
-    framerate: FPS
-  });
+  try {
+    videoEncoder.configure({
+      codec: "avc1.640028",
+      width: W, height: H,
+      bitrate: 6_000_000,
+      framerate: FPS
+    });
+  } catch(e){
+    videoEncoder.close();
+    if(typeof cv.captureStream === "function" && typeof MediaRecorder !== "undefined"){
+      return playReelMediaRecorder(W, H, total);
+    }
+    $("status").textContent = "⚠ Codec vidéo non supporté sur ce navigateur."; playing=false; resetReelUI(); return;
+  }
 
   let audioEncoder = null;
   if(hasAudio){
