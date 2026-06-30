@@ -3956,7 +3956,7 @@ function buildMjpegMov(jpegFrames, w, h, fps){
 async function playReelMjpeg(W, H, total){
   $("recbar").classList.add("on");
   $("dlReel").disabled = true; $("previewReel").disabled = true;
-  const FPS = 15, frameDurMs = 1000/FPS;
+  const FPS = 30, frameDurMs = 1000/FPS;
   const totalFrames = Math.ceil(total/frameDurMs);
   const jpegFrames = [];
   $("status").textContent = "● Capture des images… 0%";
