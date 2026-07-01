@@ -3055,6 +3055,41 @@ if($("lineupTeamRating")) $("lineupTeamRating").oninput = e => setField("lineupT
 if($("bracket")) $("bracket").oninput = e => setField("bracket", e.target.value);
 if($("bracketFormat")) $("bracketFormat").oninput = e => setField("bracketFormat", e.target.value);
 
+function rebuildBracketBuilder(slide){
+  const txt = slide.bracket;
+  if(!txt) return;
+  const isDE = txt.includes("---");
+  slide._isDE = isDE;
+  if(isDE){
+    const sections = txt.split(/^---$/m);
+    const upper = parseBracketRounds(sections[0]||"");
+    const lower = parseBracketRounds(sections[1]||"");
+    slide._ubRounds = upper.map(round => round.map(m => ({
+      a: m.teamA.name, b: m.teamB.name, sa: m.teamA.score, sb: m.teamB.score
+    })));
+    slide._lbRounds = lower.map(round => round.map(m => ({
+      a: m.teamA.name, b: m.teamB.name, sa: m.teamA.score, sb: m.teamB.score
+    })));
+    if(sections[2]){
+      const gf = parseBracketRounds(sections[2]);
+      if(gf.length && gf[0].length){
+        slide._gfSa = gf[0][0].teamA.score;
+        slide._gfSb = gf[0][0].teamB.score;
+      }
+    }
+    const ubR1Names = slide._ubRounds[0] ? slide._ubRounds[0].flatMap(m => [m.a, m.b]) : [];
+    slide._bracketTeams = ubR1Names.join("\n");
+  } else {
+    const rounds = parseBracketRounds(txt);
+    slide._ubRounds = rounds.map(round => round.map(m => ({
+      a: m.teamA.name, b: m.teamB.name, sa: m.teamA.score, sb: m.teamB.score
+    })));
+    slide._lbRounds = [];
+    const r1Names = slide._ubRounds[0] ? slide._ubRounds[0].flatMap(m => [m.a, m.b]) : [];
+    slide._bracketTeams = r1Names.join("\n");
+  }
+}
+
 // ── Bracket Builder ──
 (function(){
   const teamsEl = $("bracketTeams");
@@ -3593,6 +3628,7 @@ function applyJsonPreset(data, imageFiles){
     slide.lineupTeamRating = s.lineupTeamRating || "";
     slide.bracket = s.bracket || "";
     slide.bracketFormat = s.bracketFormat || "";
+    if(slide.bracket) rebuildBracketBuilder(slide);
     slide.planningEvents = s.planningEvents || "";
     slide.groupes = s.groupes || "";
     slide.groupeElim = s.groupeElim != null ? s.groupeElim : 3;

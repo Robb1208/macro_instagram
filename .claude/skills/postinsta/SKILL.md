@@ -119,6 +119,7 @@ Structure du JSON :
 | `classement` | `standings`, `relegationLine` (si applicable) |
 | `statistique` | `stats` |
 | `programme` | `matches`, `footerText` |
+| `bracket` | `bracket`, `bracketFormat` (voir section Bracket ci-dessous) |
 | `sondage` | `pollOptions`, `pollWinner` |
 | `tierlist` | `tiers` |
 | `transfert` | `playerName`, `playerRole`, `transferBadge`, `image` |
@@ -128,6 +129,52 @@ Structure du JSON :
 
 - `"image"` : nom du fichier image dans le même dossier. L'outil associe automatiquement les images aux slides à l'import.
 - `"photoCredit"` : affiché en bas à droite du canvas. Inclure uniquement pour les slides avec image.
+
+#### Template Bracket — format du champ `bracket`
+
+**Quand l'utilisateur demande un bracket, toujours utiliser le template `bracket`, jamais `programme`.**
+
+Le champ `bracket` est une chaîne de texte multi-ligne. Chaque match = 2 lignes (`NomÉquipe score`). Les rounds sont séparés par une **ligne vide**. Les sections Upper/Lower/Grand Final sont séparées par `---`.
+
+**Single élimination** (pas de `---`) :
+```
+Team1 0
+Team2 0
+Team3 0
+Team4 0
+
+TBD 0
+TBD 0
+```
+
+**Double élimination** (séparées par `---`) :
+```
+Upper R1 match 1 teams...
+Upper R1 match 2 teams...
+
+Upper R2 teams...
+
+Upper Final teams...
+---
+Lower R1 teams...
+
+Lower R2 teams...
+
+Lower Semi teams...
+
+Lower Final teams...
+---
+Grand Final teams...
+```
+
+Structure standard double élim 8 équipes :
+- **Upper** : 3 rounds (4 matchs → 2 → 1)
+- **Lower** : 4 rounds (2 → 2 → 1 → 1)
+- **Grand Final** : 1 match
+
+Les matchs pas encore joués : mettre `TBD 0`. Les matchs joués : mettre le vrai score (ex: `G2 3\nT1 1`).
+
+`bracketFormat` : texte affiché en footer (ex: `"Bo5 · Fearless Draft · 3–12 juillet"`).
 
 ### 5. Output
 Créer un dossier dans `outil-instagram/presets/` avec :
@@ -225,6 +272,7 @@ Ne pas suggérer de musique pour les posts carrousel classiques (non-Reel).
 | **Preview / analyse** | 4-5 | `post-image` (accroche) → `post-texte` (contexte) → `tierlist` ou `classement` → `programme` (si applicable) → `post-texte` (verdict + signature) |
 | **Programme** | 2-3 | `post-image` (accroche) → `programme` (matchs/horaires) → optionnel `sondage` (pronostics) |
 | **Récap compétition** | 3-4 | `post-image` → `classement` (standings) → `statistique` (chiffres clés) → `post-texte` (bilan + signature) |
+| **Bracket / arbre** | 1-2 | `bracket` (arbre complet) → optionnel `post-texte` (analyse des affiches + signature Macro) |
 
 Ces structures sont des guides, pas des règles rigides — adapter selon le contenu.
 
