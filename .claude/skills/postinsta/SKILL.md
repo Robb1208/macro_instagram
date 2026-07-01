@@ -119,7 +119,7 @@ Structure du JSON :
 | `classement` | `standings`, `relegationLine` (si applicable) |
 | `statistique` | `stats` |
 | `programme` | `matches`, `footerText` |
-| `bracket` | `bracket`, `bracketFormat` (voir section Bracket ci-dessous) |
+| `bracket` | `bracket`, `bracketFormat`, `bracketWinnerLabel`, `bracketDates` (voir section Bracket ci-dessous) |
 | `sondage` | `pollOptions`, `pollWinner` |
 | `tierlist` | `tiers` |
 | `transfert` | `playerName`, `playerRole`, `transferBadge`, `image` |
@@ -175,6 +175,19 @@ Structure standard double élim 8 équipes :
 Les matchs pas encore joués : mettre `TBD 0`. Les matchs joués : mettre le vrai score (ex: `G2 3\nT1 1`).
 
 `bracketFormat` : texte affiché en footer (ex: `"Bo5 · Fearless Draft · 3–12 juillet"`).
+
+`bracketWinnerLabel` : `"champion"` (défaut) ou `"qualifie"` — label affiché sous le match final quand un vainqueur est déterminé.
+
+`bracketDates` : JSON optionnel avec les dates/heures **en heure française (CEST/CET)** pour chaque match. Clés : `ub-{round}-{match}` pour l'Upper Bracket, `lb-{round}-{match}` pour le Lower Bracket, `"gf"` pour la Grand Final. Format recommandé : `"3 juil · 14h"`.
+
+Exemple :
+```json
+"bracketDates": "{\"ub-0-0\":\"3 juil · 10h\",\"ub-0-1\":\"3 juil · 13h\",\"lb-0-0\":\"5 juil · 10h\",\"gf\":\"12 juil · 11h\"}"
+```
+
+**Rappel fuseau horaire** : les matchs en Corée (KST) se convertissent en CEST avec **-7h** (ex: 17h KST = 10h CEST). Chine (CST) : **-6h**. USA Est (EDT) : **+6h**. Toujours vérifier les horaires sur Liquipedia/lolesports et convertir avant de remplir.
+
+Si les horaires exacts ne sont pas encore annoncés, ne pas inclure `bracketDates` — les dates s'ajoutent ensuite manuellement dans le builder.
 
 ### 5. Output
 Créer un dossier dans `outil-instagram/presets/` avec :

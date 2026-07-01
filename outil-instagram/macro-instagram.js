@@ -114,12 +114,12 @@ function newSlide(img, name, tpl){
            showBgImage: !!img, framedImage: false, dualImage: false, img2: null, tx2:{ox:0,oy:0}, photoCredit:"", dur: null, game: null,
            titleScale: null, descScale: null, zoom: null, descColor: null, imgBright: null,
            lineup:"", lineupCount:5, lineupTeamRating:"", lineupPhotos:[],
-           bracket:"", bracketFormat:"", planningEvents:"", groupes:"", groupeElim:3, frameY:0, statHighlight:0, mvpBadge:"mvp" };
+           bracket:"", bracketFormat:"", bracketWinnerLabel:"champion", bracketDates:"", planningEvents:"", groupes:"", groupeElim:3, frameY:0, statHighlight:0, mvpBadge:"mvp" };
 }
 function cur(){ return state.images[state.active] || null; }
 function curTpl(){ const it = cur(); return (it && it.template) || "post-image"; }
 function sVal(key){ const it = cur(); return (it && it[key] != null) ? it[key] : state[key]; }
-const EMPTY = { template:"post-image", eyebrow:"", title:"", desc:"", showDesc:false, score:"", showScore:false, badge:"", signature:"", teamA:"", teamB:"", standings:"", relegationLine:0, stats:"", matches:"", footerText:"", pollOptions:"", pollWinner:0, tiers:"", playerName:"", playerRole:"", transferBadge:"officiel", matchResult:"", lineup:"", lineupCount:5, lineupTeamRating:"", bracket:"", bracketFormat:"", planningEvents:"", groupes:"", groupeElim:3, statHighlight:0, mvpBadge:"mvp" };
+const EMPTY = { template:"post-image", eyebrow:"", title:"", desc:"", showDesc:false, score:"", showScore:false, badge:"", signature:"", teamA:"", teamB:"", standings:"", relegationLine:0, stats:"", matches:"", footerText:"", pollOptions:"", pollWinner:0, tiers:"", playerName:"", playerRole:"", transferBadge:"officiel", matchResult:"", lineup:"", lineupCount:5, lineupTeamRating:"", bracket:"", bracketFormat:"", bracketWinnerLabel:"champion", bracketDates:"", planningEvents:"", groupes:"", groupeElim:3, statHighlight:0, mvpBadge:"mvp" };
 
 // ═══ SECTION: CANVAS INIT ═══
 const cv = document.getElementById("cv");
@@ -2221,7 +2221,7 @@ function drawLayoutBracket(W,H,c,scale,pad,maxW,acc,hi){
   };
 
   // shared sub-bracket drawing: returns { yPositions, MW, MH } for connector use
-  const drawSubBracket = (subRounds, regionTop, regionBottom, bracketLeft, MW, isFinalBracket, deMode) => {
+  const drawSubBracket = (subRounds, regionTop, regionBottom, bracketLeft, MW, isFinalBracket, deMode, isLower) => {
     const availH = regionBottom - regionTop;
     const matchTop = regionTop;
     const numR = subRounds.length;
@@ -2272,7 +2272,7 @@ function drawLayoutBracket(W,H,c,scale,pad,maxW,acc,hi){
     }
 
     // connectors
-    ctx.lineWidth = Math.max(1, 1.5*scale);
+    ctx.lineWidth = Math.max(1, 2*scale);
     for(let r=0; r<numR-1; r++){
       const fromX = bracketLeft + r*(MW+RG)+MW;
       const toX = bracketLeft + (r+1)*(MW+RG);
@@ -2284,8 +2284,8 @@ function drawLayoutBracket(W,H,c,scale,pad,maxW,acc,hi){
         const targetM = sameSize ? m : Math.floor(m/2);
         if(targetM>=next.length) continue;
         const isTop = m%2===0;
-        const toY = yPos[r+1][targetM] + (sameSize ? MH/2 : (isTop ? MH*0.25 : MH*0.75));
-        ctx.strokeStyle = rgba(acc, curr[m].winner ? 0.35 : 0.15);
+        const toY = yPos[r+1][targetM] + (sameSize ? (isLower ? MH*0.75 : MH/2) : (isTop ? MH*0.25 : MH*0.75));
+        ctx.strokeStyle = rgba(acc, curr[m].winner ? 0.50 : 0.25);
         ctx.beginPath(); ctx.moveTo(fromX, fromY); ctx.lineTo(midX, fromY);
         ctx.lineTo(midX, toY); ctx.lineTo(toX, toY); ctx.stroke();
       }
@@ -2348,36 +2348,57 @@ function drawLayoutBracket(W,H,c,scale,pad,maxW,acc,hi){
     // lower region (below label)
     const lowerTop = dividerY + Math.round(14*scale) + sectionLabelH;
     const lowerBottom = gf.length ? bracketBottom - Math.round(10*scale) : bracketBottom;
-    const lResult = drawSubBracket(lower, lowerTop, lowerBottom, bracketLeft, MW, false, true);
+    const lResult = drawSubBracket(lower, lowerTop, lowerBottom, bracketLeft, MW, false, true, true);
 
-    // drop connectors: UB losers fall into LB
-    // Standard mapping: UB round i losers → LB round (i*2) for i>0, UB round 0 → LB round 0
-    ctx.save();
-    ctx.setLineDash([Math.round(4*scale), Math.round(4*scale)]);
-    ctx.lineWidth = Math.max(1, scale);
+    // UB drop indicators: right-angle line from Team A going up
+    const dropRounds = new Set();
     for(let r=0; r<uRounds; r++){
       const lbTarget = r === 0 ? 0 : Math.min(r * 2 - 1, lRounds - 1);
-      if(lbTarget >= lRounds) continue;
-      const ubX = bracketLeft + r*(MW+RG);
-      const ubMidX = ubX + MW/2;
-      for(let m=0; m<upper[r].length; m++){
-        if(!uResult.yPos[r] || uResult.yPos[r][m] === undefined) continue;
-        const ubBottomY = uResult.yPos[r][m] + uResult.MH;
-        // find target LB match
-        const lbMatchIdx = r === 0 ? Math.floor(m / 2) : (m < (lower[lbTarget]||[]).length ? m : 0);
-        if(!lResult.yPos[lbTarget] || lResult.yPos[lbTarget][lbMatchIdx] === undefined) continue;
-        const lbTopY = lResult.yPos[lbTarget][lbMatchIdx];
-        const lbX = bracketLeft + lbTarget*(MW+RG) + MW/2;
-        ctx.strokeStyle = rgba(acc, 0.12);
+      if(lbTarget < lRounds) dropRounds.add(lbTarget);
+    }
+    const dropArmLen = Math.round(12*scale);
+    const dropUpLen = Math.round(18*scale);
+    ctx.lineWidth = Math.max(1, 1.5*scale);
+    for(const lbR of dropRounds){
+      if(!lResult.yPos[lbR]) continue;
+      for(let m=0; m<(lower[lbR]||[]).length; m++){
+        if(lResult.yPos[lbR][m] === undefined) continue;
+        const cx = bracketLeft + lbR*(MW+RG);
+        const topY = lResult.yPos[lbR][m];
+        const teamAMidY = topY + lResult.MH/4;
+        ctx.strokeStyle = rgba(acc, 0.45);
         ctx.beginPath();
-        ctx.moveTo(ubMidX, ubBottomY);
-        ctx.lineTo(ubMidX, dividerY);
-        ctx.lineTo(lbX, dividerY);
-        ctx.lineTo(lbX, lbTopY);
+        ctx.moveTo(cx, teamAMidY);
+        ctx.lineTo(cx - dropArmLen, teamAMidY);
+        ctx.lineTo(cx - dropArmLen, teamAMidY - dropUpLen);
         ctx.stroke();
       }
     }
-    ctx.restore();
+
+    // match dates
+    let matchDates = {};
+    try { if(c.bracketDates) matchDates = JSON.parse(c.bracketDates); } catch(e){}
+    const dateF = Math.round(10*scale);
+    const drawMatchDate = (key, rx, my, mw) => {
+      const d = matchDates[key];
+      if(!d) return;
+      ctx.font = `500 ${dateF}px 'JetBrains Mono', monospace`;
+      ctx.fillStyle = "rgba(255,255,255,0.35)"; ctx.textBaseline = "bottom"; ctx.textAlign = "center";
+      ctx.fillText(d, rx + mw/2, my - Math.round(3*scale));
+      ctx.textAlign = "left"; ctx.textBaseline = "top";
+    };
+    for(let r=0; r<uRounds; r++){
+      for(let m=0; m<upper[r].length; m++){
+        if(!uResult.yPos[r] || uResult.yPos[r][m]===undefined) continue;
+        drawMatchDate(`ub-${r}-${m}`, bracketLeft + r*(MW+RG), uResult.yPos[r][m], MW);
+      }
+    }
+    for(let r=0; r<lRounds; r++){
+      for(let m=0; m<lower[r].length; m++){
+        if(!lResult.yPos[r] || lResult.yPos[r][m]===undefined) continue;
+        drawMatchDate(`lb-${r}-${m}`, bracketLeft + r*(MW+RG), lResult.yPos[r][m], MW);
+      }
+    }
 
     // grand final
     if(gf.length){
@@ -2395,7 +2416,7 @@ function drawLayoutBracket(W,H,c,scale,pad,maxW,acc,hi){
         const ubLastX = bracketLeft + (uRounds-1)*(MW+RG) + MW;
         const ubLastY = uResult.yPos[uRounds-1][0] + uResult.MH/2;
         const midX = ubLastX + RG/2;
-        ctx.strokeStyle = rgba(acc, 0.2);
+        ctx.strokeStyle = rgba(acc, 0.35);
         ctx.beginPath(); ctx.moveTo(ubLastX, ubLastY); ctx.lineTo(midX, ubLastY);
         ctx.lineTo(midX, gfY + gfMH*0.25); ctx.lineTo(gfX, gfY + gfMH*0.25); ctx.stroke();
       }
@@ -2403,25 +2424,34 @@ function drawLayoutBracket(W,H,c,scale,pad,maxW,acc,hi){
         const lbLastX = bracketLeft + (lRounds-1)*(MW+RG) + MW;
         const lbLastY = lResult.yPos[lRounds-1][0] + lResult.MH/2;
         const midX = lbLastX + RG/2;
-        ctx.strokeStyle = rgba(acc, 0.2);
+        ctx.strokeStyle = rgba(acc, 0.35);
         ctx.beginPath(); ctx.moveTo(lbLastX, lbLastY); ctx.lineTo(midX, lbLastY);
         ctx.lineTo(midX, gfY + gfMH*0.75); ctx.lineTo(gfX, gfY + gfMH*0.75); ctx.stroke();
       }
 
+      drawMatchDate("gf", gfX, gfY, MW);
       drawMatchCard(gfX, gfY, MW, gfMH, gf[0], true, gfTeamF, gfScoreF, gfLogoSize);
 
       // winner label
       if(gf[0].winner){
         const winnerName = gf[0].winner==="A" ? gf[0].teamA.name : gf[0].teamB.name;
+        const winLabel = (c.bracketWinnerLabel||"champion")==="qualifie" ? "QUALIFIÉ" : "CHAMPION";
         const champLabelF = Math.round(13*scale);
-        const champNameF = Math.round(28*scale);
         const champY = gfY + gfMH + Math.round(12*scale);
         ctx.font = `600 ${champLabelF}px 'JetBrains Mono', monospace`;
         ctx.fillStyle = "#6b7882"; ctx.textBaseline = "top"; ctx.textAlign = "center";
-        drawSpaced("QUALIFIÉ", gfX+MW/2 - ctx.measureText("QUALIFIÉ").width/2, champY, champLabelF*0.2);
-        ctx.font = `800 ${champNameF}px Sora, sans-serif`;
-        ctx.fillStyle = acc; ctx.textAlign = "center";
-        ctx.fillText(winnerName, gfX+MW/2, champY+champLabelF+Math.round(6*scale));
+        drawSpaced(winLabel, gfX+MW/2 - ctx.measureText(winLabel).width/2, champY, champLabelF*0.2);
+        const winLogo = findTeamLogo(winnerName);
+        const logoY = champY + champLabelF + Math.round(6*scale);
+        if(winLogo){
+          const ls = Math.round(40*scale);
+          ctx.drawImage(winLogo, gfX+MW/2 - ls/2, logoY, ls, ls);
+        } else {
+          const champNameF = Math.round(28*scale);
+          ctx.font = `800 ${champNameF}px Sora, sans-serif`;
+          ctx.fillStyle = acc; ctx.textAlign = "center";
+          ctx.fillText(winnerName, gfX+MW/2, logoY);
+        }
         ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
       }
     }
@@ -2435,24 +2465,48 @@ function drawLayoutBracket(W,H,c,scale,pad,maxW,acc,hi){
     const MW = Math.min(Math.round(260*scale), Math.floor((maxW - totalGapW) / numRounds));
     const totalBracketW = numRounds * MW + (numRounds-1) * RG;
     const bracketLeft = (W - totalBracketW) / 2;
-    drawSubBracket(rounds, bracketTop, bracketBottom, bracketLeft, MW, true, false);
+    const seResult = drawSubBracket(rounds, bracketTop, bracketBottom, bracketLeft, MW, true, false);
+
+    // match dates for single elim
+    let matchDates = {};
+    try { if(c.bracketDates) matchDates = JSON.parse(c.bracketDates); } catch(e){}
+    const dateF = Math.round(10*scale);
+    for(let r=0; r<numRounds; r++){
+      for(let m=0; m<rounds[r].length; m++){
+        if(!seResult.yPos[r] || seResult.yPos[r][m]===undefined) continue;
+        const d = matchDates[`ub-${r}-${m}`];
+        if(!d) continue;
+        ctx.font = `500 ${dateF}px 'JetBrains Mono', monospace`;
+        ctx.fillStyle = "rgba(255,255,255,0.35)"; ctx.textBaseline = "bottom"; ctx.textAlign = "center";
+        ctx.fillText(d, bracketLeft + r*(MW+RG) + MW/2, seResult.yPos[r][m] - Math.round(3*scale));
+        ctx.textAlign = "left"; ctx.textBaseline = "top";
+      }
+    }
 
     // champion label for single elim
     const lastR = rounds[rounds.length-1];
     if(lastR && lastR.length===1 && lastR[0].winner){
       const finalMatch = lastR[0];
       const winnerName = finalMatch.winner==="A" ? finalMatch.teamA.name : finalMatch.teamB.name;
+      const winLabel = (c.bracketWinnerLabel||"champion")==="qualifie" ? "QUALIFIÉ" : "CHAMPION";
       const finalRx = bracketLeft + (numRounds-1)*(MW+RG);
       const finalCx = finalRx + MW/2;
       const champLabelF = Math.round(14*scale);
-      const champNameF = Math.round(32*scale);
       const champY = bracketBottom + Math.round(16*scale);
       ctx.font = `600 ${champLabelF}px 'JetBrains Mono', monospace`;
       ctx.fillStyle = "#6b7882"; ctx.textBaseline = "top"; ctx.textAlign = "center";
-      drawSpaced("CHAMPION", finalCx - ctx.measureText("CHAMPION").width/2, champY, champLabelF*0.2);
-      ctx.font = `800 ${champNameF}px Sora, sans-serif`;
-      ctx.fillStyle = acc; ctx.textAlign = "center";
-      ctx.fillText(winnerName, finalCx, champY+champLabelF+Math.round(8*scale));
+      drawSpaced(winLabel, finalCx - ctx.measureText(winLabel).width/2, champY, champLabelF*0.2);
+      const winLogo = findTeamLogo(winnerName);
+      const logoY = champY + champLabelF + Math.round(8*scale);
+      if(winLogo){
+        const ls = Math.round(44*scale);
+        ctx.drawImage(winLogo, finalCx - ls/2, logoY, ls, ls);
+      } else {
+        const champNameF = Math.round(32*scale);
+        ctx.font = `800 ${champNameF}px Sora, sans-serif`;
+        ctx.fillStyle = acc; ctx.textAlign = "center";
+        ctx.fillText(winnerName, finalCx, logoY);
+      }
       ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
     }
   }
@@ -2923,6 +2977,8 @@ function syncInputs(){
   if($("groupeElim")) { $("groupeElim").value = has ? (it.groupeElim!=null ? it.groupeElim : 3) : 3; $("groupeElimV").textContent = $("groupeElim").value; }
   if($("bracket")) { $("bracket").value = has ? (it.bracket||"") : ""; $("bracket").disabled = !has; }
   if($("bracketFormat")) { $("bracketFormat").value = has ? (it.bracketFormat||"") : ""; $("bracketFormat").disabled = !has; }
+  if($("bracketWinnerLabel")) { $("bracketWinnerLabel").value = has ? (it.bracketWinnerLabel||"champion") : "champion"; }
+  if($("bracketDates")) { $("bracketDates").value = has ? (it.bracketDates||"") : ""; }
   if($("planningEvents")) { $("planningEvents").value = has ? (it.planningEvents||"") : ""; $("planningEvents").disabled = !has; }
   if($("lineupCountSeg")) { document.querySelectorAll("#lineupCountSeg button").forEach(b=>{ b.classList.toggle("on", parseInt(b.dataset.lc)===(has ? (it.lineupCount||5) : 5)); }); }
   if($("lineupPhotoCount")) { const n = has && it.lineupPhotos ? it.lineupPhotos.filter(Boolean).length : 0; $("lineupPhotoCount").textContent = n ? n+" photo"+(n>1?"s":"") : ""; }
@@ -3054,6 +3110,8 @@ if($("lineup")) $("lineup").oninput = e => setField("lineup", e.target.value);
 if($("lineupTeamRating")) $("lineupTeamRating").oninput = e => setField("lineupTeamRating", e.target.value);
 if($("bracket")) $("bracket").oninput = e => setField("bracket", e.target.value);
 if($("bracketFormat")) $("bracketFormat").oninput = e => setField("bracketFormat", e.target.value);
+if($("bracketWinnerLabel")) $("bracketWinnerLabel").onchange = e => setField("bracketWinnerLabel", e.target.value);
+if($("bracketDates")) $("bracketDates").oninput = e => setField("bracketDates", e.target.value);
 
 function rebuildBracketBuilder(slide){
   const txt = slide.bracket;
@@ -3087,6 +3145,19 @@ function rebuildBracketBuilder(slide){
     slide._lbRounds = [];
     const r1Names = slide._ubRounds[0] ? slide._ubRounds[0].flatMap(m => [m.a, m.b]) : [];
     slide._bracketTeams = r1Names.join("\n");
+  }
+  // restore dates from JSON
+  if(slide.bracketDates){
+    try {
+      const dates = JSON.parse(slide.bracketDates);
+      slide._ubRounds.forEach((round, ri) => {
+        round.forEach((m, mi) => { if(dates[`ub-${ri}-${mi}`]) m.date = dates[`ub-${ri}-${mi}`]; });
+      });
+      (slide._lbRounds||[]).forEach((round, ri) => {
+        round.forEach((m, mi) => { if(dates[`lb-${ri}-${mi}`]) m.date = dates[`lb-${ri}-${mi}`]; });
+      });
+      if(dates["gf"]) slide._gfDate = dates["gf"];
+    } catch(e){}
   }
 }
 
@@ -3265,7 +3336,7 @@ function rebuildBracketBuilder(slide){
       for(let m = 0; m < curr.length; m++){
         const w = getWinner(curr[m]);
         if(sameSize){
-          if(next[m]) next[m].a = w || "TBD";
+          if(next[m]) next[m].b = w || "TBD";
         } else {
           const ni = Math.floor(m / 2);
           const slot = m % 2 === 0 ? "a" : "b";
@@ -3293,7 +3364,7 @@ function rebuildBracketBuilder(slide){
             if(lb[0] && lb[0][li]) lb[0][li][slot] = loser;
           } else {
             const lbR = 2 * r - 1;
-            if(lb[lbR] && lb[lbR][m]) lb[lbR][m].b = loser;
+            if(lb[lbR] && lb[lbR][m]) lb[lbR][m].a = loser;
           }
         }
       }
@@ -3316,6 +3387,7 @@ function rebuildBracketBuilder(slide){
       const wA = m.sa > m.sb ? " winner" : (m.sb > m.sa ? " loser" : "");
       const wB = m.sb > m.sa ? " winner" : (m.sa > m.sb ? " loser" : "");
       return `<div class="bk-match">
+        <input class="bk-date" type="text" placeholder="Ex. 3 juil · 18h" value="${m.date||""}" data-sec="${section}" data-ri="${ri}" data-mi="${mi}">
         <div class="bk-team${wA}">${logoA ? `<img src="${logoA}">` : ""}<span class="bk-name">${m.a}</span></div>
         <input class="bk-score" type="number" min="0" value="${m.sa}" data-sec="${section}" data-ri="${ri}" data-mi="${mi}" data-side="a">
         <div class="bk-vs"></div>
@@ -3355,6 +3427,7 @@ function rebuildBracketBuilder(slide){
       const wGfA = gfSa > gfSb ? " winner" : (gfSb > gfSa ? " loser" : "");
       const wGfB = gfSb > gfSa ? " winner" : (gfSa > gfSb ? " loser" : "");
       html += `<div class="bk-match">
+        <input class="bk-date" type="text" placeholder="Ex. 12 juil · 18h" value="${it._gfDate||""}" data-sec="gf" data-ri="0" data-mi="0">
         <div class="bk-team${wGfA}">${logoGfA ? `<img src="${logoGfA}">` : ""}<span class="bk-name">${gfA}</span></div>
         <input class="bk-score" type="number" min="0" value="${gfSa}" data-sec="gf" data-ri="0" data-mi="0" data-side="a">
         <div class="bk-vs"></div>
@@ -3385,6 +3458,38 @@ function rebuildBracketBuilder(slide){
         renderMatchInputs();
       };
     });
+
+    // bind date inputs
+    matchesEl.querySelectorAll(".bk-date").forEach(inp => {
+      inp.oninput = () => {
+        const sec = inp.dataset.sec;
+        const ri = parseInt(inp.dataset.ri);
+        const mi = parseInt(inp.dataset.mi);
+        if(sec === "ub" && it._ubRounds[ri] && it._ubRounds[ri][mi]){
+          it._ubRounds[ri][mi].date = inp.value;
+        } else if(sec === "lb" && it._lbRounds[ri] && it._lbRounds[ri][mi]){
+          it._lbRounds[ri][mi].date = inp.value;
+        } else if(sec === "gf"){
+          it._gfDate = inp.value;
+        }
+        syncBracketDates(it);
+        render();
+      };
+    });
+  }
+
+  function syncBracketDates(it){
+    if(!it || !it._ubRounds) return;
+    const dates = {};
+    it._ubRounds.forEach((round, ri) => {
+      round.forEach((m, mi) => { if(m.date) dates[`ub-${ri}-${mi}`] = m.date; });
+    });
+    (it._lbRounds||[]).forEach((round, ri) => {
+      round.forEach((m, mi) => { if(m.date) dates[`lb-${ri}-${mi}`] = m.date; });
+    });
+    if(it._gfDate) dates["gf"] = it._gfDate;
+    it.bracketDates = Object.keys(dates).length ? JSON.stringify(dates) : "";
+    setField("bracketDates", it.bracketDates);
   }
 
   genBtn.onclick = generateBracket;
@@ -3628,6 +3733,8 @@ function applyJsonPreset(data, imageFiles){
     slide.lineupTeamRating = s.lineupTeamRating || "";
     slide.bracket = s.bracket || "";
     slide.bracketFormat = s.bracketFormat || "";
+    slide.bracketWinnerLabel = s.bracketWinnerLabel || "champion";
+    slide.bracketDates = s.bracketDates || "";
     if(slide.bracket) rebuildBracketBuilder(slide);
     slide.planningEvents = s.planningEvents || "";
     slide.groupes = s.groupes || "";
@@ -3850,7 +3957,7 @@ $("dlJson").onclick = ()=>{
       transferBadge: s.transferBadge, matchResult: s.matchResult, mvpBadge: s.mvpBadge,
       photoCredit: s.photoCredit, showBgImage: s.showBgImage, framedImage: s.framedImage,
       dur: s.dur, game: s.game, lineup: s.lineup, lineupCount: s.lineupCount,
-      lineupTeamRating: s.lineupTeamRating, bracket: s.bracket, bracketFormat: s.bracketFormat,
+      lineupTeamRating: s.lineupTeamRating, bracket: s.bracket, bracketFormat: s.bracketFormat, bracketWinnerLabel: s.bracketWinnerLabel, bracketDates: s.bracketDates,
       planningEvents: s.planningEvents, groupes: s.groupes, groupeElim: s.groupeElim, frameY: s.frameY,
     };
     if(s.titleScale!=null) sl.titleSize = Math.round(s.titleScale*100);

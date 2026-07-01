@@ -150,7 +150,9 @@ canvas.grabbing{cursor:grabbing}
 .bk-section-label{font-family:'Sora',sans-serif;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--cyan-deep);margin-bottom:6px}
 .bk-round{margin-bottom:8px}
 .bk-round-label{font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--fg-mute);margin-bottom:4px;font-family:'JetBrains Mono',monospace}
-.bk-match{display:flex;align-items:stretch;background:var(--ink-1);border:1px solid var(--line);border-radius:8px;margin-bottom:4px;overflow:hidden}
+.bk-match{display:flex;align-items:stretch;background:var(--ink-1);border:1px solid var(--line);border-radius:8px;margin-bottom:4px;overflow:hidden;flex-wrap:wrap}
+.bk-match .bk-date{width:100%;background:var(--ink-2);border:none;border-bottom:1px solid var(--line);color:var(--fg-mute);font-family:'JetBrains Mono',monospace;font-size:10px;padding:3px 8px;outline:none}
+.bk-match .bk-date::placeholder{color:var(--fg-mute);opacity:.5}
 .bk-match .bk-team{flex:1;display:flex;align-items:center;gap:6px;padding:5px 8px;font-size:12px;font-weight:600;color:var(--fg);min-height:28px}
 .bk-match .bk-team img{width:18px;height:18px;object-fit:contain}
 .bk-match .bk-score{width:32px;text-align:center;background:var(--ink-2);border:none;border-left:1px solid var(--line);border-right:1px solid var(--line);color:var(--fg);font-family:'Sora',sans-serif;font-size:13px;font-weight:800;padding:0}
