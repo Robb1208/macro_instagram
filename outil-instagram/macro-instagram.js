@@ -637,17 +637,30 @@ function drawLayoutCentered(W,H,c,scale,pad,maxW,acc,hi){
 function drawLayoutScore(W,H,c,scale,pad,maxW,acc,hi){
   const eyeF = Math.round(22*scale);
 
-  // eyebrow centered (competition)
+  // eyebrow pill (competition)
   const eyebrow = (c.eyebrow||"").toUpperCase();
   if(eyebrow){
     ctx.font = `700 ${eyeF}px Sora, sans-serif`;
-    ctx.fillStyle = acc; ctx.textAlign = "center"; ctx.textBaseline = "top";
-    drawSpaced(eyebrow, W/2 - ctx.measureText(eyebrow).width/2, Math.round(H*0.13), eyeF*0.18);
+    ctx.letterSpacing = Math.round(eyeF*0.18) + "px";
+    const tw = ctx.measureText(eyebrow).width;
+    ctx.letterSpacing = "0px";
+    const pillPx = Math.round(18*scale), pillPy = Math.round(10*scale);
+    const pillW = tw + pillPx*2, pillH = eyeF + pillPy*2;
+    const pillX = W/2 - pillW/2, pillY = Math.round(H*0.12);
+    const pillR = Math.round(pillH/2);
+    ctx.fillStyle = "rgba(0,194,224,0.08)";
+    roundRectPath(pillX, pillY, pillW, pillH, pillR); ctx.fill();
+    ctx.strokeStyle = rgba(acc, 0.30); ctx.lineWidth = Math.max(1, 1.5*scale);
+    roundRectPath(pillX, pillY, pillW, pillH, pillR); ctx.stroke();
+    ctx.fillStyle = acc; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.letterSpacing = Math.round(eyeF*0.18) + "px";
+    ctx.fillText(eyebrow, W/2, pillY + pillH/2);
+    ctx.letterSpacing = "0px";
     ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
   }
 
   // score row (teams + score) at ~44% height
-  const scoreY = H*0.43 + (c.scoreY||0)*scale;
+  const scoreY = H*0.38 + (c.scoreY||0)*scale;
   const boxSize = Math.round(168*scale);
   const boxR = Math.round(36*scale);
   const teamNameF = Math.round(28*scale);
@@ -664,38 +677,58 @@ function drawLayoutScore(W,H,c,scale,pad,maxW,acc,hi){
   const totalRowW = boxSize*2 + scoreW + teamGap*4;
   const rowX = (W - totalRowW)/2;
 
+  // auto-detect winner (highest number gets accent color)
+  const nums = (c.score||"").replace(/\*/g,"").match(/[0-9]+/g);
+  let winnerIdx = -1;
+  if(nums && nums.length >= 2){
+    const a = parseInt(nums[0]), b = parseInt(nums[1]);
+    if(a > b) winnerIdx = 0;
+    else if(b > a) winnerIdx = 1;
+  }
+
+  // draw team box helper
+  function drawTeamBox(bx, by, logoImg, abbr, isLoser){
+    ctx.save();
+    ctx.shadowColor = rgba(acc, 0.15); ctx.shadowBlur = Math.round(22*scale); ctx.shadowOffsetY = 0;
+    ctx.fillStyle = "#13161c";
+    roundRectPath(bx, by, boxSize, boxSize, boxR); ctx.fill();
+    ctx.restore();
+    ctx.strokeStyle = "#2a2f38"; ctx.lineWidth = Math.max(1,2*scale);
+    roundRectPath(bx, by, boxSize, boxSize, boxR); ctx.stroke();
+    if(isLoser) ctx.save();
+    if(isLoser) ctx.globalAlpha = 0.55;
+    if(logoImg){
+      const logoPad = Math.round(24*scale);
+      const logoSize = boxSize - logoPad*2;
+      ctx.save();
+      if(isLoser) ctx.globalAlpha = 0.55;
+      ctx.beginPath(); roundRectPath(bx, by, boxSize, boxSize, boxR); ctx.clip();
+      ctx.drawImage(logoImg, bx+logoPad, by+logoPad, logoSize, logoSize);
+      ctx.restore();
+    } else if(abbr){
+      ctx.font = `800 ${teamAbbrF}px Sora, sans-serif`;
+      ctx.fillStyle = isLoser ? "#6b7882" : "#dfe6ea"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillText(abbr, bx+boxSize/2, by+boxSize/2);
+    }
+    if(isLoser) ctx.restore();
+  }
+
   // team A box
   const teamAName = c.teamA || "";
   const teamAAbbr = teamAName.slice(0,3).toUpperCase();
   const boxAx = rowX, boxAy = scoreY - boxSize/2;
   const logoA = c.logoA || findTeamLogo(teamAName);
-  ctx.fillStyle = "#13161c";
-  roundRectPath(boxAx, boxAy, boxSize, boxSize, boxR); ctx.fill();
-  ctx.strokeStyle = "#2a2f38"; ctx.lineWidth = Math.max(1,2*scale);
-  roundRectPath(boxAx, boxAy, boxSize, boxSize, boxR); ctx.stroke();
-  if(logoA){
-    const logoPad = Math.round(24*scale);
-    const logoSize = boxSize - logoPad*2;
-    ctx.save();
-    ctx.beginPath(); roundRectPath(boxAx, boxAy, boxSize, boxSize, boxR); ctx.clip();
-    ctx.drawImage(logoA, boxAx+logoPad, boxAy+logoPad, logoSize, logoSize);
-    ctx.restore();
-  } else if(teamAAbbr){
-    ctx.font = `800 ${teamAbbrF}px Sora, sans-serif`;
-    ctx.fillStyle = "#dfe6ea"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
-    ctx.fillText(teamAAbbr, boxAx+boxSize/2, boxAy+boxSize/2);
-  }
+  drawTeamBox(boxAx, boxAy, logoA, teamAAbbr, winnerIdx===1);
 
   // score digits
   if(c.score && c.score.trim()){
     const dashF = Math.round(sf*0.38);
-    const hiParts = String(c.score).split("*");
-    const hiSegs = []; hiParts.forEach((p,i)=>{ if(p!=="") hiSegs.push({text:p, hi:i%2===1}); });
+    const raw = (c.score||"").replace(/\*/g,"");
     const tokens = [];
-    hiSegs.forEach(seg=>{
-      seg.text.replace(/([0-9]+|[\-–—]+|[^0-9\-–—]+)/g, (m)=>{
-        tokens.push({text:m, hi:seg.hi});
-      });
+    let numIdx = 0;
+    raw.replace(/([0-9]+|[\-–—]+|[^0-9\-–—]+)/g, (m)=>{
+      const isNum = /^[0-9]+$/.test(m);
+      tokens.push({text:m, numIdx: isNum ? numIdx++ : -1});
     });
     let totalSW = 0;
     let hasDash = false;
@@ -710,10 +743,15 @@ function drawLayoutScore(W,H,c,scale,pad,maxW,acc,hi){
     ctx.textAlign = "left"; ctx.textBaseline = "middle";
     tokens.forEach(t=>{
       const isDash = /^[\-–—]+$/.test(t.text);
+      const isNum = /^[0-9]+$/.test(t.text);
       if(isDash) cx += Math.round(16*scale);
       ctx.font = `800 ${isDash?dashF:sf}px Sora, sans-serif`;
-      ctx.fillStyle = t.hi ? hi : (isDash ? "#5a6570" : "#dfe6ea");
-      ctx.fillText(t.text, cx, scoreY);
+      const isLoserNum = isNum && winnerIdx >= 0 && t.numIdx !== winnerIdx;
+      if(isDash) ctx.fillStyle = "#5a6570";
+      else if(isNum && t.numIdx === winnerIdx) ctx.fillStyle = acc;
+      else if(isLoserNum) ctx.fillStyle = "#6b7882";
+      else ctx.fillStyle = "#dfe6ea";
+      ctx.fillText(t.text, cx, scoreY + Math.round(6*scale));
       cx += ctx.measureText(t.text).width;
       if(isDash) cx += Math.round(16*scale);
     });
@@ -724,24 +762,20 @@ function drawLayoutScore(W,H,c,scale,pad,maxW,acc,hi){
   const teamBAbbr = teamBName.slice(0,3).toUpperCase();
   const boxBx = W - rowX - boxSize, boxBy = scoreY - boxSize/2;
   const logoB = c.logoB || findTeamLogo(teamBName);
-  ctx.fillStyle = "#13161c";
-  roundRectPath(boxBx, boxBy, boxSize, boxSize, boxR); ctx.fill();
-  ctx.strokeStyle = "#2a2f38"; ctx.lineWidth = Math.max(1,2*scale);
-  roundRectPath(boxBx, boxBy, boxSize, boxSize, boxR); ctx.stroke();
-  if(logoB){
-    const logoPad = Math.round(24*scale);
-    const logoSize = boxSize - logoPad*2;
-    ctx.save();
-    ctx.beginPath(); roundRectPath(boxBx, boxBy, boxSize, boxSize, boxR); ctx.clip();
-    ctx.drawImage(logoB, boxBx+logoPad, boxBy+logoPad, logoSize, logoSize);
-    ctx.restore();
-  } else if(teamBAbbr){
-    ctx.font = `800 ${teamAbbrF}px Sora, sans-serif`;
-    ctx.fillStyle = "#dfe6ea"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
-    ctx.fillText(teamBAbbr, boxBx+boxSize/2, boxBy+boxSize/2);
-  }
+  drawTeamBox(boxBx, boxBy, logoB, teamBAbbr, winnerIdx===0);
 
   ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+
+  // separator line
+  const sepY = Math.round(scoreY + boxSize/2 + 40*scale);
+  const sepW = Math.round(W*0.35);
+  const sepGrad = ctx.createLinearGradient(W/2-sepW/2, 0, W/2+sepW/2, 0);
+  sepGrad.addColorStop(0, "rgba(0,194,224,0)");
+  sepGrad.addColorStop(0.3, rgba(acc, 0.35));
+  sepGrad.addColorStop(0.7, rgba(acc, 0.35));
+  sepGrad.addColorStop(1, "rgba(0,194,224,0)");
+  ctx.fillStyle = sepGrad;
+  ctx.fillRect(W/2-sepW/2, sepY, sepW, Math.max(1, Math.round(1.5*scale)));
 
   // title + desc at bottom
   const titleF = Math.round((state.format==="story"||state.reel?76:68) * scale * sVal("titleScale"));
