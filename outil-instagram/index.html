@@ -74,12 +74,18 @@
         <input type="file" id="bgImageFile" accept="image/*" class="hide" />
         <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
           <label class="check" style="flex:1"><input type="checkbox" id="showBgImage" checked /> Afficher l'image</label>
-          <label class="check" style="flex:1"><input type="checkbox" id="framedImage" /> Cadrer l'image</label>
+          <label class="check" style="flex:1"><input type="checkbox" id="dualImage" /> Double image</label>
           <button class="btn" id="bgImageClear" style="font-size:11px;padding:5px 8px;display:none">✕</button>
         </div>
         <div id="frameYRow" style="display:none;margin-top:8px">
           <label>Position du cadre</label>
           <div class="slider"><input type="range" id="frameY" min="-200" max="400" value="0" /><span class="val" id="frameYV">0</span></div>
+        </div>
+        <div id="dualImageRow" style="display:none;margin-top:8px">
+          <div class="upload" id="dropDual" style="padding:14px;font-size:13px">
+            <strong>2ème image</strong> — cliquer ou glisser
+          </div>
+          <input type="file" id="dualImageFile" accept="image/*" class="hide" />
         </div>
       </div>
       <div class="field" style="margin-top:12px">

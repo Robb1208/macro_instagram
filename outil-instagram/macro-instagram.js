@@ -111,7 +111,7 @@ function newSlide(img, name, tpl){
            standings:"", relegationLine:0, stats:"",
            matches:"", footerText:"", pollOptions:"", pollWinner:0,
            tiers:"", playerName:"", playerRole:"", transferBadge:"officiel", matchResult:"",
-           showBgImage: !!img, framedImage: false, photoCredit:"", dur: null, game: null,
+           showBgImage: !!img, framedImage: false, dualImage: false, img2: null, tx2:{ox:0,oy:0}, photoCredit:"", dur: null, game: null,
            titleScale: null, descScale: null, zoom: null, descColor: null, imgBright: null,
            lineup:"", lineupCount:5, lineupTeamRating:"", lineupPhotos:[],
            bracket:"", bracketFormat:"", planningEvents:"", groupes:"", groupeElim:3, frameY:0, statHighlight:0, mvpBadge:"mvp" };
@@ -128,6 +128,12 @@ const logo = new Image();
 let logoReady = false;
 logo.onload = () => { logoReady = true; document.getElementById("hdrlogo").src = LOGO_SRC; render(); };
 logo.src = LOGO_SRC;
+
+const bgDefault = new Image();
+let bgDefaultReady = false;
+bgDefault.onload = () => { bgDefaultReady = true; render(); };
+bgDefault.src = "bg-default.png";
+
 
 const noise = document.createElement("canvas");
 noise.width = noise.height = 220;
@@ -156,15 +162,15 @@ function drawCover(img, x, y, w, h, zoom, ox, oy){
 }
 
 function drawBaseBackground(W,H){
-  let g = ctx.createLinearGradient(0,0,W*0.35,H);
-  g.addColorStop(0, "#0c1218");
-  g.addColorStop(0.55, "#090d11");
-  g.addColorStop(1, "#070a0d");
-  ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
-  const r = ctx.createRadialGradient(W*0.85, H*0.05, 0, W*0.85, H*0.05, W*0.7);
-  r.addColorStop(0, "rgba(0,194,224,0.06)");
-  r.addColorStop(1, "rgba(0,194,224,0)");
-  ctx.fillStyle = r; ctx.fillRect(0,0,W,H);
+  if(bgDefaultReady){
+    drawCover(bgDefault, 0, 0, W, H, 1, 0, 0);
+  } else {
+    let g = ctx.createLinearGradient(0,0,W*0.35,H);
+    g.addColorStop(0, "#0c1218");
+    g.addColorStop(0.55, "#090d11");
+    g.addColorStop(1, "#070a0d");
+    ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
+  }
 }
 function drawBreakingBackground(W,H){
   let g = ctx.createLinearGradient(W*0.2,0,W*0.8,H);
@@ -211,6 +217,27 @@ function drawFramedImage(it, W, H, zoom){
   ctx.restore();
   ctx.strokeStyle = "rgba(31,44,53,0.5)"; ctx.lineWidth = Math.max(1, 1.5*scale);
   roundRectPath(frameX, frameY, frameW, frameH, frameR); ctx.stroke();
+}
+
+function drawDualImage(it, W, H, zoom){
+  const scale = W/1080;
+  const gap = Math.round(4*scale);
+  const halfW = Math.round((W - gap)/2);
+  // left image
+  ctx.save();
+  ctx.beginPath(); ctx.rect(0, 0, halfW, H); ctx.clip();
+  drawCover(it.img, 0, 0, halfW, H, zoom, it.tx.ox, it.tx.oy);
+  ctx.restore();
+  // right image
+  if(it.img2){
+    ctx.save();
+    ctx.beginPath(); ctx.rect(halfW + gap, 0, halfW, H); ctx.clip();
+    drawCover(it.img2, halfW + gap, 0, halfW, H, zoom, it.tx2.ox, it.tx2.oy);
+    ctx.restore();
+  }
+  // center divider line
+  ctx.fillStyle = INK;
+  ctx.fillRect(halfW, 0, gap, H);
 }
 
 // ═══ SECTION: EDGE BLUR ═══
@@ -418,22 +445,6 @@ function drawOverlay(W, H, slideInfo, content, hasImage){
   glow.addColorStop(0.6, rgba(glowCol, 0));
   ctx.fillStyle = glow; ctx.fillRect(0,0,W,H);
 
-  // --- Shared: neon curves ---
-  ctx.save();
-  ctx.strokeStyle = "#00c2e0";
-  ctx.shadowColor = "rgba(0,194,224,0.55)"; ctx.shadowBlur = 12*scale; ctx.lineCap = "round";
-  ctx.globalAlpha = 0.55; ctx.lineWidth = Math.max(2, 2.8*scale);
-  ctx.beginPath();
-  ctx.moveTo(W*0.56, -H*0.02);
-  ctx.bezierCurveTo(W*0.78, H*0.03, W*0.93, H*0.12, W*1.05, H*0.31);
-  ctx.stroke();
-  ctx.globalAlpha = 0.28; ctx.lineWidth = Math.max(1, 1.5*scale);
-  ctx.beginPath();
-  ctx.moveTo(W*0.48, -H*0.04);
-  ctx.bezierCurveTo(W*0.74, H*0.0, W*0.92, H*0.07, W*1.10, H*0.25);
-  ctx.stroke();
-  ctx.restore();
-
   // --- Bottom gradient (skip for post-texte) ---
   if(tpl !== "post-texte"){
     const gStr = state.gradient;
@@ -467,35 +478,13 @@ function drawOverlay(W, H, slideInfo, content, hasImage){
     ctx.fillRect(pad, Math.round(pad + lh + 13*scale), W - pad*2, Math.max(2, Math.round(2.5*scale)));
   }
 
-  // --- Shared: slide counter ---
-  let counterBottomY = H - pad;
-  if(slideInfo && slideInfo.total > 1){
-    const txt = (slideInfo.index+1) + " / " + slideInfo.total;
-    const f = Math.round(28*scale);
-    ctx.font = `600 ${f}px 'JetBrains Mono', monospace`;
-    const tw = ctx.measureText(txt).width;
-    const padX = Math.round(16*scale), padY = Math.round(11*scale);
-    const boxW = tw + padX*2, boxH = f + padY*2;
-    const bx = W - pad - boxW, by = H - pad - boxH;
-    ctx.save();
-    ctx.fillStyle = "rgba(7,10,13,0.6)";
-    roundRectPath(bx, by, boxW, boxH, Math.round(10*scale)); ctx.fill();
-    ctx.lineWidth = Math.max(1, Math.round(2*scale)); ctx.strokeStyle = rgba(acc,0.55);
-    roundRectPath(bx, by, boxW, boxH, Math.round(10*scale)); ctx.stroke();
-    ctx.fillStyle = "#fff"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
-    ctx.fillText(txt, bx + boxW/2, by + boxH/2 + Math.round(scale));
-    ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
-    ctx.restore();
-    counterBottomY = by - Math.round(6*scale);
-  }
-
-  // --- Shared: photo credit (bottom-right, under counter) ---
+  // --- Shared: photo credit (bottom-right) ---
   if(c.photoCredit){
     const credF = Math.round(16*scale);
     ctx.font = `500 ${credF}px 'Manrope', sans-serif`;
     ctx.fillStyle = "rgba(255,255,255,0.35)";
     ctx.textAlign = "right"; ctx.textBaseline = "bottom";
-    ctx.fillText("Photo — " + c.photoCredit, W - pad, counterBottomY);
+    ctx.fillText("Photo — " + c.photoCredit, W - pad, H - pad);
     ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
   }
 
@@ -696,21 +685,38 @@ function drawLayoutScore(W,H,c,scale,pad,maxW,acc,hi){
     ctx.fillStyle = "#dfe6ea"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
     ctx.fillText(teamAAbbr, boxAx+boxSize/2, boxAy+boxSize/2);
   }
-  if(teamAName){
-    ctx.font = `600 ${teamNameF}px Manrope, sans-serif`;
-    ctx.fillStyle = "#dfdfdf"; ctx.textAlign = "center"; ctx.textBaseline = "top";
-    ctx.fillText(teamAName, boxAx+boxSize/2, boxAy+boxSize+Math.round(12*scale));
-  }
 
   // score digits
   if(c.score && c.score.trim()){
-    const parts = String(c.score).split("*");
-    const segs = []; parts.forEach((p,i)=>{ if(p!=="") segs.push({text:p, hi:i%2===1}); });
-    ctx.font = `800 ${sf}px Sora, sans-serif`;
-    const totalSW = segs.reduce((s,seg)=>s+ctx.measureText(seg.text).width, 0);
+    const dashF = Math.round(sf*0.38);
+    const hiParts = String(c.score).split("*");
+    const hiSegs = []; hiParts.forEach((p,i)=>{ if(p!=="") hiSegs.push({text:p, hi:i%2===1}); });
+    const tokens = [];
+    hiSegs.forEach(seg=>{
+      seg.text.replace(/([0-9]+|[\-–—]+|[^0-9\-–—]+)/g, (m)=>{
+        tokens.push({text:m, hi:seg.hi});
+      });
+    });
+    let totalSW = 0;
+    let hasDash = false;
+    tokens.forEach(t=>{
+      const isDash = /^[\-–—]+$/.test(t.text);
+      if(isDash) hasDash = true;
+      ctx.font = `800 ${isDash?dashF:sf}px Sora, sans-serif`;
+      totalSW += ctx.measureText(t.text).width;
+    });
+    if(hasDash) totalSW += Math.round(16*scale)*2;
     let cx = W/2 - totalSW/2;
     ctx.textAlign = "left"; ctx.textBaseline = "middle";
-    segs.forEach(seg=>{ ctx.fillStyle = seg.hi ? hi : "#9aa7b0"; ctx.fillText(seg.text, cx, scoreY); cx += ctx.measureText(seg.text).width; });
+    tokens.forEach(t=>{
+      const isDash = /^[\-–—]+$/.test(t.text);
+      if(isDash) cx += Math.round(16*scale);
+      ctx.font = `800 ${isDash?dashF:sf}px Sora, sans-serif`;
+      ctx.fillStyle = t.hi ? hi : (isDash ? "#5a6570" : "#dfe6ea");
+      ctx.fillText(t.text, cx, scoreY);
+      cx += ctx.measureText(t.text).width;
+      if(isDash) cx += Math.round(16*scale);
+    });
   }
 
   // team B box
@@ -733,11 +739,6 @@ function drawLayoutScore(W,H,c,scale,pad,maxW,acc,hi){
     ctx.font = `800 ${teamAbbrF}px Sora, sans-serif`;
     ctx.fillStyle = "#dfe6ea"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
     ctx.fillText(teamBAbbr, boxBx+boxSize/2, boxBy+boxSize/2);
-  }
-  if(teamBName){
-    ctx.font = `600 ${teamNameF}px Manrope, sans-serif`;
-    ctx.fillStyle = "#dfdfdf"; ctx.textAlign = "center"; ctx.textBaseline = "top";
-    ctx.fillText(teamBName, boxBx+boxSize/2, boxBy+boxSize+Math.round(12*scale));
   }
 
   ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
@@ -2701,7 +2702,15 @@ function render(){
   const showVideo = item && item.video && tpl === "post-video" && item.showBgImage !== false;
   const showImg = (item && item.img && item.showBgImage !== false) || showVideo;
   const framed = showImg && item.framedImage && !showVideo;
-  if(showImg && !framed){
+  const dual = showImg && item.dualImage && !showVideo;
+  if(dual){
+    drawDualImage(item, W, H, sVal("zoom"));
+    if(sVal("imgBright") < 1){
+      ctx.fillStyle = `rgba(0,0,0,${1 - sVal("imgBright")})`;
+      ctx.fillRect(0,0,W,H);
+    }
+    applyEdgeBlur(W,H);
+  } else if(showImg && !framed){
     drawSlideMedia(item, W, H, sVal("zoom"));
     if(sVal("imgBright") < 1){
       ctx.fillStyle = `rgba(0,0,0,${1 - sVal("imgBright")})`;
@@ -2885,20 +2894,23 @@ function syncInputs(){
   if($("lineupPhotoCount")) { const n = has && it.lineupPhotos ? it.lineupPhotos.filter(Boolean).length : 0; $("lineupPhotoCount").textContent = n ? n+" photo"+(n>1?"s":"") : ""; }
   if($("showBgImage")) { $("showBgImage").checked = has ? (it.showBgImage !== false) : true; $("showBgImage").disabled = !has; }
   if($("framedImage")) { $("framedImage").checked = has ? !!it.framedImage : false; $("framedImage").disabled = !has; }
+  if($("dualImage")) { $("dualImage").checked = has ? !!it.dualImage : false; $("dualImage").disabled = !has; }
   if($("photoCredit")) { $("photoCredit").value = has ? (it.photoCredit||"") : ""; $("photoCredit").disabled = !has; }
   if($("bgImageClear")) { $("bgImageClear").style.display = (has && it.img) ? "" : "none"; }
   if($("frameY")) { $("frameY").value = has ? (it.frameY||0) : 0; $("frameYV").textContent = has ? (it.frameY||0) : 0; $("frameY").disabled = !has; }
   const showFrameY = has && !!it.framedImage;
   const frameYEl = document.getElementById("frameYRow");
   if(frameYEl) frameYEl.style.display = showFrameY ? "" : "none";
+  const dualRow = document.getElementById("dualImageRow");
+  if(dualRow) dualRow.style.display = (has && !!it.dualImage) ? "" : "none";
   if($("bgImageBtn")) { $("bgImageBtn").disabled = !has; }
 
   // template-specific field visibility
   const show = (id, vis) => { const el = document.getElementById(id); if(el) el.style.display = vis ? "" : "none"; };
   const hasImage = tpl!=="post-texte" && tpl!=="planning";
-  show("scoreRow", tpl==="post-image" || tpl==="post-video" || tpl==="score");
-  show("scoreYRow", tpl==="post-image" || tpl==="post-video" || tpl==="score");
-  show("scoreCheckRow", tpl==="post-image" || tpl==="post-video");
+  show("scoreRow", tpl==="score");
+  show("scoreYRow", tpl==="score");
+  show("scoreCheckRow", false);
   show("badgeRow", tpl==="breaking");
   show("signatureRow", tpl==="post-texte" || tpl==="breaking");
   show("teamRow", tpl==="score");
@@ -3374,6 +3386,28 @@ if($("bgImageClear")) $("bgImageClear").onclick = ()=> {
 };
 if($("showBgImage")) $("showBgImage").onchange = e => { setField("showBgImage", e.target.checked); };
 if($("framedImage")) $("framedImage").onchange = e => { setField("framedImage", e.target.checked); };
+if($("dualImage")) $("dualImage").onchange = e => { setField("dualImage", e.target.checked); syncInputs(); };
+
+// dual image upload
+(function(){
+  const drop2 = $("dropDual"), file2 = $("dualImageFile");
+  if(!drop2 || !file2) return;
+  drop2.onclick = () => file2.click();
+  drop2.ondragover = e => { e.preventDefault(); drop2.classList.add("dragover"); };
+  drop2.ondragleave = () => drop2.classList.remove("dragover");
+  drop2.ondrop = e => { e.preventDefault(); drop2.classList.remove("dragover"); if(e.dataTransfer.files[0]) loadDualImage(e.dataTransfer.files[0]); };
+  file2.onchange = () => { if(file2.files[0]) loadDualImage(file2.files[0]); file2.value = ""; };
+})();
+function loadDualImage(file){
+  const it = cur(); if(!it) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => { it.img2 = img; render(); };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
 
 // template switching (per-slide)
 document.querySelectorAll("#tplGrid .tpl-btn").forEach(b=>{
@@ -3658,6 +3692,7 @@ function canvasCoords(e){
   const cy = (e.touches?e.touches[0].clientY:e.clientY) - r.top;
   return { x: cx*sx, y: cy*sy };
 }
+let dragDualSide = null;
 function startDrag(e){
   const p = canvasCoords(e);
   const b = lastTextBox;
@@ -3667,7 +3702,13 @@ function startDrag(e){
     dragMode = "image";
     const it = state.images[state.active];
     if(!it){ dragMode=null; return; }
-    startTx = {...it.tx};
+    if(it.dualImage && it.img2 && p.x > cv.width/2){
+      dragDualSide = "right";
+      startTx = {...it.tx2};
+    } else {
+      dragDualSide = "left";
+      startTx = {...it.tx};
+    }
   }
   dragStart = p; cv.classList.add("grabbing");
 }
@@ -3677,8 +3718,13 @@ function moveDrag(e){
   const p = canvasCoords(e);
   if(dragMode==="image"){
     const it = state.images[state.active];
-    it.tx.ox = startTx.ox + (p.x-dragStart.x);
-    it.tx.oy = startTx.oy + (p.y-dragStart.y);
+    if(dragDualSide === "right"){
+      it.tx2.ox = startTx.ox + (p.x-dragStart.x);
+      it.tx2.oy = startTx.oy + (p.y-dragStart.y);
+    } else {
+      it.tx.ox = startTx.ox + (p.x-dragStart.x);
+      it.tx.oy = startTx.oy + (p.y-dragStart.y);
+    }
   } else {
     const it = cur(); if(it) it.textDrag = startTextDrag + (p.y-dragStart.y);
   }
@@ -3772,8 +3818,11 @@ function drawFullSlide(targetCtx, W, H, slide, idx, total, zoomMul){
   const showVideo = slide.video && slide.template === "post-video" && slide.showBgImage !== false;
   const showImg = (slide.img && slide.showBgImage !== false) || showVideo;
   const framed = showImg && slide.framedImage && !showVideo;
+  const dual = showImg && slide.dualImage && !showVideo;
   const tpl = slide.template;
-  if(showImg && !framed){
+  if(dual){
+    drawDualImage(slide, W, H, slideZoom * (zoomMul||1));
+  } else if(showImg && !framed){
     drawSlideMedia(slide, W, H, slideZoom * (zoomMul||1));
   } else if(framed){
     drawBaseBackground(W,H); drawFramedImage(slide, W, H, slideZoom);
