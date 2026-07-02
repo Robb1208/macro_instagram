@@ -91,6 +91,28 @@ function findPlayerImage(name){
   return null;
 }
 
+// ═══ SECTION: ROLE ICONS ═══
+const roleIcons = {};
+(async function loadRoleIcons(){
+  const roles = ["TOP","JGL","MID","BOT","SUPPORT"];
+  let pending = roles.length;
+  roles.forEach(r => {
+    const img = new Image();
+    img.onload = ()=>{ roleIcons[r] = img; if(--pending===0) render(); };
+    img.onerror = ()=>{ --pending; };
+    img.src = "LOGOS_ROLES/" + r + ".webp";
+  });
+})();
+
+function findRoleIcon(role){
+  if(!role) return null;
+  const key = role.toUpperCase().replace(/[_\s]+/g," ").trim();
+  if(roleIcons[key]) return roleIcons[key];
+  const aliases = { "JUNGLE":"JGL", "JUNGLER":"JGL", "ADC":"BOT", "BOTTOM":"BOT", "SUPP":"SUPPORT", "SUP":"SUPPORT" };
+  if(aliases[key] && roleIcons[aliases[key]]) return roleIcons[aliases[key]];
+  return null;
+}
+
 // ═══ SECTION: STATE ═══
 const state = {
   images: [], active: 0,
@@ -1872,15 +1894,31 @@ function drawLayoutLineup(W,H,c,scale,pad,maxW,acc,hi){
   const nameF = Math.round(32*scale);
   const roleF = Math.round(20*scale);
   const ratingF = Math.round(52*scale);
+  // find top rating index
+  let topRatingIdx = -1, topRatingVal = -1;
+  if(showRatings){
+    for(let i=0; i<count; i++){
+      const p = players[i];
+      if(p && p.rating){ const v = parseFloat(p.rating); if(v > topRatingVal){ topRatingVal = v; topRatingIdx = i; } }
+    }
+  }
+
   for(let i=0; i<count; i++){
     const p = players[i] || { name:"", role:"", rating:"" };
     const cy = cardsTop + i*(cardH + cardGap);
+    const isTop = i === topRatingIdx;
 
     // card bg
     ctx.fillStyle = "rgba(255,255,255,0.04)";
     roundRectPath(pad, cy, maxW, cardH, cardR); ctx.fill();
     ctx.strokeStyle = "rgba(255,255,255,0.06)"; ctx.lineWidth = Math.max(1, 1.5*scale);
     roundRectPath(pad, cy, maxW, cardH, cardR); ctx.stroke();
+
+    // accent separator line between cards
+    if(i > 0){
+      ctx.fillStyle = rgba(acc, 0.15);
+      ctx.fillRect(pad + Math.round(16*scale), cy - Math.round(cardGap/2), maxW - Math.round(32*scale), Math.max(1, scale));
+    }
 
     // photo — auto-match by player name, fallback to manual lineupPhotos, else empty
     const photoX = pad + photoInset;
@@ -1894,6 +1932,13 @@ function drawLayoutLineup(W,H,c,scale,pad,maxW,acc,hi){
       const iw = pImg.naturalWidth || pImg.width, ih = pImg.naturalHeight || pImg.height;
       const coverScale = Math.max(photoSize/iw, photoSize/ih);
       const dw = iw*coverScale, dh = ih*coverScale;
+      // accent gradient behind player (bottom to top)
+      const pgrd = ctx.createLinearGradient(photoX, photoY + photoSize, photoX, photoY);
+      pgrd.addColorStop(0, rgba(acc, 0.45));
+      pgrd.addColorStop(0.6, rgba(acc, 0.08));
+      pgrd.addColorStop(1, "transparent");
+      ctx.fillStyle = pgrd;
+      ctx.fillRect(photoX, photoY, photoSize, photoSize);
       ctx.drawImage(pImg, photoX+(photoSize-dw)/2, photoY+(photoSize-dh)/2, dw, dh);
       ctx.restore();
     } else {
@@ -1901,18 +1946,34 @@ function drawLayoutLineup(W,H,c,scale,pad,maxW,acc,hi){
       roundRectPath(photoX, photoY, photoSize, photoSize, photoR); ctx.fill();
     }
 
-    // name + role
+    // accent border on top rating photo
+    if(isTop){
+      ctx.strokeStyle = acc; ctx.lineWidth = Math.round(3*scale);
+      roundRectPath(photoX, photoY, photoSize, photoSize, photoR); ctx.stroke();
+    }
+
+    // name (uppercase) + role
     const textX = photoX + photoSize + Math.round(20*scale);
     if(p.name){
       ctx.font = `700 ${nameF}px Sora, sans-serif`;
       ctx.fillStyle = "#ffffff"; ctx.textBaseline = "middle";
       const nameY = p.role ? cy + cardH*0.38 : cy + cardH/2;
-      ctx.fillText(p.name, textX, nameY);
+      ctx.fillText(p.name.toUpperCase(), textX, nameY);
     }
     if(p.role){
-      ctx.font = `500 ${roleF}px Manrope, sans-serif`;
-      ctx.fillStyle = "#9aa7b0"; ctx.textBaseline = "middle";
-      ctx.fillText(p.role, textX, cy + cardH*0.65);
+      const roleIcon = findRoleIcon(p.role);
+      const roleY = cy + cardH*0.65;
+      if(roleIcon){
+        const iconS = Math.round(roleF*1.3);
+        ctx.drawImage(roleIcon, textX, roleY - iconS/2, iconS, iconS);
+        ctx.font = `500 ${roleF}px Manrope, sans-serif`;
+        ctx.fillStyle = "#9aa7b0"; ctx.textBaseline = "middle";
+        ctx.fillText(p.role, textX + iconS + Math.round(8*scale), roleY);
+      } else {
+        ctx.font = `500 ${roleF}px Manrope, sans-serif`;
+        ctx.fillStyle = "#9aa7b0"; ctx.textBaseline = "middle";
+        ctx.fillText(p.role, textX, roleY);
+      }
     }
 
     // rating
