@@ -1999,7 +1999,12 @@ function parseGroupes(text){
       groups.push(current);
     } else {
       if(!current){ current = { name: "Groupe A", teams: [] }; groups.push(current); }
-      current.teams.push({ name: line });
+      const scoreMatch = line.match(/^(.+?)\s+(\d+-\d+)\s*$/);
+      if(scoreMatch){
+        current.teams.push({ name: scoreMatch[1].trim(), score: scoreMatch[2] });
+      } else {
+        current.teams.push({ name: line });
+      }
     }
   });
   return groups;
@@ -2033,90 +2038,160 @@ function drawLayoutGroupes(W,H,c,scale,pad,maxW,acc,hi){
   if(!groups.length){ lastTextBox=null; return; }
   const elimFrom = c.groupeElim || 0;
 
-  const gridGap = Math.round(16*scale);
+  const gridGap = Math.round(24*scale);
   const cols = groups.length <= 2 ? groups.length : 2;
-  const rows = Math.ceil(groups.length / cols);
-  const cellW = Math.floor((maxW - gridGap*(cols-1)) / cols);
+  const nRows = Math.ceil(groups.length / cols);
+  const sidePad = Math.round(16*scale);
+  const gridW = maxW - sidePad*2;
+  const cellW = Math.floor((gridW - gridGap*(cols-1)) / cols);
   const gridTop = y + Math.round(22*scale);
+  const gridLeft = pad + sidePad;
 
-  const groupNameF = Math.round(26*scale);
-  const teamNameF = Math.round(26*scale);
-  const rowH = Math.round(42*scale);
-  const headerH = Math.round(38*scale);
-  const logoSize = Math.round(24*scale);
-  const rankF = Math.round(20*scale);
+  const groupNameF = Math.round(34*scale);
+  const teamNameF = Math.round(28*scale);
+  const rowH = Math.round(56*scale);
+  const groupNameH = Math.round(62*scale);
+  const colHeaderH = Math.round(32*scale);
+  const logoBase = groups.length <= 4 ? 46 : 38;
+  const logoSize = Math.round(logoBase*scale);
+  const rankF = Math.round(22*scale);
+  const scoreF = Math.round(24*scale);
+  const colHeaderF = Math.round(14*scale);
   const cardR = Math.round(10*scale);
-  const rowR = Math.round(7*scale);
-  const innerPad = Math.round(12*scale);
+  const innerPad = Math.round(14*scale);
 
+  const hasScores = groups.some(g => g.teams.some(t => t.score));
+
+  const maxTeams = Math.max(...groups.map(g => g.teams.length));
   const availH = H - gridTop - Math.round(100*scale);
-  const cellH = rows > 1 ? Math.floor((availH - gridGap*(rows-1)) / rows) : availH;
+  const cellH = nRows > 1 ? Math.floor((availH - gridGap*(nRows-1)) / nRows) : availH;
+  const dynamicRowH = Math.max(rowH, Math.floor((cellH - groupNameH - colHeaderH - innerPad) / maxTeams));
+
+  const rankColW = Math.round(36*scale);
+  const scoreColW = hasScores ? Math.round(64*scale) : 0;
 
   for(let gi = 0; gi < groups.length; gi++){
     const g = groups[gi];
     const col = gi % cols;
     const row = Math.floor(gi / cols);
-    const cx = pad + col*(cellW + gridGap);
+    const cx = gridLeft + col*(cellW + gridGap);
     const cy = gridTop + row*(cellH + gridGap);
 
     // card background
-    ctx.fillStyle = "rgba(255,255,255,0.03)";
-    roundRectPath(cx, cy, cellW, cellH, cardR); ctx.fill();
-    ctx.strokeStyle = "rgba(255,255,255,0.08)"; ctx.lineWidth = Math.max(1, scale);
-    roundRectPath(cx, cy, cellW, cellH, cardR); ctx.stroke();
+    const cardTop = cy + groupNameH;
+    const cardH = cellH - groupNameH;
 
-    // group name
+    // group name — folder tab
     ctx.font = `800 ${groupNameF}px Sora, sans-serif`;
-    ctx.fillStyle = "#ffffff"; ctx.textBaseline = "top";
-    ctx.fillText(g.name, cx + innerPad, cy + innerPad);
+    const gnText = g.name.toUpperCase();
+    const tabTextW = ctx.measureText(gnText).width;
+    const tabPadX = Math.round(18*scale);
+    const tabW = tabTextW + tabPadX*2;
+    const tabH = groupNameH;
+    const tabR = Math.round(8*scale);
+    // tab shape: rounded top corners, flat bottom merging into card
+    ctx.beginPath();
+    ctx.moveTo(cx, cardTop);
+    ctx.lineTo(cx, cy + tabR);
+    ctx.arcTo(cx, cy, cx + tabR, cy, tabR);
+    ctx.lineTo(cx + tabW - tabR, cy);
+    ctx.arcTo(cx + tabW, cy, cx + tabW, cy + tabR, tabR);
+    ctx.lineTo(cx + tabW, cardTop);
+    ctx.closePath();
+    ctx.fillStyle = "rgba(255,255,255,0.05)";
+    ctx.fill();
+    ctx.strokeStyle = "rgba(255,255,255,0.08)"; ctx.lineWidth = Math.max(1, scale);
+    ctx.stroke();
+    // accent bar at top of tab
+    ctx.fillStyle = acc;
+    ctx.fillRect(cx + tabR, cy, tabW - tabR*2, Math.round(3*scale));
+    // tab text
+    ctx.fillStyle = "#ffffff"; ctx.textBaseline = "middle"; ctx.textAlign = "left";
+    ctx.fillText(gnText, cx + tabPadX, cy + tabH/2 + Math.round(4*scale));
+    ctx.fillStyle = "rgba(255,255,255,0.03)";
+    roundRectPath(cx, cardTop, cellW, cardH, cardR); ctx.fill();
+    ctx.strokeStyle = "rgba(255,255,255,0.08)"; ctx.lineWidth = Math.max(1, scale);
+    roundRectPath(cx, cardTop, cellW, cardH, cardR); ctx.stroke();
 
-    const teamsTop = cy + headerH + innerPad;
+    // column header bar
+    const chY = cardTop;
+    ctx.fillStyle = rgba(acc, 0.18);
+    ctx.fillRect(cx, chY, cellW, colHeaderH);
+    ctx.fillStyle = rgba(acc, 0.4);
+    ctx.fillRect(cx, chY + colHeaderH - Math.max(1, scale), cellW, Math.max(1, scale));
+
+    ctx.font = `700 ${colHeaderF}px Sora, sans-serif`;
+    ctx.fillStyle = acc; ctx.textBaseline = "middle";
+    ctx.textAlign = "left";
+    ctx.fillText("#", cx + innerPad, chY + colHeaderH/2);
+    ctx.fillText("ÉQUIPE", cx + innerPad + rankColW, chY + colHeaderH/2);
+    if(hasScores){
+      ctx.textAlign = "center";
+      ctx.fillText("W-L", cx + cellW - scoreColW/2 - innerPad/2, chY + colHeaderH/2);
+    }
+
+    const teamsTop = chY + colHeaderH;
     g.teams.forEach((team, ti)=>{
       const rank = ti + 1;
-      const ry = teamsTop + ti*rowH;
-      const isFirst = rank === 1;
-
+      const ry = teamsTop + ti*dynamicRowH;
       const elim = elimFrom > 0 && rank >= elimFrom;
 
-      if(isFirst){
-        ctx.fillStyle = rgba(acc, 0.10);
-        roundRectPath(cx + innerPad/2, ry, cellW - innerPad, rowH, rowR); ctx.fill();
-        ctx.strokeStyle = rgba(acc, 0.25); ctx.lineWidth = Math.max(1, 2*scale);
-        roundRectPath(cx + innerPad/2, ry, cellW - innerPad, rowH, rowR); ctx.stroke();
-      }
-      if(elim){
-        ctx.fillStyle = "rgba(255,60,60,0.05)";
-        roundRectPath(cx + innerPad/2, ry, cellW - innerPad, rowH, rowR); ctx.fill();
-        ctx.strokeStyle = "rgba(255,60,60,0.15)"; ctx.lineWidth = Math.max(1, 2*scale);
-        roundRectPath(cx + innerPad/2, ry, cellW - innerPad, rowH, rowR); ctx.stroke();
+      // alternating row background
+      if(ti % 2 === 1){
+        ctx.fillStyle = "rgba(255,255,255,0.025)";
+        ctx.fillRect(cx, ry, cellW, dynamicRowH);
       }
 
-      const rcy = ry + rowH/2;
+      // eliminated highlight
+      if(elim){
+        ctx.fillStyle = "rgba(255,60,60,0.06)";
+        ctx.fillRect(cx, ry, cellW, dynamicRowH);
+        ctx.fillStyle = "rgba(255,60,60,0.3)";
+        ctx.fillRect(cx, ry, Math.round(3*scale), dynamicRowH);
+      }
+
+      // bottom border
+      ctx.fillStyle = "rgba(255,255,255,0.05)";
+      ctx.fillRect(cx + innerPad/2, ry + dynamicRowH - Math.max(1, scale), cellW - innerPad, Math.max(1, scale));
+
+      const rcy = ry + dynamicRowH/2;
 
       // rank
-      ctx.font = `600 ${rankF}px 'JetBrains Mono', monospace`;
-      ctx.fillStyle = elim ? "#ff5050" : (isFirst ? acc : "#9aa7b0");
-      ctx.textBaseline = "middle";
+      ctx.font = `700 ${rankF}px 'JetBrains Mono', monospace`;
+      ctx.fillStyle = elim ? "#ff5050" : "#7a8a94";
+      ctx.textBaseline = "middle"; ctx.textAlign = "left";
       ctx.fillText(String(rank), cx + innerPad, rcy);
 
       // logo
       const logoImg = findTeamLogo(team.name);
-      const logoX = cx + innerPad + Math.round(24*scale);
+      const logoX = cx + innerPad + rankColW;
       if(logoImg){
         ctx.drawImage(logoImg, logoX, rcy - logoSize/2, logoSize, logoSize);
       }
-      const nameX = logoX + (logoImg ? logoSize + Math.round(8*scale) : 0);
+      const nameX = logoX + (logoImg ? logoSize + Math.round(24*scale) : 0);
 
       // team name
       ctx.font = `600 ${teamNameF}px Manrope, sans-serif`;
-      ctx.fillStyle = isFirst ? "#ffffff" : "#dfdfdf";
-      const maxNameW = cx + cellW - innerPad - nameX;
-      let name = team.name;
+      ctx.fillStyle = elim ? "#8a6060" : "#dfdfdf";
+      ctx.textAlign = "left";
+      const maxNameW = cx + cellW - innerPad - scoreColW - nameX;
+      const fullName = team.name.toUpperCase();
+      let name = fullName;
       while(ctx.measureText(name).width > maxNameW && name.length > 3) name = name.slice(0,-1);
-      if(name !== team.name) name += "…";
+      if(name !== fullName) name += "…";
       ctx.fillText(name, nameX, rcy);
+
+      // score
+      if(hasScores && team.score){
+        ctx.font = `700 ${scoreF}px 'JetBrains Mono', monospace`;
+        ctx.fillStyle = "#b0bec5";
+        ctx.textAlign = "center";
+        ctx.fillText(team.score, cx + cellW - scoreColW/2 - innerPad/2, rcy);
+      }
     });
   }
+
+  ctx.textAlign = "left";
 
   // legend at bottom
   const legendY = H - Math.round(60*scale);
@@ -2137,6 +2212,8 @@ function drawLayoutGroupes(W,H,c,scale,pad,maxW,acc,hi){
   ctx.beginPath(); ctx.arc(legX + Math.round(140*scale), legendY, dotR, 0, Math.PI*2); ctx.fill();
   ctx.fillStyle = "#9aa7b0";
   ctx.fillText("Éliminé", legX + Math.round(190*scale), legendY);
+
+  ctx.textAlign = "left";
 
   ctx.textAlign = "left";
   lastTextBox = null;
