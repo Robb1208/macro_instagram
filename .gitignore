@@ -20,6 +20,8 @@
 !outil-instagram/LOGOS_TEAMS/**
 !outil-instagram/PLAYER_IMAGES/
 !outil-instagram/PLAYER_IMAGES/**
+!outil-instagram/LOGOS_ROLES/
+!outil-instagram/LOGOS_ROLES/**
 
 # Ignorer les presets (posts générés + images = lourd)
 outil-instagram/presets/
