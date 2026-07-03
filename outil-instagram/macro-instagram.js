@@ -2055,8 +2055,9 @@ function parseGroupes(text){
   (text||"").split("\n").forEach(line=>{
     line = line.trim();
     if(!line) return;
-    if(line.startsWith("---")){
-      current = { name: line.replace(/^-+\s*/, ""), teams: [] };
+    const normLine = line.replace(/[‒–—―]/g, "-");
+    if(normLine.startsWith("---")){
+      current = { name: normLine.replace(/^-+\s*/, ""), teams: [] };
       groups.push(current);
     } else {
       if(!current){ current = { name: "Groupe A", teams: [] }; groups.push(current); }
