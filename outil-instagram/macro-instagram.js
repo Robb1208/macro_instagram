@@ -4265,7 +4265,7 @@ function deliverVideo(blob, ext){
   $("status").textContent = "✓ Vidéo prête.";
 }
 
-function buildMjpegMov(jpegFrames, w, h, fps){
+function buildMjpegMov(jpegFrames, w, h, fps, pcmData, audioRate, audioCh){
   const n = jpegFrames.length;
   const timeScale = 600;
   const frameDur = Math.round(timeScale / fps);
@@ -4273,10 +4273,14 @@ function buildMjpegMov(jpegFrames, w, h, fps){
   let mdatPayload = 0;
   const frameSizes = [];
   for(const f of jpegFrames){ frameSizes.push(f.byteLength); mdatPayload += f.byteLength; }
+  const hasAudio = pcmData && pcmData.byteLength > 0;
+  const audioBytes = hasAudio ? pcmData.byteLength : 0;
+  const totalMdat = mdatPayload + audioBytes;
   const ftypLen = 20, mdatHdr = 8;
   const frameOffsets = [];
   let fOff = ftypLen + mdatHdr;
   for(const sz of frameSizes){ frameOffsets.push(fOff); fOff += sz; }
+  const audioFileOffset = ftypLen + mdatHdr + mdatPayload;
 
   const cat = (...a) => { let l=0; for(const x of a) l+=x.byteLength; const o=new Uint8Array(l); let p=0; for(const x of a){o.set(x,p);p+=x.byteLength;} return o; };
   const u32 = v => new Uint8Array([(v>>>24)&0xff,(v>>>16)&0xff,(v>>>8)&0xff,v&0xff]);
@@ -4288,7 +4292,7 @@ function buildMjpegMov(jpegFrames, w, h, fps){
 
   const mtx = cat(u32(0x00010000),u32(0),u32(0),u32(0),u32(0x00010000),u32(0),u32(0),u32(0),u32(0x40000000));
   const ftyp = bx("ftyp", cat(cc("qt  "),u32(0),cc("qt  ")));
-  const mvhd = fb("mvhd",0,0, cat(u32(0),u32(0),u32(timeScale),u32(movieDur),u32(0x00010000),u16(0x0100),zr(10),mtx,zr(24),u32(2)));
+  const mvhd = fb("mvhd",0,0, cat(u32(0),u32(0),u32(timeScale),u32(movieDur),u32(0x00010000),u16(0x0100),zr(10),mtx,zr(24),u32(hasAudio?3:2)));
   const tkhd = fb("tkhd",0,3, cat(u32(0),u32(0),u32(1),u32(0),u32(movieDur),zr(8),u16(0),u16(0),u16(0),u16(0),mtx,u32(w*65536),u32(h*65536)));
   const mdhd = fb("mdhd",0,0, cat(u32(0),u32(0),u32(timeScale),u32(movieDur),u16(0x55C4),u16(0)));
   const hdlr = fb("hdlr",0,0, cat(u32(0),cc("vide"),zr(12),cc("VideoHandler\0")));
@@ -4306,14 +4310,38 @@ function buildMjpegMov(jpegFrames, w, h, fps){
   const minf = bx("minf", cat(vmhd,dinf,stbl));
   const mdia = bx("mdia", cat(mdhd,hdlr,minf));
   const trak = bx("trak", cat(tkhd,mdia));
-  const moov = bx("moov", cat(mvhd,trak));
-  const mdH = cat(u32(mdatHdr+mdatPayload),cc("mdat"));
 
-  const file = new Uint8Array(ftypLen+mdatHdr+mdatPayload+moov.byteLength);
+  let audioTrak = new Uint8Array(0);
+  if(hasAudio){
+    const totalSamples = audioBytes / (audioCh * 2);
+    const aTkhd = fb("tkhd",0,3, cat(u32(0),u32(0),u32(2),u32(0),u32(movieDur),zr(8),u16(0),u16(0),u16(0x0100),u16(0),mtx,u32(0),u32(0)));
+    const aMdhd = fb("mdhd",0,0, cat(u32(0),u32(0),u32(audioRate),u32(totalSamples),u16(0x55C4),u16(0)));
+    const aHdlr = fb("hdlr",0,0, cat(u32(0),cc("soun"),zr(12),cc("SoundHandler\0")));
+    const aSmhd = fb("smhd",0,0, cat(u16(0),u16(0)));
+    const aUrlE = fb("url ",0,1,zr(0));
+    const aDref = fb("dref",0,0, cat(u32(1),aUrlE));
+    const aDinf = bx("dinf", aDref);
+    const sowtE = bx("sowt", cat(zr(6),u16(1),u16(0),u16(0),u32(0),u16(audioCh),u16(16),u16(0),u16(0),u16(audioRate),u16(0)));
+    const aStsd = fb("stsd",0,0, cat(u32(1),sowtE));
+    const aStts = fb("stts",0,0, cat(u32(1),u32(totalSamples),u32(1)));
+    const aStsc = fb("stsc",0,0, cat(u32(1),u32(1),u32(totalSamples),u32(1)));
+    const aStsz = fb("stsz",0,0, cat(u32(audioCh*2),u32(totalSamples)));
+    const aStco = fb("stco",0,0, cat(u32(1),u32(audioFileOffset)));
+    const aStbl = bx("stbl", cat(aStsd,aStts,aStsc,aStsz,aStco));
+    const aMinf = bx("minf", cat(aSmhd,aDinf,aStbl));
+    const aMdia = bx("mdia", cat(aMdhd,aHdlr,aMinf));
+    audioTrak = bx("trak", cat(aTkhd,aMdia));
+  }
+
+  const moov = bx("moov", cat(mvhd,trak,audioTrak));
+  const mdH = cat(u32(mdatHdr+totalMdat),cc("mdat"));
+
+  const file = new Uint8Array(ftypLen+mdatHdr+totalMdat+moov.byteLength);
   let p = 0;
   file.set(ftyp,p); p+=ftyp.byteLength;
   file.set(mdH,p); p+=mdH.byteLength;
   for(const f of jpegFrames){ file.set(f,p); p+=f.byteLength; }
+  if(hasAudio){ file.set(pcmData,p); p+=pcmData.byteLength; }
   file.set(moov,p);
   return file;
 }
@@ -4351,9 +4379,42 @@ async function playReelMjpeg(W, H, total){
     await new Promise(r => setTimeout(r, 0));
   }
 
+  $("status").textContent = "● Préparation audio…";
+  const SAMPLE_RATE = 48000, CHANNELS = 2;
+  let pcmAudio = null;
+  try {
+    const audioCtx = new OfflineAudioContext(CHANNELS, Math.ceil(total/1000*SAMPLE_RATE), SAMPLE_RATE);
+    const timings = []; let acc=0;
+    for(const s of state.images){ const dur=slideDur(s); timings.push({slide:s,startMs:acc,durMs:dur}); acc+=dur; }
+    let hasSource = false;
+    for(const {slide,startMs,durMs} of timings){
+      if(!slide.videoFile||slide.template!=="post-video") continue;
+      try {
+        const ab = await slide.videoFile.arrayBuffer();
+        const buf = await audioCtx.decodeAudioData(ab);
+        const src = audioCtx.createBufferSource();
+        src.buffer = buf; src.connect(audioCtx.destination);
+        src.start(startMs/1000, 0, Math.min(buf.duration, durMs/1000));
+        hasSource = true;
+      } catch(e){}
+    }
+    if(hasSource){
+      const mixed = await audioCtx.startRendering();
+      if(mixed && mixed.length > 0){
+        const ns = mixed.length;
+        const pcm = new Int16Array(ns * CHANNELS);
+        for(let i=0;i<ns;i++) for(let ch=0;ch<CHANNELS;ch++){
+          const v = mixed.getChannelData(ch)[i];
+          pcm[i*CHANNELS+ch] = Math.max(-32768, Math.min(32767, Math.round(v*32767)));
+        }
+        pcmAudio = new Uint8Array(pcm.buffer);
+      }
+    }
+  } catch(e){}
+
   $("status").textContent = "● Construction de la vidéo…";
   await new Promise(r => setTimeout(r, 50));
-  const movData = buildMjpegMov(jpegFrames, W, H, FPS);
+  const movData = buildMjpegMov(jpegFrames, W, H, FPS, pcmAudio, SAMPLE_RATE, CHANNELS);
   const blob = new Blob([movData], {type:"video/quicktime"});
   resetReelUI(); playing = false;
   deliverVideo(blob, "mov");
