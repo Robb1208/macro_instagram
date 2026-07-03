@@ -4471,7 +4471,7 @@ async function playReel(record){
   $("dlReel").disabled = true; $("previewReel").disabled = true;
   $("status").textContent = "● Préparation audio…";
 
-  const FPS = 30;
+  const FPS = 60;
   const frameDur = 1000 / FPS;
   const totalFrames = Math.ceil(total / frameDur);
   const SAMPLE_RATE = 48000;
