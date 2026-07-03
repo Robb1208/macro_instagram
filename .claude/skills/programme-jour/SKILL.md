@@ -74,7 +74,7 @@ Une slide par jeu, template `programme`, format `story`, horaires CET/CEST, tags
       "title": "*League of Legends*",
       "desc": "MSI 2026 · Play-In Day 3",
       "showDesc": true,
-      "matches": "##mardi 30 juin\n05:00 KC vs T1 BO5\n10:00 DCG vs TL BO5",
+      "matches": "##MSI 2026\n05:00 Karmine Corp vs T1 BO5\n10:00 Disguised vs Team Liquid BO5",
       "showBgImage": false,
       "game": "lol"
     }
@@ -82,9 +82,9 @@ Une slide par jeu, template `programme`, format `story`, horaires CET/CEST, tags
 }
 ```
 
-**IMPORTANT** : le champ `matches` doit toujours commencer par `##jour JJ mois` (ex: `##mardi 30 juin`) suivi d'un `\n` puis de la liste des matchs. Sans ce `##date`, rien ne s'affiche sur la slide.
+**IMPORTANT** : le champ `matches` doit toujours commencer par `##Compétition/Tournoi` (ex: `##MSI 2026`, `##LEC Summer 2026`, `##BLAST Premier`) suivi d'un `\n` puis de la liste des matchs. Sans ce `##titre`, rien ne s'affiche sur la slide.
 
-Format matches : `HH:MM Tag1 vs Tag2 BOx` — un par ligne, trié par heure. Ordre slides : LoL → CS2 → Valorant → RL → autres.
+Format matches : `HH:MM Nom complet équipe 1 vs Nom complet équipe 2 BOx` — un par ligne, trié par heure. Toujours utiliser les noms complets des équipes (ex: "Karmine Corp" et non "KC", "Team Liquid" et non "TL"). Ordre slides : LoL → CS2 → Valorant → RL → autres.
 
 ## Livraison
 
