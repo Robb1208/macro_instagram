@@ -57,6 +57,26 @@ Joueur2 / Rôle / Note
 - **lineupCount** : nombre de joueurs (5 pour LoL/Valorant/CS2, 3 pour RL)
 - **lineupTeamRating** : note globale de l'équipe (moyenne arrondie ou pondérée)
 
+#### Icônes de rôle (LoL)
+Les icônes `LOGOS_ROLES/*.webp` s'affichent automatiquement si le rôle correspond à un nom reconnu. **Toujours utiliser ces noms exacts** dans le champ rôle :
+
+| Rôle | Nom à utiliser | Aliases aussi reconnus |
+|------|---------------|----------------------|
+| Top | `Top` | — |
+| Jungle | `Jgl` | `Jungle`, `Jungler` |
+| Mid | `Mid` | — |
+| Bot / ADC | `Bot` | `ADC`, `Bottom` |
+| Support | `Support` | `Supp`, `Sup` |
+
+Exemple LoL :
+```
+Zeus / Top / 7.5
+Oner / Jgl / 6
+Faker / Mid / 8.5
+Gumayusi / Bot / 7
+Keria / Support / 8
+```
+
 #### Barème de notation indicatif
 | Note | Signification |
 |------|--------------|
@@ -240,7 +260,7 @@ Le ZIP doit être créé dans le dossier Downloads de l'utilisateur (`C:\Users\r
       "framedImage": false,
       "dur": null,
       "game": null,
-      "lineup": "Joueur1 / Role / Note\nJoueur2 / Role / Note\nJoueur3 / Role / Note\nJoueur4 / Role / Note\nJoueur5 / Role / Note",
+      "lineup": "Joueur1 / Top / Note\nJoueur2 / Jgl / Note\nJoueur3 / Mid / Note\nJoueur4 / Bot / Note\nJoueur5 / Support / Note",
       "lineupCount": 5,
       "lineupTeamRating": "6",
       "bracket": "",
