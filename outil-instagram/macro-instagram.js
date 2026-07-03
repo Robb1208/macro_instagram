@@ -1719,7 +1719,7 @@ function drawLayoutMVP(W,H,c,scale,pad,maxW,acc,hi){
   goldGlow.addColorStop(1, `rgba(${gc.r},${gc.g},${gc.b},0)`);
   ctx.fillStyle = goldGlow; ctx.fillRect(0,0,W,H);
 
-  // badge pill (centered)
+  // badge pill — drawn later, just above stats
   const pillF = Math.round(20*scale);
   ctx.font = `800 ${pillF}px Sora, sans-serif`;
   const mvpLabel = isMvpBadge ? "MVP DU MATCH" : "MACRO";
@@ -1727,8 +1727,40 @@ function drawLayoutMVP(W,H,c,scale,pad,maxW,acc,hi){
   const pillPadX = Math.round(24*scale), pillPadY = Math.round(10*scale);
   const pillW = pillTW + pillPadX*2;
   const pillH = pillF + pillPadY*2;
-  const pillX = W/2 - pillW/2;
-  const pillY = Math.round(232*scale);
+
+  // bottom text — massive title for player name
+  const eyeF = Math.round(22*scale);
+  const titleF = Math.round((state.format==="story"||state.reel?180:165)*scale*sVal("titleScale"));
+  const descF = Math.round(28*scale*sVal("descScale"));
+  const titleLH = Math.round(titleF*1.04);
+  const titleFont = `800 ${titleF}px Sora, sans-serif`;
+  const eyebrow = (c.eyebrow||"").toUpperCase();
+  const titleLines = wrapRich(richWords(c.title), titleFont, maxW);
+  const result = c.matchResult || "";
+
+  // stats
+  const stats = parseStats(c.stats);
+  const statBoxH = Math.round(110*scale);
+  const statBoxGap = Math.round(16*scale);
+  const statBoxR = Math.round(18*scale);
+  const statValueF = Math.round(48*scale);
+  const statLabelF = Math.round(21*scale);
+  const showStats = stats.length >= 1;
+
+  // layout from bottom
+  const dragOffset = ((c.textY||0)*scale) + (c.textDrag||0);
+  let bottomEdge = H - pad + dragOffset;
+  let statsY = bottomEdge;
+  if(showStats){
+    statsY = bottomEdge - statBoxH;
+    bottomEdge = statsY - Math.round(16*scale);
+  }
+
+  // badge pill — just above stats
+  const pillGap = Math.round(20*scale);
+  const pillX = pad;
+  const pillY = bottomEdge - pillH;
+  bottomEdge = pillY - pillGap;
 
   ctx.save();
   ctx.shadowColor = "rgba(0,0,0,0.5)"; ctx.shadowBlur = 16*scale;
@@ -1754,34 +1786,6 @@ function drawLayoutMVP(W,H,c,scale,pad,maxW,acc,hi){
   drawSpaced(mvpLabel, pillX + (pillW - spacedW)/2, pillY+pillH/2, pillF*0.2);
   ctx.textBaseline = "alphabetic";
 
-  // bottom text
-  const eyeF = Math.round(22*scale);
-  const titleF = Math.round((state.format==="story"||state.reel?80:72)*scale*sVal("titleScale"));
-  const descF = Math.round(28*scale*sVal("descScale"));
-  const titleLH = Math.round(titleF*1.04);
-  const titleFont = `800 ${titleF}px Sora, sans-serif`;
-  const eyebrow = (c.eyebrow||"").toUpperCase();
-  const titleLines = wrapRich(richWords(c.title), titleFont, maxW);
-  const result = c.matchResult || "";
-
-  // stats
-  const stats = parseStats(c.stats);
-  const statBoxH = Math.round(110*scale);
-  const statBoxGap = Math.round(16*scale);
-  const statBoxR = Math.round(18*scale);
-  const statValueF = Math.round(48*scale);
-  const statLabelF = Math.round(21*scale);
-  const showStats = stats.length >= 1;
-
-  // layout from bottom
-  const dragOffset = ((c.textY||0)*scale) + (c.textDrag||0);
-  let bottomEdge = H - pad + dragOffset;
-  let statsY = bottomEdge;
-  if(showStats){
-    statsY = bottomEdge - statBoxH;
-    bottomEdge = statsY - Math.round(24*scale);
-  }
-
   // result line
   if(result){
     ctx.font = `500 ${descF}px Manrope, sans-serif`;
@@ -1790,7 +1794,7 @@ function drawLayoutMVP(W,H,c,scale,pad,maxW,acc,hi){
     bottomEdge -= descF + Math.round(18*scale);
   }
 
-  // title
+  // title (player name — big)
   const accentLineH = Math.round(4*scale);
   const gapLine = Math.round(14*scale);
   const gapEye = Math.round(14*scale);
@@ -1799,6 +1803,50 @@ function drawLayoutMVP(W,H,c,scale,pad,maxW,acc,hi){
   let y = bottomEdge - titleLines.length*titleLH;
 
   ctx.textBaseline = "top";
+
+  // measure title block width for curve positioning
+  ctx.font = titleFont;
+  let titleBlockW = 0;
+  for(const ln of titleLines){
+    const sp = ctx.measureText(" ").width;
+    let lw = 0;
+    ln.forEach((word,i)=>{ if(i>0) lw += sp; lw += measureTextWithFlags(word.text); });
+    if(lw > titleBlockW) titleBlockW = lw;
+  }
+  const titleBlockH = titleLines.length * titleLH;
+
+  // decorative MVP curves — simple smooth arcs
+  ctx.save();
+  const cy0 = y + titleBlockH * 0.45;
+  // curve 1: single smooth arc, bottom-left to top-right
+  ctx.beginPath();
+  ctx.moveTo(-Math.round(30*scale), cy0 + Math.round(180*scale));
+  ctx.quadraticCurveTo(
+    W * 0.5, cy0 - Math.round(140*scale),
+    W + Math.round(50*scale), cy0 - Math.round(100*scale)
+  );
+  ctx.strokeStyle = rgba(gold, 0.28); ctx.lineWidth = Math.max(2.5, 3*scale); ctx.lineCap = "round";
+  ctx.shadowColor = rgba(gold, 0.4); ctx.shadowBlur = 16*scale;
+  ctx.stroke();
+  // curve 2: single smooth arc, top-right to bottom-left
+  ctx.beginPath();
+  ctx.moveTo(W + Math.round(40*scale), cy0 - Math.round(160*scale));
+  ctx.quadraticCurveTo(
+    W * 0.45, cy0 + Math.round(120*scale),
+    -Math.round(40*scale), cy0 + Math.round(60*scale)
+  );
+  ctx.strokeStyle = rgba(gold, 0.15); ctx.lineWidth = Math.max(1.5, 2*scale);
+  ctx.shadowColor = rgba(gold, 0.25); ctx.shadowBlur = 10*scale;
+  ctx.stroke();
+  ctx.restore();
+
+  // glow pass behind title — gold tinted
+  ctx.save();
+  ctx.shadowColor = rgba(gold, 0.9); ctx.shadowBlur = 160*scale; ctx.shadowOffsetY = 0;
+  for(const ln of titleLines){ drawRichLine(ln, pad, y, titleFont, "rgba(0,0,0,0.01)", "rgba(0,0,0,0.01)"); y += titleLH; }
+  ctx.restore();
+  y = bottomEdge - titleLines.length*titleLH;
+  // actual title text
   ctx.shadowColor = "rgba(0,0,0,0.35)"; ctx.shadowBlur = 12; ctx.shadowOffsetY = 2;
   for(const ln of titleLines){ drawRichLine(ln, pad, y, titleFont, gold, "#ffffff"); y += titleLH; }
   ctx.shadowColor = "transparent"; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
@@ -3164,7 +3212,7 @@ function syncInputs(){
   show("footerRow", tpl==="programme" || tpl==="sondage" || tpl==="tierlist");
   show("pollRow", tpl==="sondage");
   show("tiersRow", tpl==="tierlist");
-  show("playerNameRow", tpl==="citation" || tpl==="mvp");
+  show("playerNameRow", tpl==="citation");
   show("playerRoleRow", tpl==="citation");
   show("matchResultRow", tpl==="mvp");
   show("mvpBadgeRow", tpl==="mvp");
