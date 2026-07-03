@@ -1825,8 +1825,8 @@ function drawLayoutMVP(W,H,c,scale,pad,maxW,acc,hi){
     W * 0.5, cy0 - Math.round(140*scale),
     W + Math.round(50*scale), cy0 - Math.round(100*scale)
   );
-  ctx.strokeStyle = rgba(gold, 0.28); ctx.lineWidth = Math.max(2.5, 3*scale); ctx.lineCap = "round";
-  ctx.shadowColor = rgba(gold, 0.4); ctx.shadowBlur = 16*scale;
+  ctx.strokeStyle = rgba(gold, 0.7); ctx.lineWidth = Math.max(3.5, 5*scale); ctx.lineCap = "round";
+  ctx.shadowColor = rgba(gold, 0.85); ctx.shadowBlur = 40*scale;
   ctx.stroke();
   // curve 2: single smooth arc, top-right to bottom-left
   ctx.beginPath();
@@ -1835,17 +1835,36 @@ function drawLayoutMVP(W,H,c,scale,pad,maxW,acc,hi){
     W * 0.45, cy0 + Math.round(120*scale),
     -Math.round(40*scale), cy0 + Math.round(60*scale)
   );
-  ctx.strokeStyle = rgba(gold, 0.15); ctx.lineWidth = Math.max(1.5, 2*scale);
-  ctx.shadowColor = rgba(gold, 0.25); ctx.shadowBlur = 10*scale;
+  ctx.strokeStyle = rgba(gold, 0.45); ctx.lineWidth = Math.max(2.5, 3.5*scale);
+  ctx.shadowColor = rgba(gold, 0.65); ctx.shadowBlur = 30*scale;
   ctx.stroke();
   ctx.restore();
 
-  // glow pass behind title — gold tinted
-  ctx.save();
-  ctx.shadowColor = rgba(gold, 0.9); ctx.shadowBlur = 160*scale; ctx.shadowOffsetY = 0;
-  for(const ln of titleLines){ drawRichLine(ln, pad, y, titleFont, "rgba(0,0,0,0.01)", "rgba(0,0,0,0.01)"); y += titleLH; }
-  ctx.restore();
-  y = bottomEdge - titleLines.length*titleLH;
+  // radial glow behind title — gold halo
+  const glowCx = pad + titleBlockW * 0.5;
+  const glowCy = y + titleBlockH * 0.5;
+  const glowR = Math.max(titleBlockW, titleBlockH) * 0.8;
+  const titleGlow = ctx.createRadialGradient(glowCx, glowCy, 0, glowCx, glowCy, glowR);
+  const gc2 = hexToRgb(gold);
+  titleGlow.addColorStop(0, `rgba(${gc2.r},${gc2.g},${gc2.b},0.18)`);
+  titleGlow.addColorStop(0.4, `rgba(${gc2.r},${gc2.g},${gc2.b},0.08)`);
+  titleGlow.addColorStop(1, `rgba(${gc2.r},${gc2.g},${gc2.b},0)`);
+  ctx.fillStyle = titleGlow;
+  ctx.fillRect(glowCx - glowR, glowCy - glowR, glowR*2, glowR*2);
+
+  // team logo watermark behind title
+  const eyebrowText = (c.eyebrow||"").trim();
+  const teamLogo = findTeamLogo(eyebrowText);
+  if(teamLogo){
+    ctx.save();
+    ctx.globalAlpha = 0.1;
+    const logoSize = Math.round(titleBlockH * 2.2);
+    const lx = pad + titleBlockW - logoSize * 0.5;
+    const ly = y + titleBlockH * 0.5 - logoSize * 0.5;
+    ctx.drawImage(teamLogo, lx, ly, logoSize, logoSize);
+    ctx.restore();
+  }
+
   // actual title text
   ctx.shadowColor = "rgba(0,0,0,0.35)"; ctx.shadowBlur = 12; ctx.shadowOffsetY = 2;
   for(const ln of titleLines){ drawRichLine(ln, pad, y, titleFont, gold, "#ffffff"); y += titleLH; }
@@ -1876,6 +1895,11 @@ function drawLayoutMVP(W,H,c,scale,pad,maxW,acc,hi){
       roundRectPath(bx, statsY, boxW, statBoxH, statBoxR); ctx.fill();
       ctx.strokeStyle = isHi ? rgba(gold, 0.2) : "#16212a"; ctx.lineWidth = Math.max(1, 1.5*scale);
       roundRectPath(bx, statsY, boxW, statBoxH, statBoxR); ctx.stroke();
+      // gold accent line at bottom of stat box
+      const lineH = Math.round(3*scale);
+      const lineInset = Math.round(12*scale);
+      ctx.fillStyle = isHi ? gold : rgba(gold, 0.4);
+      roundRectPath(bx + lineInset, statsY + statBoxH - lineH - Math.round(2*scale), boxW - lineInset*2, lineH, lineH/2); ctx.fill();
       ctx.font = `600 ${statValueF}px 'JetBrains Mono', monospace`;
       ctx.fillStyle = isHi ? gold : "#ffffff";
       ctx.textAlign = "center"; ctx.textBaseline = "top";
@@ -1887,6 +1911,16 @@ function drawLayoutMVP(W,H,c,scale,pad,maxW,acc,hi){
       bx += boxW + statBoxGap;
     }
   }
+  // thin border around entire canvas
+  const borderInset = Math.round(8*scale);
+  const borderR = Math.round(12*scale);
+  ctx.strokeStyle = rgba(gold, 0.2);
+  ctx.lineWidth = Math.max(1, 1.5*scale);
+  ctx.shadowColor = rgba(gold, 0.15); ctx.shadowBlur = 6*scale;
+  roundRectPath(borderInset, borderInset, W - borderInset*2, H - borderInset*2, borderR);
+  ctx.stroke();
+  ctx.shadowColor = "transparent"; ctx.shadowBlur = 0;
+
   lastTextBox = null;
 }
 
