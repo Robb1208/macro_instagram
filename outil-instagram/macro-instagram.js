@@ -3954,6 +3954,7 @@ function applyJsonPreset(data, imageFiles){
     slide.photoCredit = s.photoCredit || "";
     slide.showBgImage = s.showBgImage !== false;
     slide.framedImage = !!s.framedImage;
+    slide.dualImage = !!s.dualImage;
     slide.dur = s.dur || null;
     slide.game = s.game || null;
     slide.lineup = s.lineup || "";
@@ -3991,6 +3992,24 @@ function applyJsonPreset(data, imageFiles){
         };
         img.onerror = ()=>{ pending--; if(pending === 0) finalize(); };
         img.src = URL.createObjectURL(file);
+      }
+    }
+    const img2Name = s.image2;
+    if(img2Name){
+      const file2 = imgMap[img2Name.toLowerCase()];
+      if(file2){
+        pending++;
+        const idx2 = i;
+        const img2 = new Image();
+        img2.crossOrigin = "anonymous";
+        img2.onload = ()=>{
+          state.images[idx2].img2 = img2;
+          state.images[idx2].name2 = file2.name;
+          pending--;
+          if(pending === 0) finalize();
+        };
+        img2.onerror = ()=>{ pending--; if(pending === 0) finalize(); };
+        img2.src = URL.createObjectURL(file2);
       }
     }
   }
@@ -4183,7 +4202,7 @@ $("dlJson").onclick = ()=>{
       matches: s.matches, footerText: s.footerText, pollOptions: s.pollOptions, pollWinner: s.pollWinner,
       statHighlight: s.statHighlight, tiers: s.tiers, playerName: s.playerName, playerRole: s.playerRole,
       transferBadge: s.transferBadge, matchResult: s.matchResult, mvpBadge: s.mvpBadge,
-      photoCredit: s.photoCredit, showBgImage: s.showBgImage, framedImage: s.framedImage,
+      photoCredit: s.photoCredit, showBgImage: s.showBgImage, framedImage: s.framedImage, dualImage: s.dualImage,
       dur: s.dur, game: s.game, lineup: s.lineup, lineupCount: s.lineupCount,
       lineupTeamRating: s.lineupTeamRating, bracket: s.bracket, bracketFormat: s.bracketFormat, bracketWinnerLabel: s.bracketWinnerLabel, bracketDates: s.bracketDates,
       planningEvents: s.planningEvents, groupes: s.groupes, groupeElim: s.groupeElim, frameY: s.frameY,
@@ -4194,6 +4213,7 @@ $("dlJson").onclick = ()=>{
     if(s.descColor!=null) sl.descColor = Math.round(s.descColor*100);
     if(s.imgBright!=null) sl.imgBright = Math.round(s.imgBright*100);
     if(s.name && s.img) sl.image = s.name;
+    if(s.dualImage && s.img2) sl.image2 = s.name2 || "";
     return sl;
   });
   const blob = new Blob([JSON.stringify(data, null, 2)], {type:"application/json"});
