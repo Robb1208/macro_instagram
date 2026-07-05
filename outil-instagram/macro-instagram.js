@@ -999,26 +999,28 @@ function drawLayoutClassement(W,H,c,scale,pad,maxW,acc,hi){
   const teams = parseStandings(c.standings);
   if(!teams.length){ lastTextBox=null; return; }
   const relLine = c.relegationLine || 0;
-  const rowH = Math.round(46*scale);
+  const rowH = Math.round(74*scale);
   const headerH = Math.round(32*scale);
   const tableY = y + Math.round(24*scale);
-  const numW = Math.round(32*scale);
+  const rankColW = Math.round(46*scale);
+  const logoSize = Math.round(44*scale);
+  const logoGap = Math.round(14*scale);
   const recW = Math.round(72*scale);
-  const nameX = pad + numW;
-  const recX = pad + maxW - recW;
   const rowR = Math.round(9*scale);
-  const nameF = Math.round(32*scale);
+  const nameF = Math.round(28*scale);
   const recF = Math.round(24*scale);
   const headerF = Math.round(20*scale);
+  const innerPad = Math.round(14*scale);
+  const accentBarW = Math.round(3*scale);
 
   // column headers
   ctx.font = `600 ${headerF}px 'JetBrains Mono', monospace`;
   ctx.fillStyle = "#6b7882"; ctx.textBaseline = "middle";
   const headerY = tableY + headerH/2;
-  ctx.fillText("#", pad + Math.round(14*scale), headerY);
-  ctx.fillText("Équipe", nameX + Math.round(14*scale), headerY);
+  ctx.fillText("#", pad + innerPad, headerY);
+  ctx.fillText("ÉQUIPE", pad + rankColW + innerPad, headerY);
   ctx.textAlign = "right";
-  ctx.fillText("V–D", pad + maxW - Math.round(14*scale), headerY);
+  ctx.fillText("V–D", pad + maxW - innerPad, headerY);
   ctx.textAlign = "left";
 
   let ry = tableY + headerH;
@@ -1034,6 +1036,9 @@ function drawLayoutClassement(W,H,c,scale,pad,maxW,acc,hi){
       roundRectPath(pad, ry, maxW, rowH, rowR); ctx.fill();
       ctx.strokeStyle = rgba(acc, 0.22); ctx.lineWidth = Math.max(1, 2*scale);
       roundRectPath(pad, ry, maxW, rowH, rowR); ctx.stroke();
+      // accent bar left
+      ctx.fillStyle = acc;
+      roundRectPath(pad, ry, accentBarW, rowH, Math.min(accentBarW, rowR)); ctx.fill();
     } else if(isReleg){
       if(rank===relLine){
         ctx.strokeStyle = "#16212a"; ctx.lineWidth = Math.max(1, scale);
@@ -1046,22 +1051,43 @@ function drawLayoutClassement(W,H,c,scale,pad,maxW,acc,hi){
       roundRectPath(pad, ry, maxW, rowH, rowR); ctx.fill();
     }
 
+    // subtle separator between rows (except first)
+    if(i > 0 && !isFirst && !(isReleg && rank===relLine)){
+      ctx.fillStyle = "rgba(255,255,255,0.05)";
+      ctx.fillRect(pad + innerPad, ry, maxW - innerPad*2, Math.max(1, scale));
+    }
+
     const cy = ry + rowH/2;
     // rank number
     ctx.font = `600 ${recF}px 'JetBrains Mono', monospace`;
     ctx.textBaseline = "middle";
     ctx.fillStyle = isFirst ? acc : (isReleg ? "#ff4d57" : "#9aa7b0");
-    ctx.fillText(String(rank), pad + Math.round(14*scale), cy);
-    // team name
+    ctx.fillText(String(rank), pad + innerPad, cy);
+
+    // team logo
+    const logoImg = findTeamLogo(team.name);
+    const logoX = pad + rankColW + innerPad;
+    if(logoImg){
+      ctx.drawImage(logoImg, logoX, cy - logoSize/2, logoSize, logoSize);
+    }
+    const teamNameX = logoX + (logoImg ? logoSize + logoGap : 0);
+
+    // team name (uppercase, truncated)
     ctx.font = `600 ${nameF}px Manrope, sans-serif`;
-    ctx.fillStyle = isFirst ? "#ffffff" : "#dfdfdf";
-    ctx.fillText(team.name, nameX + Math.round(14*scale), cy);
+    ctx.fillStyle = isFirst ? "#ffffff" : (isReleg ? "#8a6060" : "#dfdfdf");
+    const maxNameW = pad + maxW - innerPad - recW - teamNameX;
+    const fullName = team.name.toUpperCase();
+    let name = fullName;
+    while(ctx.measureText(name).width > maxNameW && name.length > 3) name = name.slice(0,-1);
+    if(name !== fullName) name += "…";
+    ctx.fillText(name, teamNameX, cy);
+
     // record
     if(team.record){
       ctx.font = `600 ${recF}px 'JetBrains Mono', monospace`;
       ctx.fillStyle = isFirst ? "#dfdfdf" : "#9aa7b0";
       ctx.textAlign = "right";
-      ctx.fillText(team.record, pad + maxW - Math.round(14*scale), cy);
+      ctx.fillText(team.record, pad + maxW - innerPad, cy);
       ctx.textAlign = "left";
     }
 
@@ -1973,7 +1999,7 @@ function drawLayoutLineup(W,H,c,scale,pad,maxW,acc,hi){
   const cardGap = Math.round(14*scale);
   const cardR = Math.round(16*scale);
   const teamRatingH = teamRating ? Math.round(120*scale) : 0;
-  const bottomPad = Math.round(180*scale);
+  const bottomPad = Math.round(100*scale);
   const cardsTop = headerY + Math.round(36*scale);
   const cardsBottom = H - bottomPad - teamRatingH;
   const availableH = cardsBottom - cardsTop;
