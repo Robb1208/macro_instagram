@@ -141,7 +141,7 @@ function newSlide(img, name, tpl){
            matches:"", footerText:"", pollOptions:"", pollWinner:0,
            tiers:"", playerName:"", playerRole:"", transferBadge:"officiel", matchResult:"",
            showBgImage: !!img, framedImage: false, dualImage: false, img2: null, tx2:{ox:0,oy:0}, photoCredit:"", dur: null, game: null,
-           titleScale: null, descScale: null, zoom: null, descColor: null, imgBright: null,
+           titleScale: null, descScale: null, zoom: null, zoom2: null, descColor: null, imgBright: null,
            lineup:"", lineupCount:5, lineupTeamRating:"", lineupPhotos:[],
            bracket:"", bracketFormat:"", bracketWinnerLabel:"champion", bracketDates:"", planningEvents:"", groupes:"", groupeElim:3, frameY:0, statHighlight:0, mvpBadge:"mvp" };
 }
@@ -252,6 +252,7 @@ function drawDualImage(it, W, H, zoom){
   const scale = W/1080;
   const gap = Math.round(4*scale);
   const halfW = Math.round((W - gap)/2);
+  const zoom2 = it.zoom2 != null ? it.zoom2 : zoom;
   // left image
   ctx.save();
   ctx.beginPath(); ctx.rect(0, 0, halfW, H); ctx.clip();
@@ -261,7 +262,7 @@ function drawDualImage(it, W, H, zoom){
   if(it.img2){
     ctx.save();
     ctx.beginPath(); ctx.rect(halfW + gap, 0, halfW, H); ctx.clip();
-    drawCover(it.img2, halfW + gap, 0, halfW, H, zoom, it.tx2.ox, it.tx2.oy);
+    drawCover(it.img2, halfW + gap, 0, halfW, H, zoom2, it.tx2.ox, it.tx2.oy);
     ctx.restore();
   }
   // center divider line
@@ -3972,6 +3973,7 @@ function applyJsonPreset(data, imageFiles){
     if(s.titleSize!=null) slide.titleScale = s.titleSize/100;
     if(s.descSize!=null) slide.descScale = s.descSize/100;
     if(s.zoom!=null) slide.zoom = s.zoom/100;
+    if(s.zoom2!=null) slide.zoom2 = s.zoom2/100;
     if(s.descColor!=null) slide.descColor = s.descColor/100;
     if(s.imgBright!=null) slide.imgBright = s.imgBright/100;
     state.images.push(slide);
@@ -4164,10 +4166,18 @@ window.addEventListener("touchend", endDrag);
 cv.addEventListener("wheel", e=>{
   e.preventDefault();
   const it = cur(); if(!it) return;
-  let z = sVal("zoom") + (e.deltaY<0?0.04:-0.04);
-  z = Math.max(0.5, Math.min(2.6, z));
-  it.zoom = z;
-  $("zoom").value = Math.round(z*100); $("zoomV").textContent = Math.round(z*100)+"%";
+  const p = canvasCoords(e);
+  const isDualRight = it.dualImage && it.img2 && p.x > cv.width/2;
+  if(isDualRight){
+    let z = (it.zoom2 != null ? it.zoom2 : sVal("zoom")) + (e.deltaY<0?0.04:-0.04);
+    z = Math.max(0.5, Math.min(2.6, z));
+    it.zoom2 = z;
+  } else {
+    let z = sVal("zoom") + (e.deltaY<0?0.04:-0.04);
+    z = Math.max(0.5, Math.min(2.6, z));
+    it.zoom = z;
+    $("zoom").value = Math.round(z*100); $("zoomV").textContent = Math.round(z*100)+"%";
+  }
   render();
 }, {passive:false});
 
@@ -4210,6 +4220,7 @@ $("dlJson").onclick = ()=>{
     if(s.titleScale!=null) sl.titleSize = Math.round(s.titleScale*100);
     if(s.descScale!=null) sl.descSize = Math.round(s.descScale*100);
     if(s.zoom!=null) sl.zoom = Math.round(s.zoom*100);
+    if(s.zoom2!=null) sl.zoom2 = Math.round(s.zoom2*100);
     if(s.descColor!=null) sl.descColor = Math.round(s.descColor*100);
     if(s.imgBright!=null) sl.imgBright = Math.round(s.imgBright*100);
     if(s.name && s.img) sl.image = s.name;
