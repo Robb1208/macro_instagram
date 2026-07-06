@@ -4495,7 +4495,7 @@ function buildMjpegMov(jpegFrames, w, h, fps, pcmData, audioRate, audioCh){
 async function playReelMjpeg(W, H, total){
   $("recbar").classList.add("on");
   $("dlReel").disabled = true; $("previewReel").disabled = true;
-  const FPS = 60, frameDurMs = 1000/FPS;
+  const FPS = 30, frameDurMs = 1000/FPS;
   const totalFrames = Math.ceil(total/frameDurMs);
   const jpegFrames = [];
   $("status").textContent = "● Capture des images… 0%";
@@ -4617,7 +4617,7 @@ async function playReel(record){
   $("dlReel").disabled = true; $("previewReel").disabled = true;
   $("status").textContent = "● Préparation audio…";
 
-  const FPS = 60;
+  const FPS = 30;
   const frameDur = 1000 / FPS;
   const totalFrames = Math.ceil(total / frameDur);
   const SAMPLE_RATE = 48000;
