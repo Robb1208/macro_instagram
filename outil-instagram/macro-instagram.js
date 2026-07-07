@@ -28,6 +28,17 @@ const TEMPLATES = {
 };
 
 // ═══ SECTION: TEAM LOGOS ═══
+const FR_TEAMS = new Set([
+  "VITALITY","KARMINE CORP","KC","BDS","GENTLE MATES","SOLARY","GAMEWARD",
+  "MANDATORY","JOBLIFE","LDLC","BKROG","GALIONS","MISA ESPORT","ZERANCE",
+  "3DMAX","FOG ESPORT","LYON","PARIS M8","OG","BOOSTGATE","SIKO",
+  "ULF ESPORT","BSK","ICI JAPON","PHANTASMA"
+]);
+function isFrenchTeam(name){
+  if(!name) return false;
+  const key = name.toUpperCase().replace(/[_\s]+/g," ").trim();
+  return FR_TEAMS.has(key);
+}
 const teamLogos = {};
 let logosReady = false;
 (async function loadLogos(){
@@ -47,9 +58,66 @@ let logosReady = false;
   } catch(e){ logosReady=true; }
 })();
 
+const TEAM_ALIASES = {
+  "KARMINE CORP":"KC","KARMINE":"KC","KCORP":"KC",
+  "TEAM VITALITY":"VITALITY","VIT":"VITALITY",
+  "TEAM BDS":"BDS",
+  "GENTLE MATES":"GENTLE MATES","GEN":"GENTLE MATES","GMATES":"GENTLE MATES",
+  "G2 ESPORTS":"G2","G2 HERETICS":"G2",
+  "TEAM LIQUID":"LIQUID","TL":"LIQUID",
+  "CLOUD9":"CLOUD 9","C9":"CLOUD 9",
+  "NATUS VINCERE":"NAVI","NA'VI":"NAVI",
+  "100 THIEVES":"100 THIEVES","100T":"100 THIEVES",
+  "TEAM HERETICS":"HERETICS",
+  "FNATIC":"FNATIC","FNC":"FNATIC",
+  "FAZE CLAN":"FAZE",
+  "NINJAS IN PYJAMAS":"NIP",
+  "VIRTUS PRO":"VIRTUSPRO","VP":"VIRTUSPRO",
+  "TEAM SECRET":"TEAM SECRET","TS":"TEAM SECRET",
+  "PAPER REX":"PAPER REX","PRX":"PAPER REX",
+  "GEN G":"GENG","GEN.G":"GENG",
+  "T1":"T1","SK TELECOM":"T1","SKT":"T1",
+  "DRX":"DRX","DRAGON X":"DRX",
+  "HANWHA LIFE":"HLE","HANWHA":"HLE",
+  "KT ROLSTER":"KTROLSTER","KT":"KTROLSTER",
+  "TOP ESPORTS":"TOP ESPORT","TES":"TOP ESPORT",
+  "JD GAMING":"JDG","JDG":"JDG",
+  "EDWARD GAMING":"EDG",
+  "BILIBILI GAMING":"BLG",
+  "WEIBO GAMING":"WEIBO","WBG":"WEIBO",
+  "LNG ESPORTS":"LNG",
+  "LOUD":"LOUD",
+  "FURIA":"FURIA","FURIA ESPORTS":"FURIA",
+  "MIBR":"MIBR",
+  "PAIN GAMING":"PAIN","PAIN":"PAIN",
+  "SENTINELS":"SENTINELS","SEN":"SENTINELS",
+  "NRG":"NRG","NRG ESPORTS":"NRG",
+  "LEVIATAN":"LEVIATAN","LEV":"LEVIATAN",
+  "KRÜ ESPORTS":"KRÜ ESPORTS","KRU":"KRÜ ESPORTS","KRÜ":"KRÜ ESPORTS",
+  "TEAM FALCONS":"FALCONS",
+  "MOUZ":"MOUZ","MOUSESPORTS":"MOUZ",
+  "HEROIC":"HEROIC",
+  "SPIRIT":"SPIRIT","TEAM SPIRIT":"SPIRIT",
+  "ASTRALIS":"ASTRALIS",
+  "COMPLEXITY":"COMPLEXITY","COL":"COMPLEXITY",
+  "GAMER LEGION":"GAMERLEGION","GL":"GAMERLEGION",
+  "BIG":"BIG",
+  "FLYQUEST":"FLYQUEST","FLY":"FLYQUEST",
+  "DPLUS":"DPLUS","DPLUS KIA":"DPLUS","DK":"DPLUS",
+  "FREECS":"FREECS","KWANGDONG FREECS":"FREECS","KDF":"FREECS",
+  "PSG TALON":"PSG TALON","PSG":"PSG TALON",
+  "GAM ESPORTS":"GAM","GAM":"GAM",
+  "SOLARY":"SOLARY",
+  "GAMEWARD":"GAMEWARD","GW":"GAMEWARD",
+  "MANDATORY":"MANDATORY",
+  "JOBLIFE":"JOBLIFE","JBL":"JOBLIFE",
+  "BKROG":"BKROG","BK ROG":"BKROG",
+  "SK GAMING":"SK","SK":"SK",
+};
 function findTeamLogo(name){
   if(!name) return null;
-  const key = name.toUpperCase().replace(/[_\s]+/g," ").trim();
+  let key = name.toUpperCase().replace(/[_\s]+/g," ").trim();
+  if(TEAM_ALIASES[key]) key = TEAM_ALIASES[key];
   if(teamLogos[key]) return teamLogos[key];
   for(const k in teamLogos){
     if(k.includes(key) || key.includes(k)) return teamLogos[k];
@@ -1255,15 +1323,22 @@ function drawLayoutProgramme(W,H,c,scale,pad,maxW,acc,hi){
   const rowR = Math.round(16*scale);
   const rowGap = Math.round(10*scale);
 
+  const accentBarW = Math.round(4*scale);
+  const vsDiamondSize = Math.round(13*scale);
+
   for(const day of days){
-    // day header
-    ctx.font = `700 ${dateF}px Sora, sans-serif`;
-    ctx.fillStyle = "#ffffff"; ctx.textBaseline = "middle";
-    const dateW = ctx.measureText(day.date).width;
+    // day header — dot accent + date in accent color
+    const dotR = Math.round(5*scale);
     const hdrY = y + Math.round(16*scale);
-    ctx.fillText(day.date, pad, hdrY);
-    ctx.strokeStyle = "#16212a"; ctx.lineWidth = Math.max(1, scale);
-    ctx.beginPath(); ctx.moveTo(pad+dateW+Math.round(14*scale), hdrY); ctx.lineTo(pad+maxW, hdrY); ctx.stroke();
+    ctx.fillStyle = acc;
+    ctx.beginPath(); ctx.arc(pad + dotR, hdrY, dotR, 0, Math.PI*2); ctx.fill();
+    ctx.font = `700 ${dateF}px Sora, sans-serif`;
+    ctx.fillStyle = acc; ctx.textBaseline = "middle";
+    const dateLabelX = pad + dotR*2 + Math.round(10*scale);
+    ctx.fillText(day.date, dateLabelX, hdrY);
+    const dateW = ctx.measureText(day.date).width;
+    ctx.strokeStyle = rgba(acc, 0.15); ctx.lineWidth = Math.max(1, scale);
+    ctx.beginPath(); ctx.moveTo(dateLabelX+dateW+Math.round(14*scale), hdrY); ctx.lineTo(pad+maxW, hdrY); ctx.stroke();
     const countF = Math.round(18*scale);
     ctx.font = `500 ${countF}px 'JetBrains Mono', monospace`;
     ctx.fillStyle = "#6b7882"; ctx.textAlign = "right";
@@ -1273,49 +1348,123 @@ function drawLayoutProgramme(W,H,c,scale,pad,maxW,acc,hi){
 
     for(const match of day.matches){
       // match card
-      ctx.fillStyle = "rgba(255,255,255,0.03)";
+      const hasFR = isFrenchTeam(match.teamA) || isFrenchTeam(match.teamB);
+      ctx.save();
+      if(hasFR){
+        const frGrad = ctx.createLinearGradient(pad, y, pad+maxW, y);
+        frGrad.addColorStop(0, rgba(acc, 0.12));
+        frGrad.addColorStop(0.5, rgba(acc, 0.04));
+        frGrad.addColorStop(1, "rgba(255,255,255,0.02)");
+        ctx.fillStyle = frGrad;
+      } else {
+        ctx.fillStyle = "rgba(255,255,255,0.03)";
+      }
       roundRectPath(pad, y, maxW, rowH, rowR); ctx.fill();
-      ctx.strokeStyle = "#16212a"; ctx.lineWidth = Math.max(1, Math.round(1.5*scale));
+      ctx.strokeStyle = hasFR ? rgba(acc, 0.2) : "#16212a"; ctx.lineWidth = Math.max(1, Math.round(1.5*scale));
       roundRectPath(pad, y, maxW, rowH, rowR); ctx.stroke();
+
+      // accent bar left with glow
+      ctx.beginPath();
+      roundRectPath(pad, y, accentBarW, rowH, rowR);
+      ctx.clip();
+      ctx.shadowColor = acc; ctx.shadowBlur = Math.round(12*scale); ctx.shadowOffsetX = Math.round(4*scale);
+      ctx.fillStyle = acc;
+      ctx.fillRect(pad, y, accentBarW, rowH);
+      ctx.shadowColor = "transparent"; ctx.shadowBlur = 0; ctx.shadowOffsetX = 0;
+      ctx.restore();
 
       const cy = y + rowH/2;
       const innerPad = Math.round(24*scale);
 
-      // time
+      // time pill
       if(match.time){
         ctx.font = `600 ${timeF}px 'JetBrains Mono', monospace`;
+        const timeTxt = match.time;
+        const timeTxtW = ctx.measureText(timeTxt).width;
+        const tPillPadX = Math.round(10*scale);
+        const tPillPadY = Math.round(6*scale);
+        const tPillW = timeTxtW + tPillPadX*2;
+        const tPillH = timeF + tPillPadY*2;
+        const tPillX = pad + innerPad;
+        const tPillY = cy - tPillH/2;
+        const tPillR = Math.round(6*scale);
+        ctx.fillStyle = "rgba(255,255,255,0.04)";
+        roundRectPath(tPillX, tPillY, tPillW, tPillH, tPillR); ctx.fill();
+        ctx.strokeStyle = rgba(acc, 0.25); ctx.lineWidth = Math.max(1, scale);
+        roundRectPath(tPillX, tPillY, tPillW, tPillH, tPillR); ctx.stroke();
         ctx.fillStyle = "#dfdfdf"; ctx.textBaseline = "middle";
-        ctx.fillText(match.time, pad+innerPad, cy);
+        ctx.fillText(timeTxt, tPillX + tPillPadX, cy);
       }
 
-      // teams centered
+      // teams centered with logos
       const teamFont = `700 ${matchF}px Sora, sans-serif`;
-      ctx.font = teamFont;
       const vsF = Math.round(20*scale);
-      const vsText = " vs ";
-      ctx.font = `500 ${vsF}px 'JetBrains Mono', monospace`;
-      const vsW = ctx.measureText(vsText).width;
+      const logoSize = Math.round(rowH * 0.45);
+      const logoGap = Math.round(8*scale);
+      const nameA = match.teamA.toUpperCase();
+      const nameB = match.teamB.toUpperCase();
+      const logoA = findTeamLogo(match.teamA);
+      const logoB = findTeamLogo(match.teamB);
+      const logoAW = logoA ? logoSize + logoGap : 0;
+      const logoBW = logoB ? logoSize + logoGap : 0;
       ctx.font = teamFont;
-      const aW = ctx.measureText(match.teamA).width;
-      const bW = ctx.measureText(match.teamB).width;
-      const totalTeamW = aW + vsW + bW;
+      const aW = ctx.measureText(nameA).width;
+      const bW = ctx.measureText(nameB).width;
+      const vsGap = Math.round(10*scale);
+      const totalTeamW = logoAW + aW + vsGap + vsDiamondSize*2 + vsGap + logoBW + bW;
       const teamStartX = pad + maxW/2 - totalTeamW/2;
 
+      let tx = teamStartX;
+      if(logoA){
+        ctx.drawImage(logoA, tx, cy - logoSize/2, logoSize, logoSize);
+        tx += logoSize + logoGap;
+      }
       ctx.font = teamFont;
       ctx.fillStyle = "#ffffff"; ctx.textBaseline = "middle";
-      ctx.fillText(match.teamA, teamStartX, cy);
-      ctx.font = `500 ${vsF}px 'JetBrains Mono', monospace`;
-      ctx.fillStyle = "#6b7882";
-      ctx.fillText(vsText, teamStartX+aW, cy);
+      ctx.fillText(nameA, tx, cy);
+      tx += aW + vsGap;
+
+      // VS diamond
+      const vsCx = tx + vsDiamondSize;
+      ctx.save();
+      ctx.fillStyle = rgba(acc, 0.12);
+      ctx.beginPath();
+      ctx.moveTo(vsCx, cy - vsDiamondSize);
+      ctx.lineTo(vsCx + vsDiamondSize, cy);
+      ctx.lineTo(vsCx, cy + vsDiamondSize);
+      ctx.lineTo(vsCx - vsDiamondSize, cy);
+      ctx.closePath(); ctx.fill();
+      ctx.font = `800 ${Math.round(11*scale)}px Sora, sans-serif`;
+      ctx.fillStyle = acc; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillText("VS", vsCx, cy);
+      ctx.textAlign = "left";
+      ctx.restore();
+      tx += vsDiamondSize*2 + vsGap;
+
+      if(logoB){
+        ctx.drawImage(logoB, tx, cy - logoSize/2, logoSize, logoSize);
+        tx += logoSize + logoGap;
+      }
       ctx.font = teamFont;
       ctx.fillStyle = "#ffffff";
-      ctx.fillText(match.teamB, teamStartX+aW+vsW, cy);
+      ctx.fillText(nameB, tx, cy);
 
-      // format tag
+      // format pill
       if(match.format){
-        ctx.font = `500 ${fmtF}px 'JetBrains Mono', monospace`;
-        ctx.fillStyle = acc; ctx.textAlign = "right"; ctx.textBaseline = "middle";
-        ctx.fillText(match.format.toUpperCase(), pad+maxW-innerPad, cy);
+        const fmtLabel = match.format.toUpperCase();
+        ctx.font = `600 ${fmtF}px 'JetBrains Mono', monospace`;
+        const fmtW = ctx.measureText(fmtLabel).width;
+        const pillPadX = Math.round(10*scale);
+        const pillPadY = Math.round(6*scale);
+        const pillW = fmtW + pillPadX*2;
+        const pillH = fmtF + pillPadY*2;
+        const pillX = pad + maxW - innerPad - pillW;
+        const pillY = cy - pillH/2;
+        const pillR = Math.round(6*scale);
+        ctx.fillStyle = rgba(acc, 0.12);
+        roundRectPath(pillX, pillY, pillW, pillH, pillR); ctx.fill();
+        ctx.fillStyle = acc; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+        ctx.fillText(fmtLabel, pillX + pillW/2, cy);
         ctx.textAlign = "left";
       }
 
