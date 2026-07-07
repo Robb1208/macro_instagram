@@ -2583,21 +2583,49 @@ function drawLayoutBracket(W,H,c,scale,pad,maxW,acc,hi){
   // shared card drawing helper
   const drawMatchCard = (rx, my, MW, MH, match, isFinal, teamF, scoreF, logoSize) => {
     const halfH = MH/2;
-    const cardBg = isFinal ? rgba(acc, 0.06) : "rgba(255,255,255,0.04)";
-    const cardStroke = isFinal ? rgba(acc, 0.30) : "rgba(255,255,255,0.08)";
+
+    // finale: radial glow behind card
+    if(isFinal){
+      ctx.save();
+      const glowR = Math.max(MW, MH) * 0.8;
+      const glow = ctx.createRadialGradient(rx+MW/2, my+MH/2, 0, rx+MW/2, my+MH/2, glowR);
+      glow.addColorStop(0, rgba(acc, 0.10));
+      glow.addColorStop(1, "transparent");
+      ctx.fillStyle = glow;
+      ctx.fillRect(rx-glowR, my-glowR, MW+glowR*2, MH+glowR*2);
+      ctx.restore();
+    }
+
+    const cardBg = isFinal ? rgba(acc, 0.08) : "rgba(255,255,255,0.04)";
+    const cardStroke = isFinal ? rgba(acc, 0.35) : "rgba(255,255,255,0.08)";
     ctx.fillStyle = cardBg;
     roundRectPath(rx, my, MW, MH, cardR); ctx.fill();
-    ctx.strokeStyle = cardStroke; ctx.lineWidth = Math.max(1, (isFinal?2:1.5)*scale);
+    ctx.strokeStyle = cardStroke; ctx.lineWidth = Math.max(1, (isFinal?2.5:1.5)*scale);
     roundRectPath(rx, my, MW, MH, cardR); ctx.stroke();
     if(match.winner){
       const winY = match.winner==="A" ? my : my+halfH;
       ctx.fillStyle = rgba(acc, 0.15);
       ctx.save(); ctx.beginPath(); roundRectPath(rx, my, MW, MH, cardR); ctx.clip();
       ctx.fillRect(rx, winY, MW, halfH); ctx.restore();
-      ctx.fillStyle = acc;
+      // accent bar with glow on winner side
       ctx.save(); ctx.beginPath(); roundRectPath(rx, my, MW, MH, cardR); ctx.clip();
-      ctx.fillRect(rx, winY, Math.round(3*scale), halfH); ctx.restore();
+      const barW = Math.round(4*scale);
+      ctx.shadowColor = acc; ctx.shadowBlur = Math.round(10*scale); ctx.shadowOffsetX = Math.round(3*scale);
+      ctx.fillStyle = acc;
+      ctx.fillRect(rx, winY, barW, halfH);
+      ctx.shadowColor = "transparent"; ctx.shadowBlur = 0; ctx.shadowOffsetX = 0;
+      ctx.restore();
     }
+
+    // finale: trophy icon above card
+    if(isFinal){
+      const trophyF = Math.round(18*scale);
+      ctx.font = `${trophyF}px sans-serif`;
+      ctx.textAlign = "center"; ctx.textBaseline = "bottom";
+      ctx.fillText("🏆", rx+MW/2, my - Math.round(4*scale));
+      ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+    }
+
     ctx.strokeStyle = "rgba(255,255,255,0.06)"; ctx.lineWidth = Math.max(1, scale);
     ctx.beginPath(); ctx.moveTo(rx, my+halfH); ctx.lineTo(rx+MW, my+halfH); ctx.stroke();
     const drawTeamRow = (team, isWinner, rowY) => {
@@ -2606,13 +2634,20 @@ function drawLayoutBracket(W,H,c,scale,pad,maxW,acc,hi){
       const logoImg = findTeamLogo(team.name);
       const textX = rx + rowPad + (logoImg ? logoSize + Math.round(8*scale) : 0);
       if(logoImg){ ctx.drawImage(logoImg, rx+rowPad, rowY+(halfH-logoSize)/2, logoSize, logoSize); }
-      ctx.font = `600 ${teamF}px Manrope, sans-serif`;
+      const maxNameW = MW - rowPad*2 - (logoImg ? logoSize+Math.round(8*scale) : 0) - Math.round(36*scale);
+      const fullName = team.name.toUpperCase();
+      let usedF = teamF;
+      const minF = Math.max(Math.round(10*scale), Math.round(teamF*0.6));
+      ctx.font = `600 ${usedF}px Manrope, sans-serif`;
+      if(ctx.measureText(fullName).width > maxNameW){
+        usedF = Math.max(minF, Math.round(usedF * maxNameW / ctx.measureText(fullName).width));
+        ctx.font = `600 ${usedF}px Manrope, sans-serif`;
+      }
       ctx.fillStyle = isWinner ? "#ffffff" : "#dfdfdf";
       ctx.textBaseline = "middle"; ctx.textAlign = "left";
-      const maxNameW = MW - rowPad*2 - (logoImg ? logoSize+Math.round(8*scale) : 0) - Math.round(36*scale);
-      let name = team.name;
+      let name = fullName;
       while(ctx.measureText(name).width > maxNameW && name.length > 3) name = name.slice(0,-1);
-      if(name !== team.name) name += "…";
+      if(name !== fullName) name += "…";
       ctx.fillText(name, textX, rowY + halfH/2);
       ctx.font = `800 ${scoreF}px Sora, sans-serif`;
       ctx.fillStyle = isWinner ? acc : "#6b7882";
@@ -2675,8 +2710,8 @@ function drawLayoutBracket(W,H,c,scale,pad,maxW,acc,hi){
       }
     }
 
-    // connectors
-    ctx.lineWidth = Math.max(1, 2*scale);
+    // connectors (rounded corners + glow on winner path)
+    const connR = Math.round(8*scale);
     for(let r=0; r<numR-1; r++){
       const fromX = bracketLeft + r*(MW+RG)+MW;
       const toX = bracketLeft + (r+1)*(MW+RG);
@@ -2689,9 +2724,25 @@ function drawLayoutBracket(W,H,c,scale,pad,maxW,acc,hi){
         if(targetM>=next.length) continue;
         const isTop = m%2===0;
         const toY = yPos[r+1][targetM] + (sameSize ? (isLower ? MH*0.75 : MH/2) : (isTop ? MH*0.25 : MH*0.75));
-        ctx.strokeStyle = rgba(acc, curr[m].winner ? 0.50 : 0.25);
-        ctx.beginPath(); ctx.moveTo(fromX, fromY); ctx.lineTo(midX, fromY);
-        ctx.lineTo(midX, toY); ctx.lineTo(toX, toY); ctx.stroke();
+        const hasWinner = !!curr[m].winner;
+        ctx.save();
+        if(hasWinner){
+          ctx.shadowColor = acc; ctx.shadowBlur = Math.round(6*scale);
+        }
+        ctx.strokeStyle = rgba(acc, hasWinner ? 0.55 : 0.20);
+        ctx.lineWidth = Math.max(1, (hasWinner ? 2.5 : 1.5)*scale);
+        ctx.beginPath(); ctx.moveTo(fromX, fromY);
+        if(Math.abs(fromY - toY) < 2){
+          ctx.lineTo(toX, toY);
+        } else {
+          ctx.lineTo(midX - connR, fromY);
+          ctx.arcTo(midX, fromY, midX, fromY + (toY > fromY ? connR : -connR), connR);
+          ctx.lineTo(midX, toY + (toY > fromY ? -connR : connR));
+          ctx.arcTo(midX, toY, midX + connR, toY, connR);
+          ctx.lineTo(toX, toY);
+        }
+        ctx.stroke();
+        ctx.restore();
       }
     }
     // cards
