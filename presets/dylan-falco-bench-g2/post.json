@@ -1,0 +1,26 @@
+{
+  "format": "portrait",
+  "game": "lol",
+  "watermark": true,
+  "gradient": 100,
+  "titleSize": 100,
+  "slides": [
+    {
+      "template": "post-image",
+      "image": "slide-1.jpg",
+      "photoCredit": "Lance Skundrich / Riot Games",
+      "eyebrow": "LEAGUE OF LEGENDS · LEC",
+      "title": "G2 bench *Dylan Falco*",
+      "desc": "Perkz nommé head coach après l'élimination au MSI.",
+      "showDesc": true
+    },
+    {
+      "template": "post-texte",
+      "eyebrow": "COACHING CHANGE",
+      "title": "*11 titres LEC.* Et un bench.",
+      "desc": "Quelques heures après l'élimination de G2 par LYON au MSI 2026, l'organisation annonce le bench de Dylan Falco — coach depuis 2022 et architecte de 11 trophées LEC.\n\nPerkz, arrivé comme coach positionnel il y a une semaine, prend les commandes. Première mission : l'Esports World Cup à Paris, dès le 15 juillet.",
+      "showDesc": true,
+      "signature": "Macro"
+    }
+  ]
+}
