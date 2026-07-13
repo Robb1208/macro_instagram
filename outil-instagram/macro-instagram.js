@@ -4695,7 +4695,7 @@ function buildMjpegMov(jpegFrames, w, h, fps, pcmData, audioRate, audioCh){
 async function playReelMjpeg(W, H, total){
   $("recbar").classList.add("on");
   $("dlReel").disabled = true; $("previewReel").disabled = true;
-  const FPS = 60, frameDurMs = 1000/FPS;
+  const FPS = 30, frameDurMs = 1000/FPS;
   const totalFrames = Math.ceil(total/frameDurMs);
   const jpegFrames = [];
   $("status").textContent = "● Capture des images… 0%";
@@ -4715,7 +4715,7 @@ async function playReelMjpeg(W, H, total){
     if(seekP.length) await Promise.all(seekP);
 
     drawReelFrame(W, H, tMs);
-    const blob = await new Promise(r => cv.toBlob(r, "image/jpeg", 0.75));
+    const blob = await new Promise(r => cv.toBlob(r, "image/jpeg", 0.82));
     if(!blob) continue;
     jpegFrames.push(new Uint8Array(await blob.arrayBuffer()));
 
@@ -4761,6 +4761,7 @@ async function playReelMjpeg(W, H, total){
   $("status").textContent = "● Construction de la vidéo…";
   await new Promise(r => setTimeout(r, 50));
   const movData = buildMjpegMov(jpegFrames, W, H, FPS, pcmAudio, SAMPLE_RATE, CHANNELS);
+  jpegFrames.length = 0;
   const blob = new Blob([movData], {type:"video/quicktime"});
   resetReelUI(); playing = false;
   deliverVideo(blob, "mov");
