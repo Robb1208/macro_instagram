@@ -4611,14 +4611,13 @@ function deliverVideo(blob, ext){
   $("status").textContent = "✓ Vidéo prête.";
 }
 
-function buildMjpegMov(jpegFrames, w, h, fps, pcmData, audioRate, audioCh){
-  const n = jpegFrames.length;
+function buildMjpegMovParts(frameSizes, w, h, fps, pcmData, audioRate, audioCh){
+  const n = frameSizes.length;
   const timeScale = 600;
   const frameDur = Math.round(timeScale / fps);
   const movieDur = n * frameDur;
   let mdatPayload = 0;
-  const frameSizes = [];
-  for(const f of jpegFrames){ frameSizes.push(f.byteLength); mdatPayload += f.byteLength; }
+  for(const sz of frameSizes) mdatPayload += sz;
   const hasAudio = pcmData && pcmData.byteLength > 0;
   const audioBytes = hasAudio ? pcmData.byteLength : 0;
   const totalMdat = mdatPayload + audioBytes;
@@ -4681,23 +4680,16 @@ function buildMjpegMov(jpegFrames, w, h, fps, pcmData, audioRate, audioCh){
 
   const moov = bx("moov", cat(mvhd,trak,audioTrak));
   const mdH = cat(u32(mdatHdr+totalMdat),cc("mdat"));
-
-  const file = new Uint8Array(ftypLen+mdatHdr+totalMdat+moov.byteLength);
-  let p = 0;
-  file.set(ftyp,p); p+=ftyp.byteLength;
-  file.set(mdH,p); p+=mdH.byteLength;
-  for(const f of jpegFrames){ file.set(f,p); p+=f.byteLength; }
-  if(hasAudio){ file.set(pcmData,p); p+=pcmData.byteLength; }
-  file.set(moov,p);
-  return file;
+  return { ftyp, mdatHeader: mdH, moov, pcmData: hasAudio ? pcmData : null };
 }
 
 async function playReelMjpeg(W, H, total){
   $("recbar").classList.add("on");
   $("dlReel").disabled = true; $("previewReel").disabled = true;
-  const FPS = 30, frameDurMs = 1000/FPS;
+  const FPS = 60, frameDurMs = 1000/FPS;
   const totalFrames = Math.ceil(total/frameDurMs);
-  const jpegFrames = [];
+  const frameBlobs = [];
+  const frameSizes = [];
   $("status").textContent = "● Capture des images… 0%";
 
   for(let i = 0; i <= totalFrames; i++){
@@ -4717,7 +4709,8 @@ async function playReelMjpeg(W, H, total){
     drawReelFrame(W, H, tMs);
     const blob = await new Promise(r => cv.toBlob(r, "image/jpeg", 0.82));
     if(!blob) continue;
-    jpegFrames.push(new Uint8Array(await blob.arrayBuffer()));
+    frameBlobs.push(blob);
+    frameSizes.push(blob.size);
 
     const pct = Math.round((i+1)/(totalFrames+1)*100);
     $("recprog").style.width = pct+"%";
@@ -4760,9 +4753,12 @@ async function playReelMjpeg(W, H, total){
 
   $("status").textContent = "● Construction de la vidéo…";
   await new Promise(r => setTimeout(r, 50));
-  const movData = buildMjpegMov(jpegFrames, W, H, FPS, pcmAudio, SAMPLE_RATE, CHANNELS);
-  jpegFrames.length = 0;
-  const blob = new Blob([movData], {type:"video/quicktime"});
+  const parts = buildMjpegMovParts(frameSizes, W, H, FPS, pcmAudio, SAMPLE_RATE, CHANNELS);
+  const blobParts = [parts.ftyp, parts.mdatHeader, ...frameBlobs];
+  frameBlobs.length = 0;
+  if(parts.pcmData) blobParts.push(parts.pcmData);
+  blobParts.push(parts.moov);
+  const blob = new Blob(blobParts, {type:"video/quicktime"});
   resetReelUI(); playing = false;
   deliverVideo(blob, "mov");
   render();
