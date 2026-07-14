@@ -303,7 +303,7 @@ function drawFramedImage(it, W, H, zoom){
   const frameY = barY + Math.round(20*scale) + (it.frameY||0)*scale;
   const frameX = pad;
   const frameW = W - pad*2;
-  const frameH = Math.round(H*0.50);
+  const frameH = Math.round((frameW / 2.35 + H * 0.50) / 2);
   const frameR = Math.round(14*scale);
   ctx.save();
   roundRectPath(frameX, frameY, frameW, frameH, frameR);
@@ -315,7 +315,8 @@ function drawFramedImage(it, W, H, zoom){
   fade.addColorStop(1, "rgba(7,10,13,0.7)");
   ctx.fillStyle = fade; ctx.fillRect(frameX, frameY+frameH-fadeH, frameW, fadeH);
   ctx.restore();
-  ctx.strokeStyle = "rgba(31,44,53,0.5)"; ctx.lineWidth = Math.max(1, 1.5*scale);
+  const frameColor = accentColor();
+  ctx.strokeStyle = rgba(frameColor, 0.6); ctx.lineWidth = Math.max(2, Math.round(2.5*scale));
   roundRectPath(frameX, frameY, frameW, frameH, frameR); ctx.stroke();
 }
 
