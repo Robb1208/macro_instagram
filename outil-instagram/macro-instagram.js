@@ -5,8 +5,8 @@ const LOGO_SRC = "macro-logo.png";
 
 // ═══ SECTION: CONSTANTES DA ═══
 const FORMATS = { portrait:[1080,1350], story:[1080,1920] };
-const GAME_COLORS = { lol:"#00c2e0", cs2:"#f0c14b", val:"#ff4d57", rl:"#3b9eff", cod:"#e8820c", macro:"#00c2e0" };
-const GAME_LABELS = { lol:"League of Legends", cs2:"Counter-Strike 2", val:"Valorant", rl:"Rocket League", cod:"Call of Duty", macro:"Macro" };
+const GAME_COLORS = { lol:"#00c2e0", cs2:"#f0c14b", val:"#ff4d57", rl:"#3b9eff", cod:"#e8820c", dota2:"#c23616", ff:"#ff6f00", mlbb:"#6c5ce7", macro:"#00c2e0" };
+const GAME_LABELS = { lol:"League of Legends", cs2:"Counter-Strike 2", val:"Valorant", rl:"Rocket League", cod:"Call of Duty", dota2:"Dota 2", ff:"Free Fire", mlbb:"Mobile Legends", macro:"Macro" };
 const GAME_LOGO_SRCS = { lol:"LOGOS_JEUX/lol_embleme.png", cs2:"LOGOS_JEUX/counter_strike.png", val:"LOGOS_JEUX/valorant.png", rl:"LOGOS_JEUX/RL.png", cod:"LOGOS_JEUX/callofduty_league.png" };
 const GAME_LOGO_IMGS = {};
 Object.entries(GAME_LOGO_SRCS).forEach(([k,src])=>{ const img = new Image(); img.onload = ()=>{ GAME_LOGO_IMGS[k] = img; }; img.src = src; });
@@ -2991,7 +2991,7 @@ function parsePlanningEvents(text){
       current = { abbr: parts[0]||"", date: parts[1]||"", events:[] };
       days.push(current);
     } else if(current){
-      const m = line.match(/^(\d{1,2})[h:]?-(\d{1,2})[h:]?\s+(.+?)\s+(lol|cs2|val|rl|cod)$/i);
+      const m = line.match(/^(\d{1,2})[h:]?-(\d{1,2})[h:]?\s+(.+?)\s+(lol|cs2|val|rl|cod|dota2|ff|mlbb)$/i);
       if(m) current.events.push({ start:parseInt(m[1]), end:parseInt(m[2]), name:m[3].trim(), game:m[4].toLowerCase() });
     }
   });
