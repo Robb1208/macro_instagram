@@ -7,6 +7,9 @@ const LOGO_SRC = "macro-logo.png";
 const FORMATS = { portrait:[1080,1350], story:[1080,1920] };
 const GAME_COLORS = { lol:"#00c2e0", cs2:"#f0c14b", val:"#ff4d57", rl:"#3b9eff", cod:"#e8820c", macro:"#00c2e0" };
 const GAME_LABELS = { lol:"League of Legends", cs2:"Counter-Strike 2", val:"Valorant", rl:"Rocket League", cod:"Call of Duty", macro:"Macro" };
+const GAME_LOGO_SRCS = { lol:"LOGOS_JEUX/lol_embleme.png", cs2:"LOGOS_JEUX/counter_strike.png", val:"LOGOS_JEUX/valorant.png", rl:"LOGOS_JEUX/RL.png", cod:"LOGOS_JEUX/callofduty_league.png" };
+const GAME_LOGO_IMGS = {};
+Object.entries(GAME_LOGO_SRCS).forEach(([k,src])=>{ const img = new Image(); img.onload = ()=>{ GAME_LOGO_IMGS[k] = img; }; img.src = src; });
 const INK = "#070a0d";
 const TEMPLATES = {
   "post-image":{ label:"Post image", icon:"IMG" },
@@ -3019,214 +3022,199 @@ function drawLayoutPlanning(W,H,c,scale,pad,maxW,acc,hi){
   ctx.textBaseline = "top";
   for(const ln of titleLines){ drawRichLine(ln, pad, y, titleFont, hi, "#ffffff"); y += titleLH; }
 
+  // Description under title
+  const desc = (c.desc||"").trim();
+  if(desc && c.showDesc){
+    const descF = Math.round(22*scale);
+    ctx.font = `500 ${descF}px Manrope, sans-serif`;
+    ctx.fillStyle = "rgba(255,255,255,0.45)";
+    ctx.textBaseline = "top"; ctx.textAlign = "left";
+    y += Math.round(6*scale);
+    ctx.fillText(desc, pad, y);
+    y += descF + Math.round(4*scale);
+  }
+
   const days = parsePlanningEvents(c.planningEvents);
   if(!days.length){ lastTextBox=null; return; }
 
-  // Grid layout
-  const legendH = Math.round(44*scale);
-  const gridTop = y + Math.round(20*scale);
-  const gridBottom = H - pad - legendH;
-  const timeLabelW = Math.round(44*scale);
-  const gridLeft = pad + timeLabelW;
-  const gridRight = W - pad;
-  const gridW = gridRight - gridLeft;
-  const numCols = days.length;
-  const colW = gridW / numCols;
+  // Agenda list layout — capsules with game logos, auto-fill height
+  const labelW = Math.round(90*scale);
+  const contentLeft = pad + labelW;
+  const contentW = W - pad - contentLeft;
 
-  // Time range from data
-  let minH = 24, maxH = 0;
-  for(const day of days){
-    for(const ev of day.events){
-      minH = Math.min(minH, ev.start);
-      const endH = ev.end <= ev.start ? ev.end + 24 : ev.end;
-      maxH = Math.max(maxH, endH);
-    }
-  }
-  minH = Math.max(0, Math.floor(minH/2)*2);
-  maxH = Math.min(26, Math.ceil(maxH/2)*2 + 1);
-  if(minH >= maxH){ minH = 12; maxH = 24; }
-  const timeRange = maxH - minH;
+  const topGap = Math.round(20*scale);
+  const bottomPad = pad + Math.round(10*scale);
+  const availH = H - (y + topGap) - bottomPad;
 
-  // Day headers
-  const dayAbbrF = Math.round(20*scale);
-  const dayDateF = Math.round(22*scale);
-  const headerH = Math.round(44*scale);
-  const headerY = gridTop;
-  const bodyTop = gridTop + headerH;
-  const bodyH = gridBottom - bodyTop;
-  const pxPerHour = bodyH / timeRange;
+  let totalEvts = 0;
+  for(const day of days) totalEvts += Math.max(day.events.length, 1);
+  const numSeps = days.length - 1;
 
-  for(let i = 0; i < numCols; i++){
-    const cx = gridLeft + i*colW + colW/2;
+  const minEvGap = Math.round(6*scale);
+  const minRowGap = Math.round(24*scale);
+  const fixedSpace = numSeps * minRowGap + (totalEvts - days.length) * minEvGap;
+  const pillH = Math.min(Math.round(72*scale), Math.floor((availH - fixedSpace) / totalEvts));
+  const usedH = totalEvts * pillH + fixedSpace;
+  const extraSpace = Math.max(0, availH - usedH);
+  const rowGap = minRowGap + (numSeps > 0 ? Math.floor(extraSpace * 0.6 / numSeps) : 0);
+  const evGap = minEvGap + (totalEvts > days.length ? Math.floor(extraSpace * 0.4 / (totalEvts - days.length)) : 0);
+
+  const dayAbbrF = Math.min(Math.round(24*scale), Math.round(pillH * 0.42));
+  const dayDateF = Math.min(Math.round(28*scale), Math.round(pillH * 0.50));
+  const evNameF = Math.min(Math.round(24*scale), Math.round(pillH * 0.42));
+  const evTimeF = Math.min(Math.round(20*scale), Math.round(pillH * 0.34));
+
+  y += topGap;
+
+  for(let i = 0; i < days.length; i++){
+    const day = days[i];
+    const numEv = Math.max(day.events.length, 1);
+    const rowH = numEv * pillH + (numEv - 1) * evGap;
+
+    // Day label — pill with accent bar
+    const labelCx = pad + labelW / 2;
+    const labelCy = y + rowH / 2;
+    const labelPillW = Math.round(70*scale);
+    const labelPillH = Math.min(Math.round(64*scale), rowH);
+    const labelPillR = Math.round(12*scale);
+    const accentBarW = Math.max(2, Math.round(3*scale));
+    const labelPillX = labelCx - labelPillW/2;
+    const labelPillY2 = labelCy - labelPillH/2;
+    ctx.save();
+    ctx.fillStyle = "rgba(255,255,255,0.04)";
+    roundRectPath(labelPillX, labelPillY2, labelPillW, labelPillH, labelPillR);
+    ctx.fill();
+    ctx.restore();
+    // Accent bar left side
+    ctx.save();
+    roundRectPath(labelPillX, labelPillY2, labelPillW, labelPillH, labelPillR);
+    ctx.clip();
+    ctx.fillStyle = acc;
+    ctx.fillRect(labelPillX, labelPillY2, accentBarW, labelPillH);
+    ctx.restore();
+
     ctx.font = `700 ${dayAbbrF}px Sora, sans-serif`;
+    ctx.fillStyle = acc;
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText(day.abbr, labelCx + Math.round(2*scale), labelCy - Math.round(pillH*0.18));
+    ctx.font = `600 ${dayDateF}px 'JetBrains Mono', monospace`;
     ctx.fillStyle = "#ffffff";
-    ctx.textAlign = "center"; ctx.textBaseline = "top";
-    ctx.fillText(days[i].abbr, cx, headerY);
-    ctx.font = `400 ${dayDateF}px 'JetBrains Mono', monospace`;
-    ctx.fillStyle = "#6b7882";
-    ctx.fillText(days[i].date, cx, headerY + dayAbbrF + Math.round(2*scale));
-  }
+    ctx.fillText(day.date, labelCx + Math.round(2*scale), labelCy + Math.round(pillH*0.22));
 
-  // Horizontal grid lines + time labels
-  const timeF = Math.round(16*scale);
-  for(let h = minH; h <= maxH; h += 2){
-    const yPos = bodyTop + (h - minH) * pxPerHour;
-    ctx.font = `400 ${timeF}px 'JetBrains Mono', monospace`;
-    ctx.fillStyle = "#4d5860";
-    ctx.textAlign = "right"; ctx.textBaseline = "middle";
-    ctx.fillText((h%24)+"h", gridLeft - Math.round(10*scale), yPos);
-    ctx.strokeStyle = "rgba(255,255,255,0.04)";
-    ctx.lineWidth = Math.max(1, scale);
-    ctx.beginPath(); ctx.moveTo(gridLeft, yPos); ctx.lineTo(gridRight, yPos); ctx.stroke();
-  }
-
-  // Vertical column separators — visible lines between days
-  const colGap = Math.round(6*scale);
-  for(let i = 0; i <= numCols; i++){
-    const x = gridLeft + i*colW;
-    ctx.strokeStyle = "rgba(255,255,255,0.12)";
-    ctx.lineWidth = Math.max(1, Math.round(1.5*scale));
-    ctx.beginPath(); ctx.moveTo(x, headerY); ctx.lineTo(x, gridBottom); ctx.stroke();
-  }
-
-  // Event blocks — with side-by-side layout for overlapping events
-  const blockInset = Math.round(7*scale);
-  const blockGap = Math.round(3*scale);
-  const blockR = Math.round(8*scale);
-  const evNameF = Math.round(15*scale);
-  const evTimeF = Math.round(13*scale);
-
-  for(let i = 0; i < numCols; i++){
-    const dayX = gridLeft + i*colW + blockInset;
-    const dayW = colW - blockInset*2;
-    const evts = days[i].events.map(ev => {
-      const endH = ev.end <= ev.start ? ev.end + 24 : ev.end;
-      return { ...ev, endH };
-    }).sort((a,b) => a.start - b.start || a.endH - b.endH);
-
-    // Assign sub-columns for overlapping events
-    const placed = [];
-    for(const ev of evts){
-      let col = 0;
-      while(placed.some(p => p.col === col && p.start < ev.endH && ev.start < p.endH)) col++;
-      ev.subCol = col;
-      placed.push({ col, start: ev.start, endH: ev.endH });
-    }
-    // Per-event: count how many concurrent columns in its overlap group
-    for(const ev of evts){
-      let maxInGroup = ev.subCol + 1;
-      for(const other of evts){
-        if(other.start < ev.endH && ev.start < other.endH){
-          maxInGroup = Math.max(maxInGroup, other.subCol + 1);
-        }
-      }
-      ev.groupCols = maxInGroup;
-    }
-
-    for(const ev of evts){
+    for(let j = 0; j < day.events.length; j++){
+      const ev = day.events[j];
       const gc = GAME_COLORS[ev.game] || acc;
-      const nCols = ev.groupCols;
-      const bw = (dayW - (nCols-1)*blockGap) / nCols;
-      const colX = dayX + ev.subCol * (bw + blockGap);
-      const evTop = bodyTop + (ev.start - minH) * pxPerHour;
-      const evBot = bodyTop + (ev.endH - minH) * pxPerHour;
-      const evH = Math.max(evBot - evTop, Math.round(28*scale));
+      const pillY = y + j * (pillH + evGap);
+      const pillW = contentW;
+      const capsuleR = pillH / 2;
 
-      // Block fill
+      // Capsule background
       ctx.save();
-      const bg = ctx.createLinearGradient(0, evTop, 0, evTop + evH);
-      bg.addColorStop(0, rgba(gc, 0.18));
-      bg.addColorStop(1, rgba(gc, 0.08));
+      const bg = ctx.createLinearGradient(contentLeft, 0, contentLeft + pillW, 0);
+      bg.addColorStop(0, rgba(gc, 0.20));
+      bg.addColorStop(0.5, rgba(gc, 0.08));
+      bg.addColorStop(1, rgba(gc, 0.03));
       ctx.fillStyle = bg;
-      roundRectPath(colX, evTop, bw, evH, blockR); ctx.fill();
-      ctx.strokeStyle = rgba(gc, 0.30);
+      roundRectPath(contentLeft, pillY, pillW, pillH, capsuleR);
+      ctx.fill();
+      ctx.strokeStyle = rgba(gc, 0.18);
       ctx.lineWidth = Math.max(1, 1.5*scale);
-      roundRectPath(colX, evTop, bw, evH, blockR); ctx.stroke();
+      roundRectPath(contentLeft, pillY, pillW, pillH, capsuleR);
+      ctx.stroke();
       ctx.restore();
 
-      // Text inside block — vertical when narrow
-      const tp = Math.round(7*scale);
-      const narrow = bw < Math.round(60*scale);
+      // Game logo circle with glow
+      const circleR = Math.round(pillH * 0.38);
+      const circleCx = contentLeft + capsuleR;
+      const circleCy = pillY + pillH / 2;
 
-      if(narrow){
-        // Vertical text mode
-        const vNameF = Math.round(13*scale);
-        const vTimeF = Math.round(11*scale);
+      // Glow behind circle
+      ctx.save();
+      const glowR = circleR + Math.round(6*scale);
+      const glow = ctx.createRadialGradient(circleCx, circleCy, circleR*0.5, circleCx, circleCy, glowR);
+      glow.addColorStop(0, rgba(gc, 0.25));
+      glow.addColorStop(1, rgba(gc, 0));
+      ctx.fillStyle = glow;
+      ctx.fillRect(circleCx - glowR, circleCy - glowR, glowR*2, glowR*2);
+      ctx.restore();
+
+      // Circle fill
+      ctx.save();
+      ctx.fillStyle = rgba(gc, 0.22);
+      ctx.beginPath();
+      ctx.arc(circleCx, circleCy, circleR, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      const gameLogo = GAME_LOGO_IMGS[ev.game];
+      if(gameLogo){
+        const logoS = Math.round(circleR * 1.3);
         ctx.save();
-        ctx.translate(colX + bw/2, evTop + tp);
-        ctx.rotate(-Math.PI/2);
-        // Name (reads bottom-to-top)
-        ctx.font = `700 ${vNameF}px Sora, sans-serif`;
-        ctx.fillStyle = "#ffffff";
-        ctx.textAlign = "right"; ctx.textBaseline = "middle";
-        let name = ev.name;
-        const availH = evH - tp*2;
-        while(ctx.measureText(name).width > availH && name.length > 2) name = name.slice(0,-1);
-        if(name !== ev.name) name = name.trim()+".";
-        ctx.fillText(name, 0, 0);
-        // Time below name
-        const timeStr = (ev.endH - ev.start) <= 1 ? ev.start+"h" : ev.start+"~"+(ev.end%24)+"h";
-        ctx.font = `500 ${vTimeF}px 'JetBrains Mono', monospace`;
-        ctx.fillStyle = rgba(gc, 0.85);
-        ctx.fillText(timeStr, 0, vNameF + Math.round(2*scale));
+        ctx.globalAlpha = 0.9;
+        ctx.drawImage(gameLogo, circleCx - logoS/2, circleCy - logoS/2, logoS, logoS);
         ctx.restore();
-      } else {
-        // Normal horizontal text
-        const availW = bw - tp*2;
-        const nameF2 = nCols >= 2 ? Math.round(13*scale) : evNameF;
-        const timeF2 = nCols >= 2 ? Math.round(11*scale) : evTimeF;
-
-        ctx.font = `700 ${nameF2}px Sora, sans-serif`;
-        ctx.fillStyle = "#ffffff";
-        ctx.textAlign = "left"; ctx.textBaseline = "top";
-        let name = ev.name;
-        while(ctx.measureText(name).width > availW && name.length > 2) name = name.slice(0,-1);
-        if(name !== ev.name) name = name.trim()+".";
-        ctx.fillText(name, colX + tp, evTop + tp);
-
-        const timeStr = (ev.endH - ev.start) <= 1 ? ev.start+"h" : ev.start+"~"+(ev.end%24)+"h";
-        ctx.font = `500 ${timeF2}px 'JetBrains Mono', monospace`;
-        ctx.fillStyle = rgba(gc, 0.85);
-        if(evH > Math.round(38*scale)){
-          ctx.fillText(timeStr, colX + tp, evTop + tp + nameF2 + Math.round(2*scale));
-        }
       }
 
-      // Game dot
-      if(evH > Math.round(50*scale) && !narrow){
-        const dotR = Math.round(3.5*scale);
-        ctx.fillStyle = gc;
-        ctx.beginPath();
-        ctx.arc(colX + bw - tp - dotR, evTop + evH - tp - dotR, dotR, 0, Math.PI*2);
-        ctx.fill();
-      }
+      // Event name
+      const textLeft = circleCx + circleR + Math.round(12*scale);
+      ctx.font = `700 ${evNameF}px Sora, sans-serif`;
+      ctx.fillStyle = "#ffffff";
+      ctx.textAlign = "left"; ctx.textBaseline = "middle";
+      ctx.fillText(ev.name, textLeft, circleCy);
+
+      // Time badge — colored pill
+      const tp = Math.round(16*scale);
+      const timeStr = ev.start + "h — " + (ev.end%24) + "h";
+      ctx.font = `600 ${evTimeF}px 'JetBrains Mono', monospace`;
+      const timeW = ctx.measureText(timeStr).width;
+      const badgePadX = Math.round(10*scale);
+      const badgePadY = Math.round(4*scale);
+      const badgeH = evTimeF + badgePadY*2;
+      const badgeW = timeW + badgePadX*2;
+      const badgeX = contentLeft + pillW - tp - badgeW;
+      const badgeY = circleCy - badgeH/2;
+      const badgeR = badgeH/2;
+      ctx.save();
+      ctx.fillStyle = rgba(gc, 0.15);
+      roundRectPath(badgeX, badgeY, badgeW, badgeH, badgeR);
+      ctx.fill();
+      ctx.restore();
+      ctx.fillStyle = rgba(gc, 0.8);
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillText(timeStr, badgeX + badgeW/2, circleCy);
     }
-  }
 
-  // Legend at bottom
-  const legendY = gridBottom + legendH/2 + Math.round(4*scale);
-  const legendGames = [
-    {key:"lol",label:"LoL"},{key:"cs2",label:"CS2"},{key:"val",label:"Valo"},{key:"rl",label:"RL"},{key:"cod",label:"CoD"}
-  ];
-  const legendF = Math.round(16*scale);
-  const dotR = Math.round(5*scale);
-  const itemGap = Math.round(30*scale);
+    y += rowH;
 
-  ctx.font = `500 ${legendF}px Manrope, sans-serif`;
-  let totalLW = 0;
-  for(const g of legendGames) totalLW += dotR*2 + Math.round(6*scale) + ctx.measureText(g.label).width;
-  totalLW += (legendGames.length-1)*itemGap;
-
-  let lx = W/2 - totalLW/2;
-  for(const g of legendGames){
-    ctx.fillStyle = GAME_COLORS[g.key];
-    ctx.beginPath(); ctx.arc(lx+dotR, legendY, dotR, 0, Math.PI*2); ctx.fill();
-    lx += dotR*2 + Math.round(6*scale);
-    ctx.font = `500 ${legendF}px Manrope, sans-serif`;
-    ctx.fillStyle = "#9aa7b0";
-    ctx.textBaseline = "middle"; ctx.textAlign = "left";
-    ctx.fillText(g.label, lx, legendY);
-    lx += ctx.measureText(g.label).width + itemGap;
+    if(i < days.length - 1){
+      const sepY = Math.round(y + rowGap/2);
+      const diamondS = Math.round(3.5*scale);
+      const midX = W / 2;
+      // Left line
+      ctx.strokeStyle = "rgba(255,255,255,0.08)";
+      ctx.lineWidth = Math.max(1, scale);
+      ctx.beginPath();
+      ctx.moveTo(pad + Math.round(10*scale), sepY);
+      ctx.lineTo(midX - diamondS - Math.round(8*scale), sepY);
+      ctx.stroke();
+      // Right line
+      ctx.beginPath();
+      ctx.moveTo(midX + diamondS + Math.round(8*scale), sepY);
+      ctx.lineTo(W - pad - Math.round(10*scale), sepY);
+      ctx.stroke();
+      // Diamond
+      ctx.save();
+      ctx.fillStyle = rgba(acc, 0.35);
+      ctx.beginPath();
+      ctx.moveTo(midX, sepY - diamondS);
+      ctx.lineTo(midX + diamondS, sepY);
+      ctx.lineTo(midX, sepY + diamondS);
+      ctx.lineTo(midX - diamondS, sepY);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+      y += rowGap;
+    }
   }
 
   ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
