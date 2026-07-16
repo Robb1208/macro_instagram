@@ -582,7 +582,7 @@ function drawOverlay(W, H, slideInfo, content, hasImage){
     ctx.drawImage(logo, pad, pad, lw, lh);
     ctx.restore();
     ctx.fillStyle = GAME_COLORS.macro;
-    ctx.fillRect(pad, Math.round(pad + lh + 13*scale), refW - pad*2, Math.max(2, Math.round(2.5*scale)));
+    ctx.fillRect(pad, Math.round(pad + lh + 13*scale), W - pad*2, Math.max(2, Math.round(2.5*scale)));
   }
 
   // --- Shared: photo credit (bottom-right) ---
@@ -2778,7 +2778,8 @@ function drawLayoutBracket(W,H,c,scale,pad,maxW,acc,hi){
     const lRounds = lower.length;
     const maxCols = Math.max(uRounds, lRounds) + (gf.length ? 1 : 0);
     const totalGapW = (maxCols-1)*RG;
-    const MW = Math.min(Math.round(260*scale), Math.floor((bracketMaxW - totalGapW) / maxCols));
+    const mwCap = c.bracketWide ? Math.round(400*scale) : Math.round(260*scale);
+    const MW = Math.min(mwCap, Math.floor((bracketMaxW - totalGapW) / maxCols));
     const totalBracketW = maxCols * MW + (maxCols-1) * RG;
     const bracketLeft = (W - totalBracketW) / 2;
 
@@ -2791,12 +2792,12 @@ function drawLayoutBracket(W,H,c,scale,pad,maxW,acc,hi){
     const uMaxCol = Math.max(...upper.map(r => r.length));
     const lMaxCol = Math.max(...lower.map(r => r.length));
     const uRatio = uMaxCol / Math.max(1, uMaxCol + lMaxCol);
-    const dividerGap = Math.round(40*scale);
+    const dividerGap = Math.round(72*scale);
     const dividerY = bracketTop + (totalH - dividerGap) * Math.max(0.30, Math.min(0.72, uRatio)) + dividerGap/2;
 
     // upper region
     const upperTop = bracketTop;
-    const upperBottom = dividerY - Math.round(24*scale);
+    const upperBottom = dividerY - Math.round(36*scale);
     const uResult = drawSubBracket(upper, upperTop, upperBottom, bracketLeft, MW, false, true);
 
     // divider
@@ -2804,7 +2805,7 @@ function drawLayoutBracket(W,H,c,scale,pad,maxW,acc,hi){
     ctx.beginPath(); ctx.moveTo(pad, dividerY); ctx.lineTo(W-pad, dividerY); ctx.stroke();
 
     // lower region
-    const lowerTop = dividerY + Math.round(14*scale);
+    const lowerTop = dividerY + Math.round(36*scale);
     const lowerBottom = gf.length ? bracketBottom - Math.round(10*scale) : bracketBottom;
     const lResult = drawSubBracket(lower, lowerTop, lowerBottom, bracketLeft, MW, false, true, true);
 
@@ -2836,7 +2837,7 @@ function drawLayoutBracket(W,H,c,scale,pad,maxW,acc,hi){
     // match dates
     let matchDates = {};
     try { if(c.bracketDates) matchDates = JSON.parse(c.bracketDates); } catch(e){}
-    const dateF = Math.round(10*scale);
+    const dateF = Math.round(14*scale);
     const drawMatchDate = (key, rx, my, mw) => {
       const d = matchDates[key];
       if(!d) return;
@@ -2928,7 +2929,7 @@ function drawLayoutBracket(W,H,c,scale,pad,maxW,acc,hi){
     // match dates for single elim
     let matchDates = {};
     try { if(c.bracketDates) matchDates = JSON.parse(c.bracketDates); } catch(e){}
-    const dateF = Math.round(10*scale);
+    const dateF = Math.round(14*scale);
     for(let r=0; r<numRounds; r++){
       for(let m=0; m<rounds[r].length; m++){
         if(!seResult.yPos[r] || seResult.yPos[r][m]===undefined) continue;
