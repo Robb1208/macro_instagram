@@ -43,6 +43,8 @@
         <button class="tpl-btn" data-tpl="lineup"><span class="tpl-icon">👥</span><span class="tpl-name">Lineup</span></button>
         <button class="tpl-btn" data-tpl="groupe"><span class="tpl-icon">▦</span><span class="tpl-name">Groupes</span></button>
         <button class="tpl-btn" data-tpl="bracket"><span class="tpl-icon">🏅</span><span class="tpl-name">Bracket</span></button>
+        <button class="tpl-btn" data-tpl="glossaire"><span class="tpl-icon">📖</span><span class="tpl-name">Glossaire</span></button>
+        <button class="tpl-btn" data-tpl="guide"><span class="tpl-icon">📘</span><span class="tpl-name">Guide</span></button>
       </div>
       <div style="margin-top:10px;display:flex;gap:6px">
         <button class="btn" id="folderImport" style="flex:1;justify-content:center;font-size:11px;padding:8px">📂 Dossier</button>
@@ -201,6 +203,36 @@
           <textarea id="planningEvents" rows="10" placeholder="## L 23&#10;14-22 Play-in MSI lol&#10;## M 24&#10;14-20 Play-in MSI lol&#10;20-23 VCT Chall. val&#10;## M 25&#10;18-22 LEC Spring lol&#10;## J 26&#10;20-23 CDL Major cod&#10;## V 27&#10;17-18 LEC lol&#10;## S 28&#10;14-15 IEM Demis cs2&#10;## D 29&#10;14-23 IEM Finale cs2"></textarea>
         </div>
       </div>
+      <div id="phoneticRow" style="display:none">
+        <div class="field" style="margin-top:12px">
+          <label>Prononciation <span style="color:var(--fg-mute);font-weight:400">— ex. /gænk/ — « attaque surprise »</span></label>
+          <input type="text" id="phonetic" placeholder="/gænk/ — « attaque surprise »" />
+        </div>
+      </div>
+      <div id="exampleRow" style="display:none">
+        <div class="field" style="margin-top:8px">
+          <label>Exemple concret <span style="color:var(--fg-mute);font-weight:400">— *mot* pour accent</span></label>
+          <textarea id="example" rows="3" placeholder="« Le jungler de T1 gank la top lane — ça donne un gros avantage. »"></textarea>
+        </div>
+      </div>
+      <div id="analogyRow" style="display:none">
+        <div class="field" style="margin-top:8px">
+          <label>Analogie 💡 <span style="color:var(--fg-mute);font-weight:400">— *mot* pour accent doré</span></label>
+          <textarea id="analogy" rows="2" placeholder="Comme un *contre en basket* : tu surgis là où on t'attend pas."></textarea>
+        </div>
+      </div>
+      <div id="boxesRow" style="display:none">
+        <div class="field" style="margin-top:12px">
+          <label>Encadrés <span style="color:var(--fg-mute);font-weight:400">— couleur#label#texte par ligne (cyan, gold, red, purple, green)</span></label>
+          <textarea id="boxes" rows="5" placeholder="gold#🐉 Les Drakes#Des dragons qui donnent des bonus permanents.&#10;purple#👑 Le Baron#Le gros boss, souvent le tournant du match.&#10;red#⚔️ Teamfights#Combats 5v5 spectaculaires."></textarea>
+        </div>
+      </div>
+      <div id="gridRow" style="display:none">
+        <div class="field" style="margin-top:8px">
+          <label>Grille cartes <span style="color:var(--fg-mute);font-weight:400">— emoji#nom#description par ligne</span></label>
+          <textarea id="grid" rows="5" placeholder="⚔️#Duelliste#L'attaquant. Entre en premier.&#10;🛡️#Sentinelle#Le défenseur. Verrouille les zones.&#10;💨#Initiateur#L'éclaireur. Révèle les ennemis.&#10;🌀#Contrôleur#Le stratège. Bloque la vision."></textarea>
+        </div>
+      </div>
       <div id="footerRow" style="display:none">
         <div class="field" style="margin-top:8px">
           <label>Texte de pied</label>
@@ -281,6 +313,7 @@
         </div>
         <div style="display:flex;gap:8px;align-items:center;margin:8px 0">
           <label class="check" style="margin:0"><input type="checkbox" id="bracketDoubleElim" /> Double élimination</label>
+          <label class="check" style="margin:0"><input type="checkbox" id="bracketWide" /> Double largeur</label>
           <button id="bracketGenerate" class="tpl-btn on" style="flex-direction:row;padding:6px 14px;font-size:12px;gap:5px;margin-left:auto">
             <span class="tpl-icon" style="font-size:12px">⚡</span><span class="tpl-name" style="font-size:11px">Générer</span>
           </button>

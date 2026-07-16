@@ -28,6 +28,8 @@ const TEMPLATES = {
   "lineup":    { label:"Lineup", icon:"👥" },
   "groupe":    { label:"Groupes", icon:"▦" },
   "bracket":   { label:"Bracket", icon:"🏅" },
+  "glossaire": { label:"Glossaire", icon:"📖" },
+  "guide":     { label:"Guide", icon:"📘" },
 };
 
 // ═══ SECTION: TEAM LOGOS ═══
@@ -214,7 +216,8 @@ function newSlide(img, name, tpl){
            showBgImage: !!img, framedImage: false, dualImage: false, img2: null, tx2:{ox:0,oy:0}, photoCredit:"", dur: null, game: null,
            titleScale: null, descScale: null, zoom: null, zoom2: null, descColor: null, imgBright: null,
            lineup:"", lineupCount:5, lineupTeamRating:"", lineupPhotos:[],
-           bracket:"", bracketFormat:"", bracketWinnerLabel:"champion", bracketDates:"", planningEvents:"", groupes:"", groupeElim:3, frameY:0, statHighlight:0, mvpBadge:"mvp" };
+           bracket:"", bracketFormat:"", bracketWinnerLabel:"champion", bracketDates:"", bracketWide:false, planningEvents:"", groupes:"", groupeElim:3, frameY:0, statHighlight:0, mvpBadge:"mvp",
+           phonetic:"", example:"", analogy:"", boxes:"", grid:"" };
 }
 function cur(){ return state.images[state.active] || null; }
 function curTpl(){ const it = cur(); return (it && it.template) || "post-image"; }
@@ -534,15 +537,17 @@ function drawOverlay(W, H, slideInfo, content, hasImage){
   const acc = accentColor(slideGame);
   const hi = acc;
   const c = content || EMPTY;
-  const scale = W/1080;
-  const pad = Math.round(W*0.075);
-  const maxW = W - pad*2;
+  const isBracketWide = tpl === "bracket" && c.bracketWide;
+  const refW = isBracketWide ? W/2 : W;
+  const scale = refW/1080;
+  const pad = Math.round(refW*0.075);
+  const maxW = refW - pad*2;
 
   // --- Shared: radial glow ---
   const glowCol = tpl==="breaking" ? "#ff4d57" : acc;
   const glowX = tpl==="breaking" ? 0.50 : 0.85;
   const glowY = tpl==="breaking" ? -0.04 : -0.05;
-  const glow = ctx.createRadialGradient(W*glowX, H*glowY, 0, W*glowX, H*glowY, W*0.9);
+  const glow = ctx.createRadialGradient(refW*glowX, H*glowY, 0, refW*glowX, H*glowY, refW*0.9);
   glow.addColorStop(0, rgba(glowCol, tpl==="breaking"?0.22:0.16));
   glow.addColorStop(0.6, rgba(glowCol, 0));
   ctx.fillStyle = glow; ctx.fillRect(0,0,W,H);
@@ -570,14 +575,14 @@ function drawOverlay(W, H, slideInfo, content, hasImage){
 
   // --- Shared: logo + cyan bar ---
   if(state.watermark && logoReady){
-    const lw = W*0.135;
+    const lw = refW*0.135;
     const lh = lw * (logo.naturalHeight/logo.naturalWidth);
     ctx.save();
     ctx.shadowColor = "rgba(0,0,0,0.5)"; ctx.shadowBlur = 16;
     ctx.drawImage(logo, pad, pad, lw, lh);
     ctx.restore();
     ctx.fillStyle = GAME_COLORS.macro;
-    ctx.fillRect(pad, Math.round(pad + lh + 13*scale), W - pad*2, Math.max(2, Math.round(2.5*scale)));
+    ctx.fillRect(pad, Math.round(pad + lh + 13*scale), refW - pad*2, Math.max(2, Math.round(2.5*scale)));
   }
 
   // --- Shared: photo credit (bottom-right) ---
@@ -608,6 +613,8 @@ function drawOverlay(W, H, slideInfo, content, hasImage){
     case "groupe":     drawLayoutGroupes(W,H,c,scale,pad,maxW,acc,hi); break;
     case "bracket":    drawLayoutBracket(W,H,c,scale,pad,maxW,acc,hi); break;
     case "planning":   drawLayoutPlanning(W,H,c,scale,pad,maxW,acc,hi); break;
+    case "glossaire":  drawLayoutGlossaire(W,H,c,scale,pad,maxW,acc,hi); break;
+    case "guide":      drawLayoutGuide(W,H,c,scale,pad,maxW,acc,hi); break;
     default:           drawLayoutBottom(W,H,c,scale,pad,maxW,acc,hi); break;
   }
 }
@@ -2579,7 +2586,9 @@ function drawLayoutBracket(W,H,c,scale,pad,maxW,acc,hi){
   const rounds = isDE ? null : (Array.isArray(parsed) ? parsed : []);
   if(!isDE && (!rounds || !rounds.length)){ lastTextBox=null; return; }
 
-  const RG = Math.round(40*scale);
+  const bracketPad = Math.round(W*0.04);
+  const bracketMaxW = W - bracketPad*2;
+  const RG = Math.round(22*scale);
   const cardR = Math.round(8*scale);
   const rowPad = Math.round(10*scale);
   const fmtBlockH = (c.bracketFormat||"").trim() ? Math.round(36*scale) : 0;
@@ -2670,15 +2679,15 @@ function drawLayoutBracket(W,H,c,scale,pad,maxW,acc,hi){
     const numR = subRounds.length;
     const baseIdx = subRounds.reduce((best,r,i) => r.length >= subRounds[best].length ? i : best, 0);
     const baseCount = subRounds[baseIdx].length;
-    const maxMH = Math.round((deMode ? 62 : 82)*scale);
-    const minMH = Math.round((deMode ? 40 : 48)*scale);
+    const maxMH = Math.round((deMode ? 76 : 82)*scale);
+    const minMH = Math.round((deMode ? 48 : 48)*scale);
     const idealMH = Math.floor(availH * 0.85 / Math.max(1, baseCount));
     const MH = Math.min(maxMH, Math.max(minMH, idealMH));
     const remainH = availH - baseCount * MH;
     const MG = Math.max(Math.round(6*scale), Math.floor(remainH / Math.max(1, baseCount-1)));
-    const teamF = Math.min(Math.round(22*scale), Math.max(Math.round(14*scale), Math.round(MH*0.30)));
+    const teamF = Math.min(Math.round(24*scale), Math.max(Math.round(14*scale), Math.round(MH*0.30)));
     const scoreF = Math.round(teamF * 1.1);
-    const logoSize = Math.min(Math.round(24*scale), Math.max(Math.round(14*scale), Math.round(MH*0.32)));
+    const logoSize = Math.min(Math.round(28*scale), Math.max(Math.round(16*scale), Math.round(MH*0.34)));
 
     const yPos = subRounds.map(()=>[]);
     const baseBlockH = baseCount * MH + (baseCount-1) * MG;
@@ -2769,7 +2778,7 @@ function drawLayoutBracket(W,H,c,scale,pad,maxW,acc,hi){
     const lRounds = lower.length;
     const maxCols = Math.max(uRounds, lRounds) + (gf.length ? 1 : 0);
     const totalGapW = (maxCols-1)*RG;
-    const MW = Math.min(Math.round(220*scale), Math.floor((maxW - totalGapW) / maxCols));
+    const MW = Math.min(Math.round(260*scale), Math.floor((bracketMaxW - totalGapW) / maxCols));
     const totalBracketW = maxCols * MW + (maxCols-1) * RG;
     const bracketLeft = (W - totalBracketW) / 2;
 
@@ -2785,13 +2794,8 @@ function drawLayoutBracket(W,H,c,scale,pad,maxW,acc,hi){
     const dividerGap = Math.round(40*scale);
     const dividerY = bracketTop + (totalH - dividerGap) * Math.max(0.30, Math.min(0.72, uRatio)) + dividerGap/2;
 
-    // upper section label
-    ctx.font = `700 ${sectionLabelF}px 'JetBrains Mono', monospace`;
-    ctx.fillStyle = rgba(acc, 0.5); ctx.textBaseline = "top";
-    drawSpaced("UPPER BRACKET", pad, bracketTop, sectionLabelF*0.08);
-
-    // upper region (below label)
-    const upperTop = bracketTop + sectionLabelH;
+    // upper region
+    const upperTop = bracketTop;
     const upperBottom = dividerY - Math.round(24*scale);
     const uResult = drawSubBracket(upper, upperTop, upperBottom, bracketLeft, MW, false, true);
 
@@ -2799,13 +2803,8 @@ function drawLayoutBracket(W,H,c,scale,pad,maxW,acc,hi){
     ctx.strokeStyle = rgba(acc, 0.12); ctx.lineWidth = Math.max(1, scale);
     ctx.beginPath(); ctx.moveTo(pad, dividerY); ctx.lineTo(W-pad, dividerY); ctx.stroke();
 
-    // lower section label
-    ctx.font = `700 ${sectionLabelF}px 'JetBrains Mono', monospace`;
-    ctx.fillStyle = rgba(acc, 0.5); ctx.textBaseline = "top";
-    drawSpaced("LOWER BRACKET", pad, dividerY + Math.round(14*scale), sectionLabelF*0.08);
-
-    // lower region (below label)
-    const lowerTop = dividerY + Math.round(14*scale) + sectionLabelH;
+    // lower region
+    const lowerTop = dividerY + Math.round(14*scale);
     const lowerBottom = gf.length ? bracketBottom - Math.round(10*scale) : bracketBottom;
     const lResult = drawSubBracket(lower, lowerTop, lowerBottom, bracketLeft, MW, false, true, true);
 
@@ -2921,7 +2920,7 @@ function drawLayoutBracket(W,H,c,scale,pad,maxW,acc,hi){
     const championBlockH = Math.round(70*scale);
     const bracketBottom = H - pad - fmtBlockH - championBlockH;
     const totalGapW = (numRounds-1)*RG;
-    const MW = Math.min(Math.round(260*scale), Math.floor((maxW - totalGapW) / numRounds));
+    const MW = Math.min(Math.round(260*scale), Math.floor((bracketMaxW - totalGapW) / numRounds));
     const totalBracketW = numRounds * MW + (numRounds-1) * RG;
     const bracketLeft = (W - totalBracketW) / 2;
     const seResult = drawSubBracket(rounds, bracketTop, bracketBottom, bracketLeft, MW, true, false);
@@ -3222,15 +3221,309 @@ function drawLayoutPlanning(W,H,c,scale,pad,maxW,acc,hi){
   lastTextBox = null;
 }
 
+// --- T17: Glossaire (term per slide) ---
+function drawLayoutGlossaire(W,H,c,scale,pad,maxW,acc,hi){
+  const dragOffset = ((c.textY||0)*scale) + (c.textDrag||0);
+  const eyeF = Math.round(22*scale);
+  const wordF = Math.round(68*scale*sVal("titleScale"));
+  const phoneF = Math.round(22*scale);
+  const defF = Math.round(28*scale*sVal("descScale"));
+  const defLH = Math.round(defF*1.55);
+  const boxLabelF = Math.round(18*scale);
+  const boxTextF = Math.round(24*scale);
+  const boxTextLH = Math.round(boxTextF*1.45);
+  const divH = Math.round(3*scale);
+  const boxPadX = Math.round(20*scale);
+  const boxPadY = Math.round(16*scale);
+  const boxR = Math.round(10*scale);
+  const borderW = Math.round(3.5*scale);
+
+  // slide number (big watermark)
+  const numF = Math.round(220*scale);
+  ctx.font = `800 ${numF}px Sora, sans-serif`;
+  ctx.fillStyle = rgba(acc, 0.06);
+  ctx.textAlign = "right"; ctx.textBaseline = "top";
+  const slideIdx = state.images.indexOf(cur());
+  const numStr = String(slideIdx >= 0 ? slideIdx : 0).padStart(2,"0");
+  ctx.fillText(numStr, W - pad, pad + Math.round(30*scale) + dragOffset);
+  ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+
+  let y = Math.round(H*0.14) + dragOffset;
+
+  // category eyebrow
+  const eyebrow = (c.eyebrow||"").toUpperCase();
+  if(eyebrow){
+    ctx.font = `700 ${eyeF}px Sora, sans-serif`;
+    ctx.fillStyle = acc; ctx.textBaseline = "top";
+    drawSpaced(eyebrow, pad, y, eyeF*0.18);
+    y += eyeF + Math.round(16*scale);
+  }
+
+  // term word
+  const wordFont = `800 ${wordF}px Sora, sans-serif`;
+  const wordLines = wrapRich(richWords(c.title), wordFont, maxW);
+  ctx.textBaseline = "top";
+  ctx.shadowColor = "rgba(0,0,0,0.35)"; ctx.shadowBlur = 12; ctx.shadowOffsetY = 2;
+  for(const ln of wordLines){ drawRichLine(ln, pad, y, wordFont, hi, "#ffffff"); y += Math.round(wordF*1.08); }
+  ctx.shadowColor = "transparent"; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+
+  // phonetic
+  if(c.phonetic){
+    y += Math.round(4*scale);
+    ctx.font = `400 italic ${phoneF}px Manrope, sans-serif`;
+    ctx.fillStyle = "#6b7882"; ctx.textBaseline = "top";
+    ctx.fillText(c.phonetic, pad, y);
+    y += phoneF + Math.round(8*scale);
+  }
+
+  // divider
+  y += Math.round(12*scale);
+  const gradDiv = ctx.createLinearGradient(pad, y, pad+maxW, y);
+  gradDiv.addColorStop(0, acc); gradDiv.addColorStop(1, "transparent");
+  ctx.fillStyle = gradDiv;
+  ctx.fillRect(pad, y, maxW, divH);
+  y += divH + Math.round(20*scale);
+
+  // definition
+  if(c.desc && c.desc.trim()){
+    const defFont = `500 ${defF}px Manrope, sans-serif`;
+    const defWords = richWords(c.desc);
+    const defLines = wrapRich(defWords, defFont, maxW);
+    ctx.textBaseline = "top";
+    for(const ln of defLines){ drawRichLine(ln, pad, y, defFont, acc, "#dfdfdf"); y += defLH; }
+    y += Math.round(16*scale);
+  }
+
+  // example box
+  if(c.example && c.example.trim()){
+    const exLines = wrapRich(richWords(c.example), `500 ${boxTextF}px Manrope, sans-serif`, maxW - boxPadX*2 - borderW);
+    const exH = boxPadY + boxLabelF + Math.round(8*scale) + exLines.length*boxTextLH + boxPadY;
+    // box bg + border
+    ctx.fillStyle = rgba(acc, 0.06);
+    roundRectPath(pad + borderW, y, maxW - borderW, exH, boxR);
+    ctx.fill();
+    ctx.fillStyle = acc;
+    ctx.fillRect(pad, y, borderW, exH);
+    // label
+    ctx.font = `700 ${boxLabelF}px Sora, sans-serif`;
+    ctx.fillStyle = acc; ctx.textBaseline = "top";
+    drawSpaced("EN VRAI", pad + borderW + boxPadX, y + boxPadY, boxLabelF*0.12);
+    // text
+    let ey = y + boxPadY + boxLabelF + Math.round(8*scale);
+    const exFont = `500 ${boxTextF}px Manrope, sans-serif`;
+    ctx.textBaseline = "top";
+    for(const ln of exLines){ drawRichLine(ln, pad + borderW + boxPadX, ey, exFont, acc, "#9aa7b0"); ey += boxTextLH; }
+    y += exH + Math.round(14*scale);
+  }
+
+  // analogy box
+  if(c.analogy && c.analogy.trim()){
+    const anLines = wrapRich(richWords(c.analogy), `500 ${boxTextF}px Manrope, sans-serif`, maxW - boxPadX*2 - Math.round(34*scale));
+    const anH = boxPadY + anLines.length*boxTextLH + boxPadY;
+    ctx.fillStyle = "rgba(240,193,75,0.06)";
+    roundRectPath(pad, y, maxW, anH, boxR);
+    ctx.fill();
+    // bulb icon
+    ctx.font = `400 ${Math.round(28*scale)}px sans-serif`;
+    ctx.textBaseline = "top";
+    ctx.fillText("💡", pad + boxPadX, y + boxPadY);
+    // text
+    let ay = y + boxPadY;
+    const anFont = `500 ${boxTextF}px Manrope, sans-serif`;
+    const anX = pad + boxPadX + Math.round(34*scale);
+    ctx.textBaseline = "top";
+    for(const ln of anLines){ drawRichLine(ln, anX, ay, anFont, "#f0c14b", "#f0c14b"); ay += boxTextLH; }
+    y += anH;
+  }
+
+  lastTextBox = null;
+}
+
+// --- T18: Guide (step-by-step explainer) ---
+function drawLayoutGuide(W,H,c,scale,pad,maxW,acc,hi){
+  const dragOffset = ((c.textY||0)*scale) + (c.textDrag||0);
+  const eyeF = Math.round(22*scale);
+  const titleF = Math.round(60*scale*sVal("titleScale"));
+  const titleLH = Math.round(titleF*1.12);
+  const textF = Math.round(28*scale*sVal("descScale"));
+  const textLH = Math.round(textF*1.55);
+  const boxLabelF = Math.round(18*scale);
+  const boxTextF = Math.round(24*scale);
+  const boxTextLH = Math.round(boxTextF*1.45);
+  const divH = Math.round(3*scale);
+  const boxPadX = Math.round(20*scale);
+  const boxPadY = Math.round(16*scale);
+  const boxR = Math.round(10*scale);
+  const borderW = Math.round(3.5*scale);
+
+  // slide number (big watermark)
+  const numF = Math.round(220*scale);
+  ctx.font = `800 ${numF}px Sora, sans-serif`;
+  ctx.fillStyle = rgba(acc, 0.06);
+  ctx.textAlign = "right"; ctx.textBaseline = "top";
+  const slideIdx = state.images.indexOf(cur());
+  const numStr = String(slideIdx >= 0 ? slideIdx : 0).padStart(2,"0");
+  ctx.fillText(numStr, W - pad, pad + Math.round(30*scale) + dragOffset);
+  ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+
+  let y = Math.round(H*0.14) + dragOffset;
+
+  // eyebrow
+  const eyebrow = (c.eyebrow||"").toUpperCase();
+  if(eyebrow){
+    ctx.font = `700 ${eyeF}px Sora, sans-serif`;
+    ctx.fillStyle = acc; ctx.textBaseline = "top";
+    drawSpaced(eyebrow, pad, y, eyeF*0.18);
+    y += eyeF + Math.round(16*scale);
+  }
+
+  // title
+  const titleFont = `800 ${titleF}px Sora, sans-serif`;
+  const titleLines = wrapRich(richWords(c.title), titleFont, maxW);
+  ctx.textBaseline = "top";
+  ctx.shadowColor = "rgba(0,0,0,0.35)"; ctx.shadowBlur = 12; ctx.shadowOffsetY = 2;
+  for(const ln of titleLines){ drawRichLine(ln, pad, y, titleFont, hi, "#ffffff"); y += titleLH; }
+  ctx.shadowColor = "transparent"; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+
+  // divider
+  y += Math.round(12*scale);
+  const gradDiv = ctx.createLinearGradient(pad, y, pad+maxW, y);
+  gradDiv.addColorStop(0, acc); gradDiv.addColorStop(1, "transparent");
+  ctx.fillStyle = gradDiv;
+  ctx.fillRect(pad, y, maxW, divH);
+  y += divH + Math.round(20*scale);
+
+  // description text
+  if(c.desc && c.desc.trim()){
+    const descFont = `500 ${textF}px Manrope, sans-serif`;
+    const descWords = richWords(c.desc);
+    const descLines = wrapRich(descWords, descFont, maxW);
+    ctx.textBaseline = "top";
+    for(const ln of descLines){ drawRichLine(ln, pad, y, descFont, acc, "#dfdfdf"); y += textLH; }
+    y += Math.round(16*scale);
+  }
+
+  // boxes (colored info boxes)
+  // format: "color#label#text" per line, color = cyan/gold/red/purple/green (optional, defaults cyan)
+  if(c.boxes && c.boxes.trim()){
+    const BOX_COLORS = { cyan:acc, gold:"#f0c14b", red:"#ff4d57", purple:"#b06ce0", green:"#1cc079" };
+    const boxLines = c.boxes.trim().split("\n");
+    for(const raw of boxLines){
+      if(!raw.trim()) continue;
+      const parts = raw.split("#").map(s=>s.trim());
+      let bColor = acc, bLabel = "", bText = "";
+      if(parts.length >= 3){
+        bColor = BOX_COLORS[parts[0].toLowerCase()] || acc;
+        bLabel = parts[1];
+        bText = parts[2];
+      } else if(parts.length === 2){
+        bLabel = parts[0]; bText = parts[1];
+      } else { bText = parts[0]; }
+
+      const bTextLines = wrapRich(richWords(bText), `500 ${boxTextF}px Manrope, sans-serif`, maxW - boxPadX*2 - borderW);
+      const hasLabel = !!bLabel;
+      const bH = boxPadY + (hasLabel ? boxLabelF + Math.round(6*scale) : 0) + bTextLines.length*boxTextLH + boxPadY;
+      // bg + border
+      ctx.fillStyle = rgba(bColor, 0.06);
+      roundRectPath(pad + borderW, y, maxW - borderW, bH, boxR);
+      ctx.fill();
+      ctx.fillStyle = bColor;
+      ctx.fillRect(pad, y, borderW, bH);
+      let by = y + boxPadY;
+      if(hasLabel){
+        ctx.font = `700 ${boxLabelF}px Sora, sans-serif`;
+        ctx.fillStyle = bColor; ctx.textBaseline = "top";
+        drawSpaced(bLabel.toUpperCase(), pad + borderW + boxPadX, by, boxLabelF*0.12);
+        by += boxLabelF + Math.round(6*scale);
+      }
+      const bFont = `500 ${boxTextF}px Manrope, sans-serif`;
+      ctx.textBaseline = "top";
+      for(const ln of bTextLines){ drawRichLine(ln, pad + borderW + boxPadX, by, bFont, bColor, "#9aa7b0"); by += boxTextLH; }
+      y += bH + Math.round(10*scale);
+    }
+  }
+
+  // analogy box (same as glossaire)
+  if(c.analogy && c.analogy.trim()){
+    const anLines = wrapRich(richWords(c.analogy), `500 ${boxTextF}px Manrope, sans-serif`, maxW - boxPadX*2 - Math.round(34*scale));
+    const anH = boxPadY + anLines.length*boxTextLH + boxPadY;
+    ctx.fillStyle = "rgba(240,193,75,0.06)";
+    roundRectPath(pad, y, maxW, anH, boxR);
+    ctx.fill();
+    ctx.font = `400 ${Math.round(28*scale)}px sans-serif`;
+    ctx.textBaseline = "top";
+    ctx.fillText("💡", pad + boxPadX, y + boxPadY);
+    let ay = y + boxPadY;
+    const anFont = `500 ${boxTextF}px Manrope, sans-serif`;
+    const anX = pad + boxPadX + Math.round(34*scale);
+    ctx.textBaseline = "top";
+    for(const ln of anLines){ drawRichLine(ln, anX, ay, anFont, "#f0c14b", "#f0c14b"); ay += boxTextLH; }
+    y += anH + Math.round(10*scale);
+  }
+
+  // grid cards (icon|name|desc per line)
+  if(c.grid && c.grid.trim()){
+    const gridItems = c.grid.trim().split("\n").filter(l=>l.trim());
+    const cols = gridItems.length <= 3 ? gridItems.length : 2;
+    const gap = Math.round(10*scale);
+    const cardW = (maxW - (cols-1)*gap) / cols;
+    const cardH = Math.round(110*scale);
+    const cardR = Math.round(10*scale);
+    const iconF = Math.round(26*scale);
+    const nameF = Math.round(22*scale);
+    const gdescF = Math.round(18*scale);
+    const gdescLH = Math.round(gdescF*1.35);
+
+    gridItems.forEach((raw, i) => {
+      const parts = raw.split("#").map(s=>s.trim());
+      const icon = parts[0] || "";
+      const name = parts[1] || "";
+      const gdesc = parts[2] || "";
+      const col = i % cols;
+      const row = Math.floor(i / cols);
+      const cx = pad + col*(cardW+gap);
+      const cy = y + row*(cardH+gap);
+
+      // card bg
+      ctx.fillStyle = "rgba(255,255,255,0.03)";
+      ctx.strokeStyle = "#1f2c35"; ctx.lineWidth = Math.max(1, 1.5*scale);
+      roundRectPath(cx, cy, cardW, cardH, cardR);
+      ctx.fill(); ctx.stroke();
+
+      let ty = cy + Math.round(14*scale);
+      // icon
+      ctx.font = `400 ${iconF}px sans-serif`;
+      ctx.fillStyle = "#fff"; ctx.textBaseline = "top";
+      ctx.fillText(icon, cx + Math.round(14*scale), ty);
+      ty += iconF + Math.round(6*scale);
+      // name
+      ctx.font = `700 ${nameF}px Sora, sans-serif`;
+      ctx.fillStyle = "#fff"; ctx.textBaseline = "top";
+      ctx.fillText(name, cx + Math.round(14*scale), ty);
+      ty += nameF + Math.round(4*scale);
+      // desc
+      const gdLines = wrapRich(richWords(gdesc), `400 ${gdescF}px Manrope, sans-serif`, cardW - Math.round(28*scale));
+      ctx.textBaseline = "top";
+      const gdFont = `400 ${gdescF}px Manrope, sans-serif`;
+      for(const ln of gdLines.slice(0,2)){ drawRichLine(ln, cx + Math.round(14*scale), ty, gdFont, acc, "#6b7882"); ty += gdescLH; }
+    });
+    const rows = Math.ceil(gridItems.length / cols);
+    y += rows*(cardH+gap);
+  }
+
+  lastTextBox = null;
+}
+
 // ═══ SECTION: RENDER ═══
 function render(){
-  const [W,H] = state.reel ? FORMATS.story : FORMATS[state.format];
+  let [W,H] = state.reel ? FORMATS.story : FORMATS[state.format];
+  const item = cur();
+  const tpl = curTpl();
+  if(item && item.bracketWide && tpl === "bracket") W *= 2;
   if(cv.width!==W || cv.height!==H){ cv.width=W; cv.height=H; }
   ctx.clearRect(0,0,W,H);
   ctx.fillStyle = INK; ctx.fillRect(0,0,W,H);
 
-  const item = cur();
-  const tpl = curTpl();
   const showVideo = item && item.video && tpl === "post-video" && item.showBgImage !== false;
   const showImg = (item && item.img && item.showBgImage !== false) || showVideo;
   const framed = showImg && item.framedImage && !showVideo;
@@ -3423,7 +3716,13 @@ function syncInputs(){
   if($("bracketFormat")) { $("bracketFormat").value = has ? (it.bracketFormat||"") : ""; $("bracketFormat").disabled = !has; }
   if($("bracketWinnerLabel")) { $("bracketWinnerLabel").value = has ? (it.bracketWinnerLabel||"champion") : "champion"; }
   if($("bracketDates")) { $("bracketDates").value = has ? (it.bracketDates||"") : ""; }
+  if($("bracketWide")) { $("bracketWide").checked = has ? !!it.bracketWide : false; }
   if($("planningEvents")) { $("planningEvents").value = has ? (it.planningEvents||"") : ""; $("planningEvents").disabled = !has; }
+  if($("phonetic")) { $("phonetic").value = has ? (it.phonetic||"") : ""; $("phonetic").disabled = !has; }
+  if($("example")) { $("example").value = has ? (it.example||"") : ""; $("example").disabled = !has; }
+  if($("analogy")) { $("analogy").value = has ? (it.analogy||"") : ""; $("analogy").disabled = !has; }
+  if($("boxes")) { $("boxes").value = has ? (it.boxes||"") : ""; $("boxes").disabled = !has; }
+  if($("grid")) { $("grid").value = has ? (it.grid||"") : ""; $("grid").disabled = !has; }
   if($("lineupCountSeg")) { document.querySelectorAll("#lineupCountSeg button").forEach(b=>{ b.classList.toggle("on", parseInt(b.dataset.lc)===(has ? (it.lineupCount||5) : 5)); }); }
   if($("lineupPhotoCount")) { const n = has && it.lineupPhotos ? it.lineupPhotos.filter(Boolean).length : 0; $("lineupPhotoCount").textContent = n ? n+" photo"+(n>1?"s":"") : ""; }
   if($("showBgImage")) { $("showBgImage").checked = has ? (it.showBgImage !== false) : true; $("showBgImage").disabled = !has; }
@@ -3470,6 +3769,11 @@ function syncInputs(){
   show("groupesRow", tpl==="groupe");
   show("bracketRow", tpl==="bracket");
   show("bracketFormatRow", tpl==="bracket");
+  show("phoneticRow", tpl==="glossaire");
+  show("exampleRow", tpl==="glossaire");
+  show("analogyRow", tpl==="glossaire" || tpl==="guide");
+  show("boxesRow", tpl==="guide");
+  show("gridRow", tpl==="guide");
 
   // for score template, force showScore on
   if(tpl==="score" && has){
@@ -3556,6 +3860,7 @@ if($("bracket")) $("bracket").oninput = e => setField("bracket", e.target.value)
 if($("bracketFormat")) $("bracketFormat").oninput = e => setField("bracketFormat", e.target.value);
 if($("bracketWinnerLabel")) $("bracketWinnerLabel").onchange = e => setField("bracketWinnerLabel", e.target.value);
 if($("bracketDates")) $("bracketDates").oninput = e => setField("bracketDates", e.target.value);
+if($("bracketWide")) $("bracketWide").onchange = e => { setField("bracketWide", e.target.checked); render(); };
 
 function rebuildBracketBuilder(slide){
   const txt = slide.bracket;
@@ -3960,6 +4265,11 @@ function rebuildBracketBuilder(slide){
   };
 })();
 if($("planningEvents")) $("planningEvents").oninput = e => setField("planningEvents", e.target.value);
+if($("phonetic")) $("phonetic").oninput = e => setField("phonetic", e.target.value);
+if($("example")) $("example").oninput = e => setField("example", e.target.value);
+if($("analogy")) $("analogy").oninput = e => setField("analogy", e.target.value);
+if($("boxes")) $("boxes").oninput = e => setField("boxes", e.target.value);
+if($("grid")) $("grid").oninput = e => setField("grid", e.target.value);
 if($("frameY")) $("frameY").oninput = e => { const v=parseFloat(e.target.value); $("frameYV").textContent=v; setField("frameY", v); };
 document.querySelectorAll("#lineupCountSeg button").forEach(b=>{
   b.onclick = ()=>{
@@ -4180,8 +4490,14 @@ function applyJsonPreset(data, imageFiles){
     slide.bracketFormat = s.bracketFormat || "";
     slide.bracketWinnerLabel = s.bracketWinnerLabel || "champion";
     slide.bracketDates = s.bracketDates || "";
+    slide.bracketWide = !!s.bracketWide;
     if(slide.bracket) rebuildBracketBuilder(slide);
     slide.planningEvents = s.planningEvents || "";
+    slide.phonetic = s.phonetic || "";
+    slide.example = s.example || "";
+    slide.analogy = s.analogy || "";
+    slide.boxes = s.boxes || "";
+    slide.grid = s.grid || "";
     slide.groupes = s.groupes || "";
     slide.groupeElim = s.groupeElim != null ? s.groupeElim : 3;
     slide.frameY = s.frameY || 0;
@@ -4320,7 +4636,9 @@ $("resetView").onclick = ()=>{
 };
 
 function updateDimLabel(){
-  const [W,H] = state.reel ? FORMATS.story : FORMATS[state.format];
+  let [W,H] = state.reel ? FORMATS.story : FORMATS[state.format];
+  const it = cur();
+  if(it && it.bracketWide && curTpl() === "bracket") W *= 2;
   $("dimLabel").textContent = `${W} × ${H}`;
 }
 
@@ -4429,7 +4747,7 @@ $("dlJson").onclick = ()=>{
       transferBadge: s.transferBadge, matchResult: s.matchResult, mvpBadge: s.mvpBadge,
       photoCredit: s.photoCredit, showBgImage: s.showBgImage, framedImage: s.framedImage, dualImage: s.dualImage,
       dur: s.dur, game: s.game, lineup: s.lineup, lineupCount: s.lineupCount,
-      lineupTeamRating: s.lineupTeamRating, bracket: s.bracket, bracketFormat: s.bracketFormat, bracketWinnerLabel: s.bracketWinnerLabel, bracketDates: s.bracketDates,
+      lineupTeamRating: s.lineupTeamRating, bracket: s.bracket, bracketFormat: s.bracketFormat, bracketWinnerLabel: s.bracketWinnerLabel, bracketDates: s.bracketDates, bracketWide: s.bracketWide,
       planningEvents: s.planningEvents, groupes: s.groupes, groupeElim: s.groupeElim, frameY: s.frameY,
     };
     if(s.titleScale!=null) sl.titleSize = Math.round(s.titleScale*100);
