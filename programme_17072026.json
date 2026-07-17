@@ -1,0 +1,48 @@
+{
+  "format": "story",
+  "game": "esport",
+  "watermark": true,
+  "gradient": 100,
+  "slides": [
+    {
+      "template": "programme",
+      "eyebrow": "PROGRAMME DU JOUR",
+      "title": "*League of Legends*",
+      "desc": "EWC 2026 · Quarts de finale · Paris",
+      "showDesc": true,
+      "matches": "##Esports World Cup 2026\n13:00 Hanwha Life Esports vs T1 BO3\n13:00 Gen.G vs JD Gaming BO3\n15:30 Anyone's Legend vs Karmine Corp BO3\n15:30 Bilibili Gaming vs Dplus KIA BO3",
+      "showBgImage": false,
+      "game": "lol"
+    },
+    {
+      "template": "programme",
+      "eyebrow": "PROGRAMME DU JOUR",
+      "title": "*Counter-Strike 2*",
+      "desc": "Stake Ranked Ep. 3 · Barcelone",
+      "showDesc": true,
+      "matches": "##Stake Ranked Episode 3\n12:00 3DMAX vs Gentle Mates BO3\n17:00 HEROIC vs Ninjas in Pyjamas BO3",
+      "showBgImage": false,
+      "game": "cs2"
+    },
+    {
+      "template": "programme",
+      "eyebrow": "PROGRAMME DU JOUR",
+      "title": "*Valorant*",
+      "desc": "VCT EMEA Stage 2 · Semaine 1",
+      "showDesc": true,
+      "matches": "##VCT 2026 EMEA Stage 2\n17:00 Karmine Corp vs Eternal Fire BO3\n20:00 Team Vitality vs Natus Vincere BO3",
+      "showBgImage": false,
+      "game": "val"
+    },
+    {
+      "template": "programme",
+      "eyebrow": "PROGRAMME DU JOUR",
+      "title": "*Call of Duty*",
+      "desc": "CDL Championship 2026 · Las Vegas",
+      "showDesc": true,
+      "matches": "##CDL Championship 2026\n21:00 Miami Heretics vs Toronto KOI BO5\n22:30 Los Angeles Thieves vs G2 Minnesota BO5\n00:00 Riyadh Falcons vs FaZe Vegas BO5\n01:30 OpTic Texas vs Paris Gentle Mates BO5",
+      "showBgImage": false,
+      "game": "cod"
+    }
+  ]
+}
