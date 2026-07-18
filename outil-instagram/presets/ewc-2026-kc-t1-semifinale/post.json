@@ -24,20 +24,10 @@
       "showScore": true
     },
     {
-      "template": "mvp",
-      "eyebrow": "MVP DE LA SÉRIE",
-      "title": "*Caliste* inarrêtable",
-      "playerName": "Caliste",
-      "playerRole": "ADC · Karmine Corp",
-      "image": "slide-1.jpg",
-      "matchResult": "KC 2-1 T1",
-      "stats": "KDA · 12/5/7\nKP · 50%\nDmg total · 55.8k"
-    },
-    {
       "template": "post-texte",
-      "eyebrow": "EWC 2026 · DEMI-FINALE",
-      "title": "Rendez-vous en *finale*",
-      "desc": "Menés après le Game 1, les joueurs de KC ont répondu avec caractère. Caliste a porté l'équipe pour renverser T1 et décrocher une place en finale de l'EWC.",
+      "eyebrow": "NOTES DES JOUEURS",
+      "title": "Les notes de *KC*",
+      "desc": "Caliste · ADC · *8.5/10*\nCanna · TOP · *8/10*\nBusio · SUP · *7.5/10*\nKyeahoo · MID · *7/10*\nYike · JGL · *6.5/10*",
       "showDesc": true,
       "signature": "Macro"
     }
