@@ -41,8 +41,11 @@ const FR_TEAMS = new Set([
 ]);
 function isFrenchTeam(name){
   if(!name) return false;
-  const key = name.toUpperCase().replace(/[_\s]+/g," ").trim();
-  return FR_TEAMS.has(key);
+  let key = name.toUpperCase().replace(/[_\s]+/g," ").trim();
+  if(TEAM_ALIASES[key]) key = TEAM_ALIASES[key];
+  if(FR_TEAMS.has(key)) return true;
+  for(const fr of FR_TEAMS){ if(fr.includes(key) || key.includes(fr)) return true; }
+  return false;
 }
 const teamLogos = {};
 let logosReady = false;
@@ -188,7 +191,7 @@ function findRoleIcon(role){
   if(!role) return null;
   const key = role.toUpperCase().replace(/[_\s]+/g," ").trim();
   if(roleIcons[key]) return roleIcons[key];
-  const aliases = { "JUNGLE":"JGL", "JUNGLER":"JGL", "ADC":"BOT", "BOTTOM":"BOT", "SUPP":"SUPPORT", "SUP":"SUPPORT" };
+  const aliases = { "JUNGLE":"JGL", "JUNGLER":"JGL", "ADC":"BOT", "BOTTOM":"BOT", "SUPP":"SUPPORT", "SUP":"SUPPORT", "TOPLANER":"TOP", "MIDLANER":"MID", "BOTLANER":"BOT", "ADC (BOTLANER)":"BOT", "ADC (BOT)":"BOT" };
   if(aliases[key] && roleIcons[aliases[key]]) return roleIcons[aliases[key]];
   return null;
 }
@@ -3492,10 +3495,16 @@ function drawLayoutGuide(W,H,c,scale,pad,maxW,acc,hi){
       ctx.fill(); ctx.stroke();
 
       let ty = cy + Math.round(14*scale);
-      // icon
-      ctx.font = `400 ${iconF}px sans-serif`;
-      ctx.fillStyle = "#fff"; ctx.textBaseline = "top";
-      ctx.fillText(icon, cx + Math.round(14*scale), ty);
+      // icon — use role icon if available, else emoji
+      const rIcon = findRoleIcon(icon) || findRoleIcon(name);
+      if(rIcon){
+        const iconS = Math.round(iconF*1.2);
+        ctx.drawImage(rIcon, cx + Math.round(14*scale), ty, iconS, iconS);
+      } else {
+        ctx.font = `400 ${iconF}px sans-serif`;
+        ctx.fillStyle = "#fff"; ctx.textBaseline = "top";
+        ctx.fillText(icon, cx + Math.round(14*scale), ty);
+      }
       ty += iconF + Math.round(6*scale);
       // name
       ctx.font = `700 ${nameF}px Sora, sans-serif`;
