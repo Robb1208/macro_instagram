@@ -1,0 +1,38 @@
+{
+  "format": "story",
+  "game": "esport",
+  "watermark": true,
+  "gradient": 100,
+  "slides": [
+    {
+      "template": "programme",
+      "eyebrow": "PROGRAMME DU JOUR",
+      "title": "*League of Legends*",
+      "desc": "EWC 2026 · Demi-finales",
+      "showDesc": true,
+      "matches": "##EWC 2026\n13:00 T1 vs Karmine Corp BO3\n15:30 Gen.G vs DPlus Kia BO3",
+      "showBgImage": false,
+      "game": "lol"
+    },
+    {
+      "template": "programme",
+      "eyebrow": "PROGRAMME DU JOUR",
+      "title": "*Valorant*",
+      "desc": "VCT EMEA Stage 2 · Semaine 1",
+      "showDesc": true,
+      "matches": "##VCT EMEA Stage 2\n17:00 Gentle Mates vs FUT Esports BO3\n20:00 Team Heretics vs Team Liquid BO3",
+      "showBgImage": false,
+      "game": "val"
+    },
+    {
+      "template": "programme",
+      "eyebrow": "PROGRAMME DU JOUR",
+      "title": "*Call of Duty*",
+      "desc": "CDL Championship 2026 · Las Vegas",
+      "showDesc": true,
+      "matches": "##CDL Championship 2026\n21:00 Paris Gentle Mates vs G2 Minnesota BO5\n22:30 Riyadh Falcons vs Miami Heretics BO5\n00:00 OpTic Texas vs FaZe Vegas BO5\n01:30 TBD vs TBD BO5",
+      "showBgImage": false,
+      "game": "cod"
+    }
+  ]
+}
