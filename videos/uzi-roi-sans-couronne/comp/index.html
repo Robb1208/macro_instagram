@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=1080, height=1920" />
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
     <style>
-      /* ── Fonts (bundled) ── */
       @font-face { font-family: 'Sora'; font-weight: 400; src: url('assets/fonts/sora-400.ttf') format('truetype'); }
       @font-face { font-family: 'Sora'; font-weight: 600; src: url('assets/fonts/sora-600.ttf') format('truetype'); }
       @font-face { font-family: 'Sora'; font-weight: 700; src: url('assets/fonts/sora-700.ttf') format('truetype'); }
@@ -18,10 +17,7 @@
       @font-face { font-family: 'JetBrains Mono'; font-weight: 700; src: url('assets/fonts/jetbrains-700.ttf') format('truetype'); }
 
       * { margin: 0; padding: 0; box-sizing: border-box; }
-      html, body {
-        margin: 0; width: 1080px; height: 1920px;
-        overflow: hidden; background: #070a0d;
-      }
+      html, body { margin: 0; width: 1080px; height: 1920px; overflow: hidden; background: #070a0d; }
       body { font-family: 'Manrope', system-ui, sans-serif; }
       h1, h2, h3 { font-family: 'Sora', sans-serif; color: #fff; letter-spacing: -0.01em; }
       .mono { font-family: 'JetBrains Mono', monospace; }
@@ -39,57 +35,26 @@
         position: absolute;
         left: 80px; right: 80px;
         text-align: center;
-        font-family: 'Sora', sans-serif;
-        font-weight: 700;
+        font-family: 'Manrope', sans-serif;
+        font-weight: 600;
+        font-size: 30px;
         color: #fff;
-        line-height: 1.35;
+        line-height: 1.45;
         opacity: 0;
-        text-shadow: 0 2px 20px rgba(0,0,0,0.8), 0 1px 4px rgba(0,0,0,0.9);
+        text-shadow: 0 2px 24px rgba(0,0,0,0.85), 0 1px 4px rgba(0,0,0,0.9);
       }
-      .subtitle .hl { color: var(--cyan); }
-      .subtitle .red { color: var(--red); }
+      .subtitle .hl { color: var(--cyan); font-weight: 700; }
+      .subtitle .red { color: var(--red); font-weight: 700; }
 
-      /* Scan line effect */
-      .scan-line {
-        position: absolute;
-        left: 0; right: 0;
-        height: 3px;
-        background: linear-gradient(90deg, transparent 0%, var(--cyan) 20%, var(--cyan-bright) 50%, var(--cyan) 80%, transparent 100%);
-        box-shadow: 0 0 30px rgba(0,194,224,0.6), 0 0 60px rgba(0,194,224,0.3);
-        opacity: 0;
+      .curves-layer {
+        position: absolute; inset: 0; z-index: 2;
+        mix-blend-mode: screen;
+        will-change: transform, opacity;
       }
-
-      /* Horizontal accent bars */
-      .h-bar {
-        position: absolute;
-        height: 1px;
-        background: linear-gradient(90deg, transparent 0%, rgba(0,194,224,0.5) 15%, rgba(0,194,224,0.8) 50%, rgba(0,194,224,0.5) 85%, transparent 100%);
-        opacity: 0;
-      }
-
-      /* Frame corners */
-      .frame-corner {
-        position: absolute;
-        width: 40px; height: 40px;
-        opacity: 0;
-      }
-      .frame-corner::before, .frame-corner::after {
-        content: '';
-        position: absolute;
-        background: var(--cyan);
-      }
-      .frame-corner.tl::before { top: 0; left: 0; width: 40px; height: 2px; }
-      .frame-corner.tl::after  { top: 0; left: 0; width: 2px; height: 40px; }
-      .frame-corner.tr::before { top: 0; right: 0; width: 40px; height: 2px; }
-      .frame-corner.tr::after  { top: 0; right: 0; width: 2px; height: 40px; }
-      .frame-corner.bl::before { bottom: 0; left: 0; width: 40px; height: 2px; }
-      .frame-corner.bl::after  { bottom: 0; left: 0; width: 2px; height: 40px; }
-      .frame-corner.br::before { bottom: 0; right: 0; width: 40px; height: 2px; }
-      .frame-corner.br::after  { bottom: 0; right: 0; width: 2px; height: 40px; }
+      .curves-layer img { width: 1080px; height: 1920px; object-fit: cover; }
     </style>
   </head>
   <body>
-    <!-- ═══ MAIN COMPOSITION — 1080×1920, 22s ═══ -->
     <div
       id="root"
       data-composition-id="main"
@@ -113,7 +78,7 @@
         style="position: absolute; inset: 0; z-index: 0; width: 1080px; height: 1920px; object-fit: cover"
       ></video>
 
-      <!-- ── TRACK 1: Gradient overlays ── -->
+      <!-- ── TRACK 1: Gradient overlays + cyan bottom fade ── -->
       <div
         id="gradient-overlay"
         class="clip"
@@ -123,82 +88,71 @@
         style="position: absolute; inset: 0; z-index: 1"
       >
         <div style="
-          position: absolute; top: 0; left: 0; right: 0; height: 500px;
-          background: linear-gradient(180deg, rgba(7,10,13,0.8) 0%, rgba(7,10,13,0.3) 50%, transparent 100%);
+          position: absolute; top: 0; left: 0; right: 0; height: 400px;
+          background: linear-gradient(180deg, rgba(7,10,13,0.65) 0%, rgba(7,10,13,0.15) 60%, transparent 100%);
         "></div>
         <div style="
-          position: absolute; bottom: 0; left: 0; right: 0; height: 800px;
-          background: linear-gradient(0deg, rgba(7,10,13,0.95) 0%, rgba(7,10,13,0.65) 35%, rgba(7,10,13,0.2) 70%, transparent 100%);
+          position: absolute; bottom: 0; left: 0; right: 0; height: 900px;
+          background: linear-gradient(0deg, rgba(7,10,13,0.95) 0%, rgba(7,10,13,0.7) 30%, rgba(7,10,13,0.25) 65%, transparent 100%);
         "></div>
-        <div id="cyan-glow" style="
-          position: absolute; bottom: 200px; left: 0; right: 0; height: 600px;
-          background: radial-gradient(ellipse 900px 400px at 50% 100%, rgba(0,194,224,0.08) 0%, transparent 70%);
-          opacity: 1;
+        <!-- Cyan color fade at the bottom -->
+        <div id="cyan-fade" style="
+          position: absolute; bottom: 0; left: 0; right: 0; height: 500px;
+          background: linear-gradient(0deg, rgba(0,194,224,0.12) 0%, rgba(0,194,224,0.05) 30%, transparent 100%);
+          opacity: 0;
         "></div>
       </div>
 
-      <!-- ── TRACK 2: Curves overlay (animated) ── -->
+      <!-- ── TRACK 2: Curves overlay — layer A (slow drift right+up) ── -->
       <div
-        id="curves"
-        class="clip"
+        id="curves-a"
+        class="clip curves-layer"
         data-start="0"
         data-duration="22"
         data-track-index="2"
-        style="position: absolute; inset: 0; z-index: 2; opacity: 0; mix-blend-mode: screen"
+        style="opacity: 0"
       >
-        <img src="assets/curves-overlay.png" style="width: 1080px; height: 1920px; object-fit: cover" />
+        <img src="assets/curves-overlay.png" />
       </div>
 
-      <!-- ── TRACK 3: Frame corners (cinematic) ── -->
+      <!-- ── TRACK 3: Curves overlay — layer B (slow drift left+down, offset) ── -->
       <div
-        id="frame"
-        class="clip"
+        id="curves-b"
+        class="clip curves-layer"
         data-start="0"
         data-duration="22"
         data-track-index="3"
-        style="position: absolute; inset: 0; z-index: 5"
+        style="opacity: 0; transform: scaleX(-1)"
       >
-        <div id="fc-tl" class="frame-corner tl" style="top: 240px; left: 55px"></div>
-        <div id="fc-tr" class="frame-corner tr" style="top: 240px; right: 55px"></div>
-        <div id="fc-bl" class="frame-corner bl" style="bottom: 340px; left: 55px"></div>
-        <div id="fc-br" class="frame-corner br" style="bottom: 340px; right: 55px"></div>
+        <img src="assets/curves-overlay.png" />
       </div>
 
-      <!-- ── TRACK 4: Scan lines ── -->
+      <!-- ── TRACK 4: Ambient cyan glow bloom ── -->
       <div
-        id="scan-container"
+        id="glow-bloom"
         class="clip"
         data-start="0"
         data-duration="22"
         data-track-index="4"
-        style="position: absolute; inset: 0; z-index: 6; pointer-events: none"
-      >
-        <div id="scan1" class="scan-line" style="top: 240px"></div>
-        <div id="scan2" class="scan-line" style="top: 1580px"></div>
-      </div>
+        style="
+          position: absolute; bottom: -100px; left: -200px; right: -200px; height: 800px;
+          z-index: 3;
+          background: radial-gradient(ellipse 1000px 500px at 50% 80%, rgba(0,194,224,0.15) 0%, rgba(0,194,224,0.04) 40%, transparent 70%);
+          opacity: 0;
+          will-change: transform, opacity;
+          pointer-events: none;
+        "
+      ></div>
 
-      <!-- ── TRACK 5: Horizontal accent bars ── -->
-      <div
-        id="hbars"
-        class="clip"
-        data-start="0"
-        data-duration="22"
-        data-track-index="5"
-        style="position: absolute; inset: 0; z-index: 7; pointer-events: none"
-      >
-        <div id="hbar-top" class="h-bar" style="top: 290px; left: 55px; right: 55px"></div>
-        <div id="hbar-bot" class="h-bar" style="bottom: 390px; left: 55px; right: 55px"></div>
-      </div>
-
-      <!-- ── TRACK 6: Top bar — Macro + LoL (inside safe zone) ── -->
+      <!-- ── TRACK 5: Top bar — Macro + LoL ── -->
       <div
         id="top-bar"
         class="clip"
         data-start="0"
         data-duration="22"
-        data-track-index="6"
+        data-track-index="5"
         style="
-          position: absolute; top: 260px; left: 80px; right: 80px; z-index: 10;
+          position: absolute; top: 250px; left: 80px; right: 80px; z-index: 10;
           display: flex; align-items: center; gap: 18px;
         "
       >
@@ -213,26 +167,26 @@
         </div>
       </div>
 
-      <!-- ── TRACK 7: Title block (0s–6s) — higher up ── -->
+      <!-- ── TRACK 6: Title block (0s–5.5s) ── -->
       <div
         id="title-block"
         class="clip"
         data-start="0"
-        data-duration="6"
-        data-track-index="7"
-        style="position: absolute; top: 620px; left: 80px; right: 80px; z-index: 10"
+        data-duration="5.5"
+        data-track-index="6"
+        style="position: absolute; bottom: 450px; left: 80px; right: 80px; z-index: 10"
       >
         <div id="eyebrow" style="
           font-family: 'Sora', sans-serif; font-size: 16px; font-weight: 700;
           letter-spacing: 0.2em; text-transform: uppercase; color: var(--cyan);
           margin-bottom: 18px; opacity: 0;
         ">PORTRAIT · LÉGENDE</div>
-        <h1 id="t-line1" style="font-size: 68px; font-weight: 800; line-height: 1.05; opacity: 0">Uzi,</h1>
-        <h1 id="t-line2" style="font-size: 68px; font-weight: 800; line-height: 1.05; opacity: 0">le roi <span style="color: var(--cyan)">sans</span></h1>
-        <h1 id="t-line3" style="font-size: 68px; font-weight: 800; color: var(--cyan); line-height: 1.05; opacity: 0">couronne</h1>
+        <h1 id="t-line1" style="font-size: 66px; font-weight: 800; line-height: 1.08; opacity: 0">Uzi,</h1>
+        <h1 id="t-line2" style="font-size: 66px; font-weight: 800; line-height: 1.08; opacity: 0">le roi <span style="color: var(--cyan)">sans</span></h1>
+        <h1 id="t-line3" style="font-size: 66px; font-weight: 800; color: var(--cyan); line-height: 1.08; opacity: 0">couronne</h1>
         <p id="t-sub" style="
-          font-family: 'Sora', sans-serif; font-size: 32px; font-weight: 600;
-          color: var(--fg-dim); line-height: 1.3; margin-top: 14px; opacity: 0;
+          font-family: 'Manrope', sans-serif; font-size: 28px; font-weight: 500;
+          color: var(--fg-dim); line-height: 1.3; margin-top: 16px; opacity: 0;
         ">de League of Legends</p>
         <div id="accent-line" style="
           width: 0; height: 3px; background: var(--cyan); margin-top: 20px;
@@ -240,83 +194,86 @@
         "></div>
       </div>
 
-      <!-- ── TRACK 8: Subtitle 1 (4s–7.5s) — centered in safe zone ── -->
-      <div id="sub1" class="clip subtitle" data-start="4" data-duration="3.5" data-track-index="8"
-        style="top: 700px; font-size: 34px; z-index: 11">
-        Jian Zi-Hao, alias <span class="hl">Uzi</span>, est considéré comme le <span class="hl">meilleur ADC</span> de l'histoire de League of Legends.
+      <!-- ── TRACK 7: Subtitle 1 (4s–8s) — L'enfant prodige ── -->
+      <div id="sub1" class="clip subtitle" data-start="4" data-duration="4" data-track-index="7"
+        style="bottom: 400px; z-index: 11">
+        <span class="hl">Jian Zi-Hao</span>, alias Uzi, entre sur la scène compétitive à seulement <span class="hl">16 ans</span>. En 2012, il écrase l'IPL5 avec Royal Club et devient le plus jeune joueur à atteindre une finale internationale. Son style ? <span class="hl">Ultra-agressif</span>, mécanique parfaite, aucun respect pour l'adversaire en lane.
       </div>
 
-      <!-- ── TRACK 9: Subtitle 2 (7.5s–11s) ── -->
-      <div id="sub2" class="clip subtitle" data-start="7.5" data-duration="3.5" data-track-index="9"
-        style="top: 700px; font-size: 34px; z-index: 11">
-        Pendant <span class="hl">8 ans</span>, il a dominé la botlane avec un style agressif et mécanique, repoussant les limites du rôle.
+      <!-- ── TRACK 8: Subtitle 2 (8s–12s) — La domination ── -->
+      <div id="sub2" class="clip subtitle" data-start="8" data-duration="4" data-track-index="8"
+        style="bottom: 400px; z-index: 11">
+        Pendant <span class="hl">8 ans</span>, Uzi redéfinit le rôle d'ADC. Sa Vayne est légendaire, son Lucian chirurgical. Il repousse le plafond mécanique du jeu à chaque saison. En LPL, personne ne veut l'affronter en botlane. <span class="hl">Le meilleur ADC de tous les temps</span>, disent les pros eux-mêmes.
       </div>
 
-      <!-- ── TRACK 10: Subtitle 3 (11s–14.5s) ── -->
-      <div id="sub3" class="clip subtitle" data-start="11" data-duration="3.5" data-track-index="10"
-        style="top: 700px; font-size: 34px; z-index: 11">
-        <span class="hl">5 participations</span> aux Worlds. <span class="hl">2 finales</span> perdues. Une en 2013, l'autre en 2014. À chaque fois, si près du titre.
+      <!-- ── TRACK 9: Subtitle 3 (12s–16s) — Les finales perdues ── -->
+      <div id="sub3" class="clip subtitle" data-start="12" data-duration="4" data-track-index="9"
+        style="bottom: 400px; z-index: 11">
+        <span class="hl">Worlds 2013</span> : finale face à SKT T1 de Faker. Défaite 3-0. <span class="hl">Worlds 2014</span> : encore en finale, cette fois face à Samsung White. Défaite 3-1. Cinq participations aux Worlds, <span class="hl">deux finales</span>, et à chaque fois, si près du titre. <span class="red">Jamais le sacre</span>.
       </div>
 
-      <!-- ── TRACK 11: Subtitle 4 (14.5s–18s) ── -->
-      <div id="sub4" class="clip subtitle" data-start="14.5" data-duration="3.5" data-track-index="11"
-        style="top: 700px; font-size: 34px; z-index: 11">
-        Blessures, retraites, retours. Son corps l'a trahi avant que le jeu ne le fasse. <span class="red">0 titre mondial</span>.
+      <!-- ── TRACK 10: Subtitle 4 (16s–19.5s) — La chute et la légende ── -->
+      <div id="sub4" class="clip subtitle" data-start="16" data-duration="3.5" data-track-index="10"
+        style="bottom: 400px; z-index: 11">
+        Des blessures chroniques aux mains et aux bras. Diabète de type 2 diagnostiqué en pleine carrière. <span class="hl">Trois retraites</span>, trois retours. Son corps l'a trahi bien avant que le jeu ne le fasse. En 2020, la retraite définitive. <span class="red">0 titre mondial</span>. Mais une légende <span class="hl">intacte</span>.
       </div>
 
-      <!-- ── TRACK 12: Stats bar (6s–19.5s) — above bottom safe zone ── -->
+      <!-- ── TRACK 11: Stats bar (5.5s–19.5s) ── -->
       <div
         id="stats-bar"
         class="clip"
-        data-start="6"
-        data-duration="13.5"
-        data-track-index="12"
+        data-start="5.5"
+        data-duration="14"
+        data-track-index="11"
         style="
-          position: absolute; top: 1100px; left: 80px; right: 80px; z-index: 10;
+          position: absolute; bottom: 350px; left: 80px; right: 80px; z-index: 10;
           display: flex; justify-content: space-between; gap: 16px;
         "
       >
         <div id="stat1" style="
           text-align: center; flex: 1; opacity: 0;
-          background: rgba(7,10,13,0.7); border: 1px solid rgba(0,194,224,0.25);
-          border-radius: 12px; padding: 14px 8px; backdrop-filter: blur(4px);
+          background: rgba(7,10,13,0.65); border: 1px solid rgba(0,194,224,0.2);
+          border-radius: 12px; padding: 14px 8px; backdrop-filter: blur(6px);
+          will-change: transform;
         ">
           <div class="mono" style="font-size: 34px; font-weight: 700; color: var(--cyan)">5x</div>
           <div style="font-size: 12px; color: var(--fg-dim); margin-top: 4px; font-family: 'Sora'; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase">Worlds</div>
         </div>
         <div id="stat2" style="
           text-align: center; flex: 1; opacity: 0;
-          background: rgba(7,10,13,0.7); border: 1px solid rgba(0,194,224,0.25);
-          border-radius: 12px; padding: 14px 8px; backdrop-filter: blur(4px);
+          background: rgba(7,10,13,0.65); border: 1px solid rgba(0,194,224,0.2);
+          border-radius: 12px; padding: 14px 8px; backdrop-filter: blur(6px);
+          will-change: transform;
         ">
           <div class="mono" style="font-size: 34px; font-weight: 700; color: var(--cyan)">2x</div>
           <div style="font-size: 12px; color: var(--fg-dim); margin-top: 4px; font-family: 'Sora'; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase">Finaliste</div>
         </div>
         <div id="stat3" style="
           text-align: center; flex: 1; opacity: 0;
-          background: rgba(7,10,13,0.7); border: 1px solid rgba(255,77,87,0.25);
-          border-radius: 12px; padding: 14px 8px; backdrop-filter: blur(4px);
+          background: rgba(7,10,13,0.65); border: 1px solid rgba(255,77,87,0.2);
+          border-radius: 12px; padding: 14px 8px; backdrop-filter: blur(6px);
+          will-change: transform;
         ">
           <div class="mono" style="font-size: 34px; font-weight: 700; color: var(--red)">0</div>
           <div style="font-size: 12px; color: var(--fg-dim); margin-top: 4px; font-family: 'Sora'; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase">Titre</div>
         </div>
       </div>
 
-      <!-- ── TRACK 13: Closing subtitle (18s–21s) ── -->
-      <div id="sub-end" class="clip subtitle" data-start="18" data-duration="3" data-track-index="13"
-        style="top: 750px; font-size: 38px; z-index: 11">
+      <!-- ── TRACK 12: Closing (19.5s–21.5s) ── -->
+      <div id="sub-end" class="clip subtitle" data-start="19.5" data-duration="2" data-track-index="12"
+        style="bottom: 500px; font-size: 36px; font-family: 'Sora', sans-serif; font-weight: 800; z-index: 11">
         Le <span class="hl">roi sans couronne</span>.<br/>La légende reste intacte.
       </div>
 
-      <!-- ── TRACK 14: macro.gg watermark ── -->
+      <!-- ── TRACK 13: macro.gg watermark ── -->
       <div
         id="counter"
         class="clip"
         data-start="0"
         data-duration="22"
-        data-track-index="14"
+        data-track-index="13"
         style="
-          position: absolute; bottom: 345px; right: 60px; z-index: 15;
+          position: absolute; bottom: 345px; right: 80px; z-index: 15;
           font-family: 'JetBrains Mono', monospace; font-size: 12px;
           color: rgba(255,255,255,0.2); opacity: 0;
         "
@@ -324,128 +281,155 @@
 
     </div>
 
-    <!-- ═══ GSAP TIMELINE ═══ -->
     <script>
       window.__timelines = window.__timelines || {};
-      const tl = gsap.timeline({ paused: true });
+      var tl = gsap.timeline({ paused: true });
 
-      // ── Curves overlay fade in + breathing pulse ──
-      tl.to("#curves", { opacity: 0.12, duration: 1.5, ease: "power2.out" }, 0);
-      tl.to("#curves", { opacity: 0.06, duration: 2, ease: "sine.inOut", yoyo: true, repeat: 4 }, 1.5);
+      // ── Curves layer A: bloom in + slow drift right/up ──
+      tl.fromTo("#curves-a",
+        { opacity: 0, scale: 1.05 },
+        { opacity: 0.10, scale: 1.05, duration: 1.5, ease: "power2.out" }, 0);
+      var curvesPhaseA = { p: 0 };
+      tl.to(curvesPhaseA, {
+        p: Math.PI * 2 * 3,
+        duration: 20,
+        ease: "none",
+        onUpdate: function() {
+          var drift = Math.sin(curvesPhaseA.p) * 15;
+          var driftY = Math.sin(curvesPhaseA.p * 0.7) * 10;
+          var sc = 1.05 + Math.sin(curvesPhaseA.p * 0.5) * 0.03;
+          var op = 0.10 + Math.sin(curvesPhaseA.p * 0.8) * 0.03;
+          var el = document.getElementById("curves-a");
+          el.style.transform = "translate(" + drift + "px, " + driftY + "px) scale(" + sc + ")";
+          el.style.opacity = String(op);
+        }
+      }, 1.5);
 
-      // ── Cyan glow breathing ──
-      tl.to("#cyan-glow", { opacity: 0.6, duration: 2.5, ease: "sine.inOut", yoyo: true, repeat: 7 }, 0.5);
+      // ── Curves layer B: bloom in + slow drift opposite direction ──
+      tl.fromTo("#curves-b",
+        { opacity: 0, scale: 1.08 },
+        { opacity: 0.06, scale: 1.08, duration: 2, ease: "power2.out" }, 0.5);
+      var curvesPhaseB = { p: 0 };
+      tl.to(curvesPhaseB, {
+        p: Math.PI * 2 * 2.5,
+        duration: 19,
+        ease: "none",
+        onUpdate: function() {
+          var drift = Math.sin(curvesPhaseB.p + Math.PI) * 12;
+          var driftY = Math.sin(curvesPhaseB.p * 0.6 + Math.PI / 2) * 8;
+          var sc = 1.08 + Math.sin(curvesPhaseB.p * 0.4) * 0.02;
+          var op = 0.06 + Math.sin(curvesPhaseB.p * 0.9) * 0.02;
+          var el = document.getElementById("curves-b");
+          el.style.transform = "scaleX(-1) translate(" + drift + "px, " + driftY + "px) scale(" + sc + ")";
+          el.style.opacity = String(op);
+        }
+      }, 2);
 
-      // ── Frame corners fade in (0.5s) ──
-      tl.fromTo("#fc-tl", { opacity: 0, x: -15, y: -15 }, { opacity: 0.5, x: 0, y: 0, duration: 0.7, ease: "power3.out" }, 0.5);
-      tl.fromTo("#fc-tr", { opacity: 0, x: 15, y: -15 },  { opacity: 0.5, x: 0, y: 0, duration: 0.7, ease: "power3.out" }, 0.6);
-      tl.fromTo("#fc-bl", { opacity: 0, x: -15, y: 15 },  { opacity: 0.5, x: 0, y: 0, duration: 0.7, ease: "power3.out" }, 0.7);
-      tl.fromTo("#fc-br", { opacity: 0, x: 15, y: 15 },   { opacity: 0.5, x: 0, y: 0, duration: 0.7, ease: "power3.out" }, 0.8);
+      // ── Cyan bottom fade: bloom in ──
+      tl.fromTo("#cyan-fade",
+        { opacity: 0 },
+        { opacity: 1, duration: 2, ease: "power2.out" }, 1);
 
-      // ── Horizontal bars sweep in ──
-      tl.fromTo("#hbar-top", { opacity: 0, scaleX: 0 }, { opacity: 0.4, scaleX: 1, duration: 0.8, ease: "power2.inOut" }, 0.8);
-      tl.fromTo("#hbar-bot", { opacity: 0, scaleX: 0 }, { opacity: 0.4, scaleX: 1, duration: 0.8, ease: "power2.inOut" }, 1.0);
+      // ── Ambient glow bloom: swell in then bounded breathe ──
+      tl.fromTo("#glow-bloom",
+        { opacity: 0, scale: 0.85 },
+        { opacity: 0.35, scale: 1, duration: 1.2, ease: "power2.out" }, 0.8);
+      var glowPhase = { p: 0 };
+      tl.to(glowPhase, {
+        p: Math.PI * 2 * 5,
+        duration: 19.5,
+        ease: "none",
+        onUpdate: function() {
+          var op = 0.35 + Math.sin(glowPhase.p) * 0.08;
+          var sc = 1 + Math.sin(glowPhase.p) * 0.02;
+          var el = document.getElementById("glow-bloom");
+          el.style.opacity = String(op);
+          el.style.transform = "scale(" + sc + ")";
+        }
+      }, 2);
 
-      // ── Scan line 1: sweep down at 1s ──
-      tl.fromTo("#scan1", { y: 0, opacity: 0 }, { y: 0, opacity: 0.7, duration: 0.1 }, 1.0);
-      tl.to("#scan1", { y: 1340, duration: 1.2, ease: "power1.inOut" }, 1.1);
-      tl.to("#scan1", { opacity: 0, duration: 0.2 }, 2.1);
-
-      // ── Top bar (0.3s → 1.2s) ──
+      // ── Top bar ──
       tl.fromTo("#macro-logo", { opacity: 0, x: -20 }, { opacity: 1, x: 0, duration: 0.6, ease: "power3.out" }, 0.3);
-      tl.fromTo("#cyan-sep",   { opacity: 0, scaleY: 0 }, { opacity: 1, scaleY: 1, duration: 0.3, ease: "power3.out" }, 0.6);
+      tl.fromTo("#cyan-sep", { opacity: 0, scaleY: 0 }, { opacity: 1, scaleY: 1, duration: 0.3, ease: "power3.out" }, 0.6);
       tl.fromTo("#game-badge", { opacity: 0, x: -15 }, { opacity: 1, x: 0, duration: 0.5, ease: "power3.out" }, 0.7);
-      tl.fromTo("#counter",    { opacity: 0 }, { opacity: 1, duration: 0.4 }, 0.5);
+      tl.fromTo("#counter", { opacity: 0 }, { opacity: 1, duration: 0.4 }, 0.5);
 
-      // ── Title block (0.8s → 3.2s) — more dynamic reveals ──
-      tl.fromTo("#eyebrow", { opacity: 0, x: -30 }, { opacity: 1, x: 0, duration: 0.5, ease: "power3.out" }, 0.8);
-      tl.fromTo("#t-line1", { opacity: 0, y: 40, scale: 0.97 }, { opacity: 1, y: 0, scale: 1, duration: 0.55, ease: "power3.out" }, 1.2);
-      tl.fromTo("#t-line2", { opacity: 0, y: 40, scale: 0.97 }, { opacity: 1, y: 0, scale: 1, duration: 0.55, ease: "power3.out" }, 1.5);
-      tl.fromTo("#t-line3", { opacity: 0, y: 40, scale: 0.97 }, { opacity: 1, y: 0, scale: 1, duration: 0.55, ease: "power3.out" }, 1.8);
-      tl.fromTo("#t-sub",   { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.4, ease: "power2.out" }, 2.3);
-      tl.to("#accent-line", { width: 200, duration: 0.6, ease: "power2.inOut" }, 2.6);
+      // ── Title block: waterfall entry ──
+      var F = 1 / 30;
+      tl.set("#eyebrow", { opacity: 1, x: -30 }, 0.8);
+      tl.to("#eyebrow", { x: 0, duration: 0.4, ease: "power4.out" }, 0.8);
 
-      // ── Accent line glow pulse ──
-      tl.to("#accent-line", { boxShadow: "0 0 30px rgba(0,194,224,0.8)", duration: 0.4, ease: "sine.inOut", yoyo: true, repeat: 1 }, 3.0);
+      var t1 = 0.8 + 0.4 + 2 * F;
+      tl.set("#t-line1", { opacity: 1, y: 50 }, t1);
+      tl.to("#t-line1", { y: 0, duration: 0.35, ease: "power4.out" }, t1);
 
-      // ── Title block exit (3.5s → 4s) ──
-      tl.to("#eyebrow",     { opacity: 0, x: -20, duration: 0.35, ease: "power2.in" }, 3.5);
-      tl.to("#t-line1",     { opacity: 0, y: -15, duration: 0.35, ease: "power2.in" }, 3.5);
-      tl.to("#t-line2",     { opacity: 0, y: -15, duration: 0.35, ease: "power2.in" }, 3.6);
-      tl.to("#t-line3",     { opacity: 0, y: -15, duration: 0.35, ease: "power2.in" }, 3.7);
-      tl.to("#t-sub",       { opacity: 0, duration: 0.3, ease: "power2.in" }, 3.7);
-      tl.to("#accent-line", { opacity: 0, width: 0, duration: 0.3, ease: "power2.in" }, 3.7);
-      tl.set("#t-line2",    { opacity: 0 }, 4.0);
-      tl.set("#t-line3",    { opacity: 0 }, 4.0);
-      tl.set("#t-sub",      { opacity: 0 }, 4.0);
-      tl.set("#accent-line",{ opacity: 0 }, 4.0);
+      var t2 = t1 + 0.35 - F;
+      tl.set("#t-line2", { opacity: 1, y: 50 }, t2);
+      tl.to("#t-line2", { y: 0, duration: 0.35, ease: "power4.out" }, t2);
 
-      // ── Scan line 2: sweep up at transition (3.8s) ──
-      tl.fromTo("#scan2", { y: 0, opacity: 0 }, { y: 0, opacity: 0.5, duration: 0.1 }, 3.8);
-      tl.to("#scan2", { y: -1340, duration: 1.0, ease: "power1.inOut" }, 3.9);
-      tl.to("#scan2", { opacity: 0, duration: 0.2 }, 4.7);
+      var t3 = t2 + 0.35 - F;
+      tl.set("#t-line3", { opacity: 1, y: 50 }, t3);
+      tl.to("#t-line3", { y: 0, duration: 0.35, ease: "power4.out" }, t3);
 
-      // ── Subtitle 1 (4s → 7s) — slide up + scale ──
-      tl.fromTo("#sub1", { opacity: 0, y: 30, scale: 0.96 }, { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: "power3.out" }, 4.0);
-      tl.to("#sub1", { opacity: 0, y: -15, duration: 0.4, ease: "power2.in" }, 7.0);
+      var t4 = t3 + 0.3;
+      tl.fromTo("#t-sub", { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.4, ease: "power3.out" }, t4);
+      tl.to("#accent-line", { width: 200, duration: 0.5, ease: "power2.inOut" }, t4 + 0.1);
 
-      // ── H-bars pulse on subtitle transitions ──
-      tl.to("#hbar-top", { opacity: 0.7, duration: 0.15, ease: "power1.in", yoyo: true, repeat: 1 }, 4.0);
-      tl.to("#hbar-bot", { opacity: 0.7, duration: 0.15, ease: "power1.in", yoyo: true, repeat: 1 }, 4.0);
+      // ── Title block exit ──
+      tl.to("#eyebrow", { opacity: 0, x: -15, duration: 0.3, ease: "power2.in" }, 3.8);
+      tl.to("#t-line1", { opacity: 0, y: -12, duration: 0.3, ease: "power2.in" }, 3.8);
+      tl.to("#t-line2", { opacity: 0, y: -12, duration: 0.3, ease: "power2.in" }, 3.9);
+      tl.to("#t-line3", { opacity: 0, y: -12, duration: 0.3, ease: "power2.in" }, 4.0);
+      tl.to("#t-sub", { opacity: 0, duration: 0.25, ease: "power2.in" }, 4.0);
+      tl.to("#accent-line", { opacity: 0, width: 0, duration: 0.25, ease: "power2.in" }, 4.0);
+      tl.set("#t-line3", { opacity: 0 }, 4.4);
+      tl.set("#t-sub", { opacity: 0 }, 4.4);
+      tl.set("#accent-line", { opacity: 0 }, 4.4);
 
-      // ── Stats pop in (6.5s) ──
-      tl.fromTo("#stat1", { opacity: 0, y: 30, scale: 0.88 }, { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: "back.out(1.6)" }, 6.5);
-      tl.fromTo("#stat2", { opacity: 0, y: 30, scale: 0.88 }, { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: "back.out(1.6)" }, 6.8);
-      tl.fromTo("#stat3", { opacity: 0, y: 30, scale: 0.88 }, { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: "back.out(1.6)" }, 7.1);
+      // ── Subtitle 1 (4s–7.5s) ──
+      tl.fromTo("#sub1", { opacity: 0, y: 25 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, 4.2);
+      tl.to("#sub1", { opacity: 0, y: -12, duration: 0.4, ease: "power2.in" }, 7.5);
 
-      // ── Subtitle 2 (7.5s → 10.5s) ──
-      tl.fromTo("#sub2", { opacity: 0, y: 30, scale: 0.96 }, { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: "power3.out" }, 7.5);
-      tl.to("#hbar-top", { opacity: 0.7, duration: 0.15, ease: "power1.in", yoyo: true, repeat: 1 }, 7.5);
-      tl.to("#sub2", { opacity: 0, y: -15, duration: 0.4, ease: "power2.in" }, 10.5);
+      // ── Stats pop in (5.5s) — smooth power3 settle ──
+      tl.fromTo("#stat1", { opacity: 0, scale: 0, y: 20 }, { opacity: 1, scale: 1, y: 0, duration: 0.5, ease: "power3.out" }, 5.8);
+      tl.fromTo("#stat2", { opacity: 0, scale: 0, y: 20 }, { opacity: 1, scale: 1, y: 0, duration: 0.5, ease: "power3.out" }, 6.0);
+      tl.fromTo("#stat3", { opacity: 0, scale: 0, y: 20 }, { opacity: 1, scale: 1, y: 0, duration: 0.5, ease: "power3.out" }, 6.2);
 
-      // ── Subtitle 3 (11s → 14s) ──
-      tl.fromTo("#sub3", { opacity: 0, y: 30, scale: 0.96 }, { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: "power3.out" }, 11.0);
-      tl.to("#hbar-top", { opacity: 0.7, duration: 0.15, ease: "power1.in", yoyo: true, repeat: 1 }, 11.0);
-      tl.to("#sub3", { opacity: 0, y: -15, duration: 0.4, ease: "power2.in" }, 14.0);
+      // ── Subtitle 2 (8s–11.5s) ──
+      tl.fromTo("#sub2", { opacity: 0, y: 25 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, 8.2);
+      tl.to("#sub2", { opacity: 0, y: -12, duration: 0.4, ease: "power2.in" }, 11.5);
 
-      // ── Subtitle 4 (14.5s → 17.5s) ──
-      tl.fromTo("#sub4", { opacity: 0, y: 30, scale: 0.96 }, { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: "power3.out" }, 14.5);
-      tl.to("#hbar-top", { opacity: 0.7, duration: 0.15, ease: "power1.in", yoyo: true, repeat: 1 }, 14.5);
-      tl.to("#stat3", { scale: 1.1, duration: 0.3, ease: "power1.inOut", yoyo: true, repeat: 1 }, 15.5);
-      tl.to("#sub4", { opacity: 0, y: -15, duration: 0.4, ease: "power2.in" }, 17.5);
+      // ── Subtitle 3 (12s–15.5s) ──
+      tl.fromTo("#sub3", { opacity: 0, y: 25 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, 12.2);
+      tl.to("#sub3", { opacity: 0, y: -12, duration: 0.4, ease: "power2.in" }, 15.5);
 
-      // ── Stats exit (17.5s) ──
-      tl.to("#stat1", { opacity: 0, y: 20, duration: 0.4, ease: "power2.in" }, 17.5);
-      tl.to("#stat2", { opacity: 0, y: 20, duration: 0.4, ease: "power2.in" }, 17.6);
-      tl.to("#stat3", { opacity: 0, y: 20, duration: 0.4, ease: "power2.in" }, 17.7);
-      tl.set("#stat2", { opacity: 0 }, 18.0);
+      // ── Subtitle 4 (16s–19s) ──
+      tl.fromTo("#sub4", { opacity: 0, y: 25 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, 16.2);
+      // Pulse "0 titre" stat
+      tl.to("#stat3", { scale: 1.08, duration: 0.25, ease: "power1.inOut", yoyo: true, repeat: 1 }, 17.5);
+      tl.to("#sub4", { opacity: 0, y: -12, duration: 0.4, ease: "power2.in" }, 19.0);
 
-      // ── Scan line sweep before closing ──
-      tl.set("#scan1", { y: 0 }, 17.5);
-      tl.fromTo("#scan1", { y: 0, opacity: 0 }, { y: 0, opacity: 0.6, duration: 0.1 }, 17.6);
-      tl.to("#scan1", { y: 1340, duration: 0.8, ease: "power1.in" }, 17.75);
-      tl.to("#scan1", { opacity: 0, duration: 0.15 }, 18.35);
+      // ── Stats exit (19s) ──
+      tl.to("#stat1", { opacity: 0, y: 15, duration: 0.4, ease: "power2.in" }, 19.0);
+      tl.to("#stat2", { opacity: 0, y: 15, duration: 0.4, ease: "power2.in" }, 19.1);
+      tl.to("#stat3", { opacity: 0, y: 15, duration: 0.4, ease: "power2.in" }, 19.2);
+      tl.set("#stat2", { opacity: 0 }, 19.5);
 
-      // ── Closing subtitle (18s → 21s) — scale up reveal ──
-      tl.fromTo("#sub-end", { opacity: 0, scale: 0.92 }, { opacity: 1, scale: 1, duration: 0.7, ease: "power3.out" }, 18.0);
-      tl.to("#sub-end", { opacity: 0, scale: 1.03, duration: 0.6, ease: "power2.in" }, 20.5);
+      // ── Closing subtitle (19.5s–21.5s) ──
+      tl.fromTo("#sub-end", { opacity: 0, scale: 0.94 }, { opacity: 1, scale: 1, duration: 0.6, ease: "power3.out" }, 19.5);
+      tl.to("#sub-end", { opacity: 0, duration: 0.5, ease: "power2.in" }, 21.0);
 
-      // ── Frame corners pulse at closing ──
-      tl.to("#fc-tl", { opacity: 0.8, duration: 0.3, ease: "sine.inOut", yoyo: true, repeat: 1 }, 18.0);
-      tl.to("#fc-tr", { opacity: 0.8, duration: 0.3, ease: "sine.inOut", yoyo: true, repeat: 1 }, 18.1);
-      tl.to("#fc-bl", { opacity: 0.8, duration: 0.3, ease: "sine.inOut", yoyo: true, repeat: 1 }, 18.2);
-      tl.to("#fc-br", { opacity: 0.8, duration: 0.3, ease: "sine.inOut", yoyo: true, repeat: 1 }, 18.3);
+      // ── Glow pulse on closing ──
+      tl.to("#glow-bloom", { opacity: 0.5, scale: 1.05, duration: 0.4, ease: "power2.out" }, 19.5);
+      tl.to("#glow-bloom", { opacity: 0.25, scale: 1, duration: 0.6, ease: "power2.inOut" }, 20.0);
 
-      // ── Everything exits (21s → 22s) ──
-      tl.to("#top-bar",  { opacity: 0, y: -10, duration: 0.5, ease: "power2.in" }, 21.0);
-      tl.to("#hbar-top", { opacity: 0, scaleX: 0, duration: 0.4, ease: "power2.in" }, 21.0);
-      tl.to("#hbar-bot", { opacity: 0, scaleX: 0, duration: 0.4, ease: "power2.in" }, 21.1);
-      tl.to("#fc-tl",    { opacity: 0, duration: 0.4, ease: "power2.in" }, 21.0);
-      tl.to("#fc-tr",    { opacity: 0, duration: 0.4, ease: "power2.in" }, 21.1);
-      tl.to("#fc-bl",    { opacity: 0, duration: 0.4, ease: "power2.in" }, 21.2);
-      tl.to("#fc-br",    { opacity: 0, duration: 0.4, ease: "power2.in" }, 21.3);
-      tl.to("#counter",  { opacity: 0, duration: 0.4, ease: "power2.in" }, 21.2);
-      tl.to("#curves",   { opacity: 0, duration: 0.5, ease: "power2.in" }, 21.0);
+      // ── Everything out (21s–22s) ──
+      tl.to("#top-bar", { opacity: 0, y: -10, duration: 0.5, ease: "power2.in" }, 21.0);
+      tl.to("#counter", { opacity: 0, duration: 0.4, ease: "power2.in" }, 21.2);
+      tl.to("#glow-bloom", { opacity: 0, duration: 0.6, ease: "power2.in" }, 21.0);
+      tl.to("#cyan-fade", { opacity: 0, duration: 0.5, ease: "power2.in" }, 21.0);
+      tl.to("#curves-a", { opacity: 0, duration: 0.5, ease: "power2.in" }, 21.0);
+      tl.to("#curves-b", { opacity: 0, duration: 0.5, ease: "power2.in" }, 21.0);
 
       window.__timelines["main"] = tl;
     </script>
