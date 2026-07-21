@@ -194,27 +194,27 @@
         "></div>
       </div>
 
-      <!-- ── TRACK 7: Subtitle 1 (4s–8s) — L'enfant prodige ── -->
-      <div id="sub1" class="clip subtitle" data-start="4" data-duration="4" data-track-index="7"
-        style="bottom: 400px; z-index: 11">
+      <!-- ── TRACK 7: Subtitle 1 (4s–8.5s) — L'enfant prodige ── -->
+      <div id="sub1" class="clip subtitle" data-start="4" data-duration="4.5" data-track-index="7"
+        style="bottom: 520px; z-index: 11">
         <span class="hl">Jian Zi-Hao</span>, alias Uzi, entre sur la scène compétitive à seulement <span class="hl">16 ans</span>. En 2012, il écrase l'IPL5 avec Royal Club et devient le plus jeune joueur à atteindre une finale internationale. Son style ? <span class="hl">Ultra-agressif</span>, mécanique parfaite, aucun respect pour l'adversaire en lane.
       </div>
 
-      <!-- ── TRACK 8: Subtitle 2 (8s–12s) — La domination ── -->
-      <div id="sub2" class="clip subtitle" data-start="8" data-duration="4" data-track-index="8"
-        style="bottom: 400px; z-index: 11">
+      <!-- ── TRACK 8: Subtitle 2 (8.5s–13s) — La domination ── -->
+      <div id="sub2" class="clip subtitle" data-start="8.5" data-duration="4.5" data-track-index="8"
+        style="bottom: 520px; z-index: 11">
         Pendant <span class="hl">8 ans</span>, Uzi redéfinit le rôle d'ADC. Sa Vayne est légendaire, son Lucian chirurgical. Il repousse le plafond mécanique du jeu à chaque saison. En LPL, personne ne veut l'affronter en botlane. <span class="hl">Le meilleur ADC de tous les temps</span>, disent les pros eux-mêmes.
       </div>
 
-      <!-- ── TRACK 9: Subtitle 3 (12s–16s) — Les finales perdues ── -->
-      <div id="sub3" class="clip subtitle" data-start="12" data-duration="4" data-track-index="9"
-        style="bottom: 400px; z-index: 11">
+      <!-- ── TRACK 9: Subtitle 3 (13s–17s) — Les finales perdues ── -->
+      <div id="sub3" class="clip subtitle" data-start="13" data-duration="4" data-track-index="9"
+        style="bottom: 520px; z-index: 11">
         <span class="hl">Worlds 2013</span> : finale face à SKT T1 de Faker. Défaite 3-0. <span class="hl">Worlds 2014</span> : encore en finale, cette fois face à Samsung White. Défaite 3-1. Cinq participations aux Worlds, <span class="hl">deux finales</span>, et à chaque fois, si près du titre. <span class="red">Jamais le sacre</span>.
       </div>
 
-      <!-- ── TRACK 10: Subtitle 4 (16s–19.5s) — La chute et la légende ── -->
-      <div id="sub4" class="clip subtitle" data-start="16" data-duration="3.5" data-track-index="10"
-        style="bottom: 400px; z-index: 11">
+      <!-- ── TRACK 10: Subtitle 4 (17s–20s) — La chute et la légende ── -->
+      <div id="sub4" class="clip subtitle" data-start="17" data-duration="3" data-track-index="10"
+        style="bottom: 520px; z-index: 11">
         Des blessures chroniques aux mains et aux bras. Diabète de type 2 diagnostiqué en pleine carrière. <span class="hl">Trois retraites</span>, trois retours. Son corps l'a trahi bien avant que le jeu ne le fasse. En 2020, la retraite définitive. <span class="red">0 titre mondial</span>. Mais une légende <span class="hl">intacte</span>.
       </div>
 
@@ -259,9 +259,9 @@
         </div>
       </div>
 
-      <!-- ── TRACK 12: Closing (19.5s–21.5s) ── -->
-      <div id="sub-end" class="clip subtitle" data-start="19.5" data-duration="2" data-track-index="12"
-        style="bottom: 500px; font-size: 36px; font-family: 'Sora', sans-serif; font-weight: 800; z-index: 11">
+      <!-- ── TRACK 12: Closing (20s–22s) ── -->
+      <div id="sub-end" class="clip subtitle" data-start="20" data-duration="2" data-track-index="12"
+        style="bottom: 580px; font-size: 36px; font-family: 'Sora', sans-serif; font-weight: 800; z-index: 11">
         Le <span class="hl">roi sans couronne</span>.<br/>La légende reste intacte.
       </div>
 
@@ -386,47 +386,47 @@
       tl.set("#t-sub", { opacity: 0 }, 4.4);
       tl.set("#accent-line", { opacity: 0 }, 4.4);
 
-      // ── Subtitle 1 (4s–7.5s) ──
+      // ── Subtitle 1 (4s–8s) ──
       tl.fromTo("#sub1", { opacity: 0, y: 25 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, 4.2);
-      tl.to("#sub1", { opacity: 0, y: -12, duration: 0.4, ease: "power2.in" }, 7.5);
+      tl.to("#sub1", { opacity: 0, y: -12, duration: 0.4, ease: "power2.in" }, 8.0);
 
       // ── Stats pop in (5.5s) — smooth power3 settle ──
       tl.fromTo("#stat1", { opacity: 0, scale: 0, y: 20 }, { opacity: 1, scale: 1, y: 0, duration: 0.5, ease: "power3.out" }, 5.8);
       tl.fromTo("#stat2", { opacity: 0, scale: 0, y: 20 }, { opacity: 1, scale: 1, y: 0, duration: 0.5, ease: "power3.out" }, 6.0);
       tl.fromTo("#stat3", { opacity: 0, scale: 0, y: 20 }, { opacity: 1, scale: 1, y: 0, duration: 0.5, ease: "power3.out" }, 6.2);
 
-      // ── Subtitle 2 (8s–11.5s) ──
-      tl.fromTo("#sub2", { opacity: 0, y: 25 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, 8.2);
-      tl.to("#sub2", { opacity: 0, y: -12, duration: 0.4, ease: "power2.in" }, 11.5);
+      // ── Subtitle 2 (8.5s–12.5s) ──
+      tl.fromTo("#sub2", { opacity: 0, y: 25 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, 8.7);
+      tl.to("#sub2", { opacity: 0, y: -12, duration: 0.4, ease: "power2.in" }, 12.5);
 
-      // ── Subtitle 3 (12s–15.5s) ──
-      tl.fromTo("#sub3", { opacity: 0, y: 25 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, 12.2);
-      tl.to("#sub3", { opacity: 0, y: -12, duration: 0.4, ease: "power2.in" }, 15.5);
+      // ── Subtitle 3 (13s–16.5s) ──
+      tl.fromTo("#sub3", { opacity: 0, y: 25 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, 13.2);
+      tl.to("#sub3", { opacity: 0, y: -12, duration: 0.4, ease: "power2.in" }, 16.5);
 
-      // ── Subtitle 4 (16s–19s) ──
-      tl.fromTo("#sub4", { opacity: 0, y: 25 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, 16.2);
+      // ── Subtitle 4 (17s–19.5s) ──
+      tl.fromTo("#sub4", { opacity: 0, y: 25 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, 17.2);
       // Pulse "0 titre" stat
-      tl.to("#stat3", { scale: 1.08, duration: 0.25, ease: "power1.inOut", yoyo: true, repeat: 1 }, 17.5);
-      tl.to("#sub4", { opacity: 0, y: -12, duration: 0.4, ease: "power2.in" }, 19.0);
+      tl.to("#stat3", { scale: 1.08, duration: 0.25, ease: "power1.inOut", yoyo: true, repeat: 1 }, 18.0);
+      tl.to("#sub4", { opacity: 0, y: -12, duration: 0.4, ease: "power2.in" }, 19.5);
 
-      // ── Stats exit (19s) ──
-      tl.to("#stat1", { opacity: 0, y: 15, duration: 0.4, ease: "power2.in" }, 19.0);
-      tl.to("#stat2", { opacity: 0, y: 15, duration: 0.4, ease: "power2.in" }, 19.1);
-      tl.to("#stat3", { opacity: 0, y: 15, duration: 0.4, ease: "power2.in" }, 19.2);
-      tl.set("#stat2", { opacity: 0 }, 19.5);
+      // ── Stats exit (19.5s) ──
+      tl.to("#stat1", { opacity: 0, y: 15, duration: 0.4, ease: "power2.in" }, 19.5);
+      tl.to("#stat2", { opacity: 0, y: 15, duration: 0.4, ease: "power2.in" }, 19.6);
+      tl.to("#stat3", { opacity: 0, y: 15, duration: 0.4, ease: "power2.in" }, 19.7);
+      tl.set("#stat2", { opacity: 0 }, 20.0);
 
-      // ── Closing subtitle (19.5s–21.5s) ──
-      tl.fromTo("#sub-end", { opacity: 0, scale: 0.94 }, { opacity: 1, scale: 1, duration: 0.6, ease: "power3.out" }, 19.5);
-      tl.to("#sub-end", { opacity: 0, duration: 0.5, ease: "power2.in" }, 21.0);
+      // ── Closing subtitle (20s–21.5s) ──
+      tl.fromTo("#sub-end", { opacity: 0, scale: 0.94 }, { opacity: 1, scale: 1, duration: 0.6, ease: "power3.out" }, 20.0);
+      tl.to("#sub-end", { opacity: 0, duration: 0.5, ease: "power2.in" }, 21.3);
 
       // ── Glow pulse on closing ──
-      tl.to("#glow-bloom", { opacity: 0.5, scale: 1.05, duration: 0.4, ease: "power2.out" }, 19.5);
-      tl.to("#glow-bloom", { opacity: 0.25, scale: 1, duration: 0.6, ease: "power2.inOut" }, 20.0);
+      tl.to("#glow-bloom", { opacity: 0.5, scale: 1.05, duration: 0.4, ease: "power2.out" }, 20.0);
+      tl.to("#glow-bloom", { opacity: 0.25, scale: 1, duration: 0.6, ease: "power2.inOut" }, 20.5);
 
       // ── Everything out (21s–22s) ──
       tl.to("#top-bar", { opacity: 0, y: -10, duration: 0.5, ease: "power2.in" }, 21.0);
       tl.to("#counter", { opacity: 0, duration: 0.4, ease: "power2.in" }, 21.2);
-      tl.to("#glow-bloom", { opacity: 0, duration: 0.6, ease: "power2.in" }, 21.0);
+      tl.to("#glow-bloom", { opacity: 0, duration: 0.5, ease: "power2.in" }, 21.2);
       tl.to("#cyan-fade", { opacity: 0, duration: 0.5, ease: "power2.in" }, 21.0);
       tl.to("#curves-a", { opacity: 0, duration: 0.5, ease: "power2.in" }, 21.0);
       tl.to("#curves-b", { opacity: 0, duration: 0.5, ease: "power2.in" }, 21.0);
