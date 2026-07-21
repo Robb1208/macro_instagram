@@ -1724,6 +1724,23 @@ function drawLayoutTierList(W,H,c,scale,pad,maxW,acc,hi){
   ctx.textBaseline = "top";
   for(const ln of titleLines){ drawRichLine(ln, pad, y, titleFont, hi, "#ffffff"); y += titleLH; }
 
+  if(c.showDesc && c.desc && c.desc.trim()){
+    const descF = Math.round(28*scale*sVal("descScale"));
+    const descLH = Math.round(descF*1.55);
+    const descFont = `500 ${descF}px Manrope, sans-serif`;
+    const divH = Math.round(3*scale);
+    y += Math.round(12*scale);
+    const gradDiv = ctx.createLinearGradient(pad, y, pad+maxW, y);
+    gradDiv.addColorStop(0, acc); gradDiv.addColorStop(1, "transparent");
+    ctx.fillStyle = gradDiv;
+    ctx.fillRect(pad, y, maxW, divH);
+    y += divH + Math.round(16*scale);
+    const descWords = richWords(c.desc);
+    const descLines = wrapRich(descWords, descFont, maxW);
+    ctx.textBaseline = "top";
+    for(const ln of descLines){ drawRichLine(ln, pad, y, descFont, acc, "#dfdfdf"); y += descLH; }
+  }
+
   const tiers = parseTiers(c.tiers);
   if(!tiers.length){ lastTextBox=null; return; }
 
