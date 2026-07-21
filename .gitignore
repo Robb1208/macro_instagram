@@ -28,6 +28,10 @@
 # Ignorer les presets (posts générés + images = lourd)
 outil-instagram/presets/
 
+# === HYPERFRAMES (skills installés via npx skills) ===
+!.agents/
+!.agents/**
+
 # === SKILLS ===
 !.claude/
 !.claude/skills/
@@ -37,6 +41,31 @@ outil-instagram/presets/
 !.claude/skills/match-result/SKILL.md
 !.claude/skills/programme-jour/
 !.claude/skills/programme-jour/SKILL.md
+!.claude/skills/captions-overlay
+!.claude/skills/changelog-video
+!.claude/skills/cut-the-curve
+!.claude/skills/embedded-captions
+!.claude/skills/faceless-explainer
+!.claude/skills/figma
+!.claude/skills/general-video
+!.claude/skills/hyperframes
+!.claude/skills/hyperframes-animation
+!.claude/skills/hyperframes-cli
+!.claude/skills/hyperframes-core
+!.claude/skills/hyperframes-creative
+!.claude/skills/hyperframes-keyframes
+!.claude/skills/hyperframes-registry
+!.claude/skills/media-use
+!.claude/skills/motion-doctrine
+!.claude/skills/motion-graphics
+!.claude/skills/music-to-video
+!.claude/skills/oversized-cursor
+!.claude/skills/pr-to-video
+!.claude/skills/product-launch-video
+!.claude/skills/remotion-to-hyperframes
+!.claude/skills/seam-craft
+!.claude/skills/slideshow
+!.claude/skills/talking-head-recut
 
 # === REDIRECTION GITHUB PAGES ===
 !index.html
