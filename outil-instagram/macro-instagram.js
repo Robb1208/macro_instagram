@@ -3486,14 +3486,18 @@ function drawLayoutGuide(W,H,c,scale,pad,maxW,acc,hi){
   if(c.grid && c.grid.trim()){
     const gridItems = c.grid.trim().split("\n").filter(l=>l.trim());
     const cols = gridItems.length <= 3 ? gridItems.length : 2;
-    const gap = Math.round(10*scale);
+    const nRows = Math.ceil(gridItems.length / cols);
+    const bottomMargin = Math.round(80*scale);
+    const availH = H - y - bottomMargin;
+    const gap = Math.round(14*scale);
+    const cardH = Math.round((availH - (nRows-1)*gap) / nRows);
     const cardW = (maxW - (cols-1)*gap) / cols;
-    const cardH = Math.round(110*scale);
-    const cardR = Math.round(10*scale);
-    const iconF = Math.round(26*scale);
-    const nameF = Math.round(22*scale);
-    const gdescF = Math.round(18*scale);
-    const gdescLH = Math.round(gdescF*1.35);
+    const cardR = Math.round(12*scale);
+    const cardPad = Math.round(20*scale);
+    const iconF = Math.round(36*scale);
+    const nameF = Math.round(30*scale);
+    const gdescF = Math.round(22*scale);
+    const gdescLH = Math.round(gdescF*1.45);
 
     gridItems.forEach((raw, i) => {
       const parts = raw.split("#").map(s=>s.trim());
@@ -3511,28 +3515,29 @@ function drawLayoutGuide(W,H,c,scale,pad,maxW,acc,hi){
       roundRectPath(cx, cy, cardW, cardH, cardR);
       ctx.fill(); ctx.stroke();
 
-      let ty = cy + Math.round(14*scale);
+      let ty = cy + cardPad;
       // icon — use role icon if available, else emoji
       const rIcon = findRoleIcon(icon) || findRoleIcon(name);
       if(rIcon){
-        const iconS = Math.round(iconF*1.2);
-        ctx.drawImage(rIcon, cx + Math.round(14*scale), ty, iconS, iconS);
+        const iconS = Math.round(iconF*1.1);
+        ctx.drawImage(rIcon, cx + cardPad, ty, iconS, iconS);
       } else {
         ctx.font = `400 ${iconF}px sans-serif`;
         ctx.fillStyle = "#fff"; ctx.textBaseline = "top";
-        ctx.fillText(icon, cx + Math.round(14*scale), ty);
+        ctx.fillText(icon, cx + cardPad, ty);
       }
-      ty += iconF + Math.round(6*scale);
+      ty += iconF + Math.round(14*scale);
       // name
       ctx.font = `700 ${nameF}px Sora, sans-serif`;
       ctx.fillStyle = "#fff"; ctx.textBaseline = "top";
-      ctx.fillText(name, cx + Math.round(14*scale), ty);
-      ty += nameF + Math.round(4*scale);
+      ctx.fillText(name, cx + cardPad, ty);
+      ty += nameF + Math.round(8*scale);
       // desc
-      const gdLines = wrapRich(richWords(gdesc), `400 ${gdescF}px Manrope, sans-serif`, cardW - Math.round(28*scale));
+      const maxDescLines = Math.max(2, Math.floor((cy + cardH - cardPad - ty) / gdescLH));
+      const gdLines = wrapRich(richWords(gdesc), `400 ${gdescF}px Manrope, sans-serif`, cardW - cardPad*2);
       ctx.textBaseline = "top";
       const gdFont = `400 ${gdescF}px Manrope, sans-serif`;
-      for(const ln of gdLines.slice(0,2)){ drawRichLine(ln, cx + Math.round(14*scale), ty, gdFont, acc, "#6b7882"); ty += gdescLH; }
+      for(const ln of gdLines.slice(0, maxDescLines)){ drawRichLine(ln, cx + cardPad, ty, gdFont, acc, "#8a959d"); ty += gdescLH; }
     });
     const rows = Math.ceil(gridItems.length / cols);
     y += rows*(cardH+gap);

@@ -78,4 +78,12 @@ Pipeline : sujet → recherche web → recherche photos Flickr/HLTV → JSON + i
 - Ne pas ajouter de template global — c'est par slide
 - Ne pas réintroduire un picker de couleur de surbrillance — c'est auto-sync avec le jeu
 - Ne pas toucher au fichier de maquettes `.html` dans ce dossier
-- Ne pas ajouter de dépendances npm ou de bundler — c'est volontairement simple
+- Ne pas ajouter de dépendances npm ou de bundler — c'est volontairement simple (exception : `hyperframes` et `puppeteer` sont autorisés)
+
+## HyperFrames
+
+Framework HTML→MP4 (par HeyGen). Transforme du HTML/CSS en vidéo déterministe. Utilisé pour générer des Reels 9:16.
+
+- Paquet : `hyperframes` (v0.7.66+)
+- Prérequis système : FFmpeg (installé via winget), Node 22+
+- CLI : `npx hyperframes preview` (aperçu), `npx hyperframes render` (export MP4)
