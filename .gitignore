@@ -28,6 +28,13 @@
 # Ignorer les presets (posts générés + images = lourd)
 outil-instagram/presets/
 
+# === HYPERFRAMES PROJECTS ===
+!videos/
+!videos/**
+videos/**/assets/
+videos/**/renders/
+videos/**/node_modules/
+
 # === HYPERFRAMES (skills installés via npx skills) ===
 !.agents/
 !.agents/**
