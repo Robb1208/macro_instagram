@@ -92,11 +92,11 @@ La dernière scène n'a PAS besoin d'exit tween (elle se termine avec la vidéo)
 
 ### Effets globaux (toujours inclus)
 - **Ken Burns** : zoom lent sur la vidéo de fond (scale 1.0 → 1.08 sur toute la durée, `ease: "none"`)
-- **Barre de progression** : glow bar s'anime de scaleX 0 → 1 de gauche à droite sur toute la durée (`transformOrigin: "left center"`, `ease: "none"`)
+- **Barre de progression** : la ligne du top bar (`#top-line`, `.bar-line`) s'anime de scaleX 0 → 1 de gauche à droite sur toute la durée. Couleur pleine accent, 4px, glow léger (`box-shadow: 0 0 8px rgba(accent,0.4)`), `border-radius: 2px`. Ne PAS mettre un glow trop fort sinon ça fait un blob flou au début.
 
 ```js
 tl.fromTo("#bg-video", { scale: 1.0 }, { scale: 1.08, duration: DUREE, ease: "none" }, 0);
-tl.fromTo("#glow-bar", { scaleX: 0, transformOrigin: "left center" }, { scaleX: 1, duration: DUREE, ease: "none" }, 0);
+tl.fromTo("#top-line", { scaleX: 0, transformOrigin: "left center" }, { scaleX: 1, duration: DUREE, ease: "none" }, 0);
 ```
 
 ### Timeline
