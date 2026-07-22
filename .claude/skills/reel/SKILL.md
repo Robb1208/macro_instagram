@@ -30,6 +30,7 @@ Skill pour créer des Reels Instagram esport pour Macro avec HyperFrames (HTML �
 | Valorant | Rouge Valorant | `#ff4655` |
 | Rocket League | Bleu RL | `#0077ff` |
 | Fortnite | Violet | `#9d4dfa` |
+| StarCraft | Magenta | `#c84ddb` |
 
 L'accent est utilisé partout : badge titre, barre glow, overlay gradient (teinte en bas), séparateurs, `<em>` et `.accent`.
 
@@ -58,8 +59,8 @@ linear-gradient(180deg,
 1. **Vidéo de fond** (`#bg-video`) — track 0, `muted`, plein écran `object-fit: cover`
 2. **Overlay gradient** (`#overlay`) — track 1, lisibilité texte
 3. **Glow bar** (`#glow-bar`) — track 2, barre 4px en bas, couleur accent + box-shadow glow
-4. **Top bar** (`#top-bar`) — track 15, logo Macro (`assets/macro-logo.png`) + ligne dégradée
-5. **Titre** (`#title-block`) — track 16, badge catégorie + titre jeu
+4. **Top bar** (`#top-bar`) — track 15, logo Macro (`assets/macro-logo.png`) + ligne dégradée. **`top: 60px`** (pas 0) pour que l'interface Instagram ne cache pas le logo/barre.
+5. **Titre** (`#title-block`) — track 16, badge catégorie + titre jeu. **`top: 150px`** (sous la top bar décalée).
 6. **Audio** (`#bg-audio`) — track 20, même src que vidéo, `data-volume="0.7"`
 
 ### Scènes texte
@@ -98,6 +99,45 @@ La dernière scène n'a PAS besoin d'exit tween (elle se termine avec la vidéo)
 tl.fromTo("#bg-video", { scale: 1.0 }, { scale: 1.08, duration: DUREE, ease: "none" }, 0);
 tl.fromTo("#top-line", { scaleX: 0, transformOrigin: "left center" }, { scaleX: 1, duration: DUREE, ease: "none" }, 0);
 ```
+
+### Transition push-slide avec outro (optionnel)
+Si Robin demande d'inclure l'outro Macro dans la composition, utiliser une transition push-slide avec motion blur directionnel :
+
+**Structure HTML** : `#slide-wrap` > (`#main-wrap` + `#outro-wrap`). Le slide-wrap enveloppe les deux pour que le blur s'applique sur tout.
+
+**Filtre SVG pour motion blur horizontal** (pas CSS `blur()` qui est gaussien/rond) :
+```html
+<svg style="position:absolute;width:0;height:0;" aria-hidden="true">
+  <defs>
+    <filter id="mblur" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur id="mblur-gauss" in="SourceGraphic" stdDeviation="0 0"/>
+    </filter>
+  </defs>
+</svg>
+```
+
+**Animation GSAP** :
+```js
+var HALF = TRANS_DUR / 2;
+var blurEl = document.getElementById("mblur-gauss");
+var blurProxy = { val: 0 };
+// Push-slide : main sort à gauche, outro entre par la droite
+tl.to("#main-wrap", { x: -1080, duration: TRANS_DUR, ease: "power3.inOut" }, TRANS_T);
+tl.fromTo("#outro-wrap", { x: 1080 }, { x: 0, duration: TRANS_DUR, ease: "power3.inOut" }, TRANS_T);
+// Motion blur horizontal via SVG filter (stdDeviation="X 0" = horizontal uniquement)
+tl.set("#slide-wrap", { filter: "url(#mblur)" }, TRANS_T);
+tl.to(blurProxy, { val: 80, duration: HALF, ease: "power3.in",
+  onUpdate: function() { blurEl.setAttribute("stdDeviation", blurProxy.val + " 0"); }
+}, TRANS_T);
+tl.fromTo("#slide-wrap", { skewX: 0 }, { skewX: -12, duration: HALF, ease: "power3.in" }, TRANS_T);
+tl.to(blurProxy, { val: 0, duration: HALF, ease: "power3.out",
+  onUpdate: function() { blurEl.setAttribute("stdDeviation", blurProxy.val + " 0"); }
+}, TRANS_T + HALF);
+tl.to("#slide-wrap", { skewX: 0, duration: HALF, ease: "power3.out" }, TRANS_T + HALF);
+tl.set("#slide-wrap", { filter: "none" }, TRANS_T + TRANS_DUR);
+```
+
+Ne **jamais** utiliser CSS `filter: blur()` pour du motion blur — ça donne un flou gaussien rond. Utiliser le filtre SVG avec `stdDeviation="X 0"` pour des traînées horizontales réalistes.
 
 ### Timeline
 ```js
@@ -151,3 +191,4 @@ Initialiser avec `npx hyperframes init` si nouveau projet, ou copier la structur
 - Ne pas oublier l'audio séparé (`<audio>` en plus du `<video muted>`)
 - Ne pas oublier `class="clip"` sur tout élément avec timing
 - Ne pas mettre de `repeat: -1` ni de random/Date.now()
+- **Ne PAS ajouter d'outro Macro par défaut** — seulement si Robin le demande explicitement. Utiliser alors la transition push-slide + motion blur directionnel (voir section dédiée)
