@@ -100,8 +100,8 @@ tl.fromTo("#bg-video", { scale: 1.0 }, { scale: 1.08, duration: DUREE, ease: "no
 tl.fromTo("#top-line", { scaleX: 0, transformOrigin: "left center" }, { scaleX: 1, duration: DUREE, ease: "none" }, 0);
 ```
 
-### Transition push-slide avec outro (optionnel)
-Si Robin demande d'inclure l'outro Macro dans la composition, utiliser une transition push-slide avec motion blur directionnel :
+### Transition push-slide avec outro (OBLIGATOIRE)
+Chaque reel se termine par l'outro Macro (`Macro_OUT.mp4`, dispo dans `outil-instagram/Macro_OUT.mp4` — copier dans `assets/` du reel). Transition push-slide avec motion blur directionnel :
 
 **Structure HTML** : `#slide-wrap` > (`#main-wrap` + `#outro-wrap`). Le slide-wrap enveloppe les deux pour que le blur s'applique sur tout.
 
@@ -191,4 +191,4 @@ Initialiser avec `npx hyperframes init` si nouveau projet, ou copier la structur
 - Ne pas oublier l'audio séparé (`<audio>` en plus du `<video muted>`)
 - Ne pas oublier `class="clip"` sur tout élément avec timing
 - Ne pas mettre de `repeat: -1` ni de random/Date.now()
-- **Ne PAS ajouter d'outro Macro par défaut** — seulement si Robin le demande explicitement. Utiliser alors la transition push-slide + motion blur directionnel (voir section dédiée)
+- **Toujours ajouter l'outro Macro** (`Macro_OUT.mp4`) en fin de reel avec transition push-slide + motion blur directionnel (voir section dédiée)
