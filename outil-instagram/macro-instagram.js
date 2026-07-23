@@ -3618,7 +3618,7 @@ function drawLayoutEdito(W,H,c,scale,pad,maxW,acc,hi){
   const descFont = `500 ${descF}px Manrope, sans-serif`;
   const eyebrow = (c.eyebrow || "").toUpperCase();
   const titleLines = wrapRich(richWords(c.title), titleFont, textW);
-  const descLines = (c.showDesc && c.desc && c.desc.trim()) ? wrapRich(richWords(c.desc), descFont, Math.round(textW * 0.95)).slice(0, 20) : [];
+  const descLines = (c.showDesc && c.desc && c.desc.trim()) ? wrapRich(richWords(c.desc), descFont, Math.round(textW * 0.95)).slice(0, 30) : [];
 
   const accentLineH = Math.round(4 * scale);
   const gap = Math.round(14 * scale);
