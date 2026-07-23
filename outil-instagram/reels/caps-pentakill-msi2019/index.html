@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Manrope:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    width: 1080px;
+    height: 1920px;
+    overflow: hidden;
+    background: #05060a;
+    font-family: 'Manrope', sans-serif;
+  }
+
+  #slide-wrap {
+    position: absolute;
+    width: 1080px;
+    height: 1920px;
+    overflow: hidden;
+  }
+
+  #main-wrap {
+    position: absolute;
+    width: 1080px;
+    height: 1920px;
+  }
+
+  #outro-wrap {
+    position: absolute;
+    width: 1080px;
+    height: 1920px;
+    top: 0;
+    left: 0;
+    transform: translateX(1080px);
+  }
+
+  #outro-video {
+    width: 1080px;
+    height: 1920px;
+    object-fit: contain;
+    background: #05060a;
+  }
+
+  #bg-video {
+    position: absolute;
+    top: 0; left: 0;
+    width: 1080px;
+    height: 1920px;
+    object-fit: cover;
+    transform-origin: center center;
+  }
+
+  #overlay {
+    position: absolute;
+    top: 0; left: 0;
+    width: 1080px;
+    height: 1920px;
+    background: linear-gradient(180deg,
+      rgba(5,6,10,0.82) 0%,
+      rgba(5,6,10,0.50) 10%,
+      rgba(5,6,10,0.12) 18%,
+      rgba(5,6,10,0.05) 35%,
+      rgba(5,6,10,0.05) 55%,
+      rgba(5,6,10,0.35) 63%,
+      rgba(0,229,255,0.10) 75%,
+      rgba(0,229,255,0.20) 100%
+    );
+  }
+
+  #top-bar {
+    position: absolute;
+    top: 60px;
+    left: 60px;
+    right: 60px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    z-index: 15;
+  }
+
+  #top-bar img {
+    height: 36px;
+    width: auto;
+  }
+
+  .bar-line-wrap {
+    flex: 1;
+    height: 4px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 2px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  #top-line {
+    width: 100%;
+    height: 100%;
+    background: #00e5ff;
+    border-radius: 2px;
+    transform-origin: left center;
+    transform: scaleX(0);
+    box-shadow: 0 0 8px rgba(0,229,255,0.4);
+  }
+
+  #title-block {
+    position: absolute;
+    top: 118px;
+    left: 60px;
+    right: 60px;
+    z-index: 16;
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 6px 18px;
+    background: #00e5ff;
+    color: #05060a;
+    font-family: 'Sora', sans-serif;
+    font-weight: 700;
+    font-size: 18px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    border-radius: 4px;
+    margin-bottom: 10px;
+  }
+
+  .title-text {
+    font-family: 'Sora', sans-serif;
+    font-weight: 800;
+    font-size: 28px;
+    color: #ffffff;
+    line-height: 1.2;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  #glow-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: #00e5ff;
+    box-shadow: 0 0 20px rgba(0,229,255,0.6), 0 0 60px rgba(0,229,255,0.3);
+    z-index: 10;
+  }
+
+  #scene-divider {
+    position: absolute;
+    top: 1240px;
+    left: 100px;
+    right: 100px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(0,229,255,0.25), transparent);
+    z-index: 5;
+  }
+
+  .scene {
+    position: absolute;
+    top: 1300px;
+    left: 0;
+    right: 0;
+    padding: 0 60px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    z-index: 12;
+  }
+
+  .scene-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+  }
+
+  .scene .line1 {
+    font-family: 'Sora', sans-serif;
+    font-weight: 700;
+    font-size: 40px;
+    color: #ffffff;
+    line-height: 1.25;
+  }
+
+  .scene .line2 {
+    font-family: 'Manrope', sans-serif;
+    font-weight: 600;
+    font-size: 28px;
+    color: rgba(255,255,255,0.65);
+    line-height: 1.35;
+  }
+
+  .scene .separator {
+    width: 80px;
+    height: 3px;
+    background: #00e5ff;
+    border-radius: 2px;
+    box-shadow: 0 0 10px rgba(0,229,255,0.4);
+  }
+
+  .scene em {
+    color: #00e5ff;
+    font-style: normal;
+  }
+
+  .scene .impact {
+    font-family: 'Sora', sans-serif;
+    font-weight: 800;
+    font-size: 58px;
+    color: #00e5ff;
+    text-shadow: 0 0 30px rgba(0,229,255,0.6), 0 0 60px rgba(0,229,255,0.3);
+    letter-spacing: 4px;
+  }
+</style>
+</head>
+<body>
+
+<div id="slide-wrap" data-composition-id="main" data-width="1080" data-height="1920" data-start="0">
+
+  <!-- SVG filter for directional motion blur -->
+  <svg style="position:absolute;width:0;height:0;" aria-hidden="true">
+    <defs>
+      <filter id="mblur" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur id="mblur-gauss" in="SourceGraphic" stdDeviation="0 0"/>
+      </filter>
+    </defs>
+  </svg>
+
+  <div id="main-wrap">
+    <!-- Track 0: Background video (muted) -->
+    <video id="bg-video" class="clip" data-start="0" data-duration="36.7" data-track-index="0"
+           src="assets/caps-pentakill-h264.mp4" muted playsinline></video>
+
+    <!-- Track 1: Overlay gradient -->
+    <div id="overlay" class="clip" data-start="0" data-duration="36.7" data-track-index="1"></div>
+
+    <!-- Track 2: Glow bar -->
+    <div id="glow-bar" class="clip" data-start="0" data-duration="36.7" data-track-index="2"></div>
+
+    <!-- Track 3: Decorative divider -->
+    <div id="scene-divider" class="clip" data-start="0" data-duration="35.5" data-track-index="3"></div>
+
+    <!-- Track 15: Top bar -->
+    <div id="top-bar" class="clip" data-start="0" data-duration="36.7" data-track-index="15">
+      <img id="macro-logo" src="assets/macro-logo.png" alt="Macro">
+      <div class="bar-line-wrap">
+        <div id="top-line"></div>
+      </div>
+    </div>
+
+    <!-- Track 16: Title block -->
+    <div id="title-block" class="clip" data-start="0" data-duration="36.7" data-track-index="16">
+      <div id="title-inner">
+        <div class="badge">League of Legends</div>
+        <div class="title-text">MSI 2019 — Demi-finale</div>
+      </div>
+    </div>
+
+    <!-- Track 10: Scene 1 — Hook (0s-6s) -->
+    <div id="s1" class="clip scene" data-start="0" data-duration="6" data-track-index="10">
+      <div id="s1-inner" class="scene-inner">
+        <div class="line1">MSI 2019. <em>Demi-finale.</em></div>
+        <div class="separator"></div>
+        <div class="line2">G2 Esports pousse dans la base de SKT.</div>
+      </div>
+    </div>
+
+    <!-- Track 11: Scene 2 — Teamfight (6s-12s) -->
+    <div id="s2" class="clip scene" data-start="6" data-duration="6" data-track-index="11">
+      <div id="s2-inner" class="scene-inner">
+        <div class="line1">Le teamfight <em>s'engage.</em></div>
+        <div class="separator"></div>
+        <div class="line2">Caps sur Sylas voit l'ouverture.</div>
+      </div>
+    </div>
+
+    <!-- Track 12: Scene 3 — Kills (12s-18s) -->
+    <div id="s3" class="clip scene" data-start="12" data-duration="6" data-track-index="12">
+      <div id="s3-inner" class="scene-inner">
+        <div class="line1">Premier kill. <em>Double kill.</em></div>
+        <div class="separator"></div>
+        <div class="line2">Le mid de G2 est en feu.</div>
+      </div>
+    </div>
+
+    <!-- Track 13: Scene 4 — Push (18s-25s) -->
+    <div id="s4" class="clip scene" data-start="18" data-duration="7" data-track-index="13">
+      <div id="s4-inner" class="scene-inner">
+        <div class="line1">La base de SKT <em>s'effondre.</em></div>
+        <div class="separator"></div>
+        <div class="line2">Personne ne peut l'arrêter.</div>
+      </div>
+    </div>
+
+    <!-- Track 14: Scene 5 — Quadra (25s-32s) -->
+    <div id="s5" class="clip scene" data-start="25" data-duration="7" data-track-index="14">
+      <div id="s5-inner" class="scene-inner">
+        <div class="impact">QUADRA KILL</div>
+        <div class="separator"></div>
+        <div class="line2">Il n'en reste plus qu'un.</div>
+      </div>
+    </div>
+
+    <!-- Track 17: Scene 6 — Pentakill (32s-35.5s) -->
+    <div id="s6" class="clip scene" data-start="32" data-duration="3.5" data-track-index="17">
+      <div id="s6-inner" class="scene-inner">
+        <div class="impact" style="font-size:72px;">PENTAKILL</div>
+        <div class="separator"></div>
+        <div class="line1">Caps entre dans <em>la légende.</em></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Outro wrap -->
+  <div id="outro-wrap">
+    <video id="outro-video" class="clip" data-start="35.5" data-duration="4.1" data-track-index="25"
+           src="assets/Macro_OUT.mp4" muted playsinline
+           style="width:1080px;height:1920px;object-fit:contain;background:#05060a;"></video>
+  </div>
+</div>
+
+<!-- Track 20: Audio (same source as video) -->
+<audio id="bg-audio" class="clip" data-start="0" data-duration="36.7" data-track-index="20"
+       src="assets/caps-pentakill-h264.mp4" data-volume="0.7"></audio>
+
+<!-- Track 21: Outro audio -->
+<audio id="outro-audio" class="clip" data-start="35.5" data-duration="4.1" data-track-index="21"
+       src="assets/Macro_OUT.mp4" data-volume="0.8"></audio>
+
+<script src="assets/gsap.min.js"></script>
+<script>
+window.__timelines = window.__timelines || {};
+
+var VIDEO_DUR = 36.7;
+var OUTRO_DUR = 4.1;
+var TRANS_DUR = 0.6;
+var TRANS_T = 35.5;
+var TOTAL = TRANS_T + OUTRO_DUR;
+var HALF = TRANS_DUR / 2;
+
+var tl = gsap.timeline({ paused: true });
+
+/* ── Global effects ─────────────────────────────── */
+
+tl.fromTo("#bg-video",
+  { scale: 1.0 },
+  { scale: 1.08, duration: VIDEO_DUR, ease: "none" }, 0);
+
+tl.fromTo("#top-line",
+  { scaleX: 0, transformOrigin: "left center" },
+  { scaleX: 1, duration: TRANS_T, ease: "none" }, 0);
+
+/* ── Top bar entrance ───────────────────────────── */
+
+tl.from("#macro-logo", { opacity: 0, x: -20, duration: 0.5, ease: "power3.out" }, 0.2);
+tl.from(".bar-line-wrap", { scaleX: 0, transformOrigin: "left center", duration: 0.4, ease: "power2.out" }, 0.4);
+
+/* ── Title entrance ─────────────────────────────── */
+
+tl.from(".badge", { opacity: 0, y: 20, duration: 0.4, ease: "power3.out" }, 0.5);
+tl.from(".title-text", { opacity: 0, y: 15, duration: 0.4, ease: "power3.out" }, 0.7);
+
+/* ── Divider ────────────────────────────────────── */
+
+tl.from("#scene-divider", { scaleX: 0, transformOrigin: "center center", duration: 0.3, ease: "power2.out" }, 0.8);
+
+/* ── Scene 1: Hook (0s-6s) ──────────────────────── */
+
+tl.from("#s1-inner .line1", { opacity: 0, y: 30, duration: 0.5, ease: "power3.out" }, 0.3);
+tl.from("#s1-inner .separator", { scaleX: 0, duration: 0.25, ease: "power2.out" }, 0.6);
+tl.from("#s1-inner .line2", { opacity: 0, y: 15, duration: 0.4, ease: "power3.out" }, 0.9);
+tl.to("#s1-inner", { opacity: 0, duration: 0.25, ease: "power2.in" }, 5.75);
+tl.set("#s1-inner", { opacity: 0 }, 6.0);
+
+/* ── Scene 2: Teamfight (6s-12s) ────────────────── */
+
+tl.from("#s2-inner .line1", { opacity: 0, y: 30, duration: 0.5, ease: "power3.out" }, 6.3);
+tl.from("#s2-inner .separator", { scaleX: 0, duration: 0.25, ease: "power2.out" }, 6.6);
+tl.from("#s2-inner .line2", { opacity: 0, y: 15, duration: 0.4, ease: "power3.out" }, 6.9);
+tl.to("#s2-inner", { opacity: 0, duration: 0.25, ease: "power2.in" }, 11.75);
+tl.set("#s2-inner", { opacity: 0 }, 12.0);
+
+/* ── Scene 3: Kills (12s-18s) ───────────────────── */
+
+tl.from("#s3-inner .line1", { opacity: 0, y: 30, duration: 0.5, ease: "power3.out" }, 12.3);
+tl.from("#s3-inner .separator", { scaleX: 0, duration: 0.25, ease: "power2.out" }, 12.6);
+tl.from("#s3-inner .line2", { opacity: 0, y: 15, duration: 0.4, ease: "power3.out" }, 12.9);
+tl.to("#s3-inner", { opacity: 0, duration: 0.25, ease: "power2.in" }, 17.75);
+tl.set("#s3-inner", { opacity: 0 }, 18.0);
+
+/* ── Scene 4: Push (18s-25s) ────────────────────── */
+
+tl.from("#s4-inner .line1", { opacity: 0, y: 30, duration: 0.5, ease: "power3.out" }, 18.3);
+tl.from("#s4-inner .separator", { scaleX: 0, duration: 0.25, ease: "power2.out" }, 18.6);
+tl.from("#s4-inner .line2", { opacity: 0, y: 15, duration: 0.4, ease: "power3.out" }, 18.9);
+tl.to("#s4-inner", { opacity: 0, duration: 0.25, ease: "power2.in" }, 24.75);
+tl.set("#s4-inner", { opacity: 0 }, 25.0);
+
+/* ── Scene 5: Quadra (25s-32s) ──────────────────── */
+
+tl.from("#s5-inner .impact", { scale: 0.5, opacity: 0, duration: 0.5, ease: "back.out(1.7)" }, 25.3);
+tl.from("#s5-inner .separator", { scaleX: 0, duration: 0.25, ease: "power2.out" }, 25.6);
+tl.from("#s5-inner .line2", { opacity: 0, y: 15, duration: 0.4, ease: "power3.out" }, 25.9);
+tl.to("#s5-inner", { opacity: 0, duration: 0.25, ease: "power2.in" }, 31.75);
+tl.set("#s5-inner", { opacity: 0 }, 32.0);
+
+/* ── Scene 6: Pentakill (32s-35.5s) — last scene ── */
+
+tl.from("#s6-inner .impact", { scale: 0.6, opacity: 0, duration: 0.5, ease: "back.out(1.5)" }, 32.3);
+tl.from("#s6-inner .separator", { scaleX: 0, duration: 0.25, ease: "power2.out" }, 32.6);
+tl.from("#s6-inner .line1", { opacity: 0, y: 15, duration: 0.4, ease: "power3.out" }, 32.9);
+
+/* ── Push-slide transition to outro ─────────────── */
+
+var comp = document.querySelector('[data-composition-id="main"]');
+var blurEl = comp.querySelector("#mblur-gauss");
+var blurProxy = { val: 0 };
+
+tl.to("#main-wrap", { x: -1080, duration: TRANS_DUR, ease: "power3.inOut" }, TRANS_T);
+tl.fromTo("#outro-wrap", { x: 1080 }, { x: 0, duration: TRANS_DUR, ease: "power3.inOut" }, TRANS_T);
+
+tl.set("#slide-wrap", { filter: "url(#mblur)" }, TRANS_T);
+tl.to(blurProxy, {
+  val: 80, duration: HALF, ease: "power3.in",
+  onUpdate: function() { blurEl.setAttribute("stdDeviation", blurProxy.val + " 0"); }
+}, TRANS_T);
+tl.fromTo("#slide-wrap", { skewX: 0 }, { skewX: -12, duration: HALF, ease: "power3.in" }, TRANS_T);
+tl.to(blurProxy, {
+  val: 0, duration: HALF, ease: "power3.out",
+  onUpdate: function() { blurEl.setAttribute("stdDeviation", blurProxy.val + " 0"); }
+}, TRANS_T + HALF);
+tl.to("#slide-wrap", { skewX: 0, duration: HALF, ease: "power3.out" }, TRANS_T + HALF);
+tl.set("#slide-wrap", { filter: "none" }, TRANS_T + TRANS_DUR);
+
+window.__timelines["main"] = tl;
+</script>
+
+</body>
+</html>

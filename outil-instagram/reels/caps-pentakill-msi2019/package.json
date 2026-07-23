@@ -1,0 +1,9 @@
+{
+  "name": "caps-pentakill-msi2019",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "npx hyperframes preview",
+    "check": "npx hyperframes check",
+    "render": "npx hyperframes render"
+  }
+}
