@@ -183,6 +183,69 @@ Initialiser avec `npx hyperframes init` si nouveau projet, ou copier la structur
 6. `npx hyperframes render` — générer le MP4
 7. Montrer le résultat à Robin
 
+## Remplissage des barres noires (fond vidéo floué)
+
+Quand la vidéo source contient des barres noires en haut et/ou en bas (ex: gameplay 16:9 filmé dans un cadre 9:16), les remplacer par une version floutée de la vidéo pour un rendu plus pro.
+
+### 1. Détecter les barres noires
+```bash
+ffmpeg -i assets/video.mp4 -vf "cropdetect=24:2:0" -frames:v 100 -f null - 2>&1 | grep "crop=" | tail -1
+```
+Résultat type : `crop=1080:1160:0:380` → gameplay de 1160px de haut, commençant à y=380. Barres noires : 380px en haut, 380px en bas (1920 - 380 - 1160).
+
+### 2. Générer la vidéo floutée
+Cropper la zone de gameplay, scale à 1080×1920, appliquer un gros box blur + assombrir légèrement :
+```bash
+ffmpeg -y -i assets/video-h264.mp4 \
+  -vf "crop=1080:HEIGHT:0:Y,scale=1080:1920:flags=bilinear,boxblur=30:5,eq=brightness=-0.05:saturation=0.5" \
+  -c:v libx264 -preset fast -crf 28 -r 30 -g 30 -keyint_min 30 -movflags +faststart \
+  -an -t DUREE assets/video-blur.mp4
+```
+- `HEIGHT` et `Y` viennent du cropdetect
+- `boxblur=30:5` : flou fort (rayon 30, 5 passes)
+- `eq=brightness=-0.05:saturation=0.5` : assombrir et désaturer pour pas distraire
+- `-g 30 -keyint_min 30` : keyframes fréquentes (HyperFrames en a besoin pour le seek)
+
+### 3. Ajouter à la composition HTML
+Placer la vidéo floutée **avant** `#bg-video` dans `#main-wrap` (track -1 = couche la plus basse) :
+```html
+<video id="bg-blur" class="clip" data-start="0" data-duration="DUREE" data-track-index="-1"
+       src="assets/video-blur.mp4" muted playsinline></video>
+```
+
+### 4. Clipper la vidéo principale
+La vidéo source a des barres noires **opaques** intégrées — elles cachent la vidéo floutée derrière. Ajouter un `clip-path` pour masquer ces zones :
+```css
+#bg-video {
+  clip-path: inset(380px 0 380px 0);  /* top right bottom left */
+}
+```
+Les valeurs correspondent aux barres noires détectées par cropdetect.
+
+### 5. Ken Burns sur les deux vidéos
+Appliquer un léger zoom sur la vidéo floutée aussi (un peu plus fort que la vidéo principale pour un effet parallaxe) :
+```js
+tl.fromTo("#bg-blur",
+  { scale: 1.02 }, { scale: 1.12, duration: DUREE, ease: "none" }, 0);
+tl.fromTo("#bg-video",
+  { scale: 1.0 }, { scale: 1.08, duration: DUREE, ease: "none" }, 0);
+```
+
+### 6. Renforcer l'overlay
+Avec un fond coloré au lieu de noir, augmenter légèrement l'opacité du gradient overlay pour garder la lisibilité du texte (+3-5% sur les zones critiques haut et bas).
+
+### CSS nécessaire
+```css
+#bg-blur {
+  position: absolute;
+  top: 0; left: 0;
+  width: 1080px;
+  height: 1920px;
+  object-fit: cover;
+  transform-origin: center center;
+}
+```
+
 ## Ce qu'il ne faut PAS faire
 
 - Ne pas dépasser la durée de la vidéo source
