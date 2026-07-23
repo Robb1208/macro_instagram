@@ -1,0 +1,84 @@
+{
+  "format": "portrait",
+  "game": "macro",
+  "watermark": true,
+  "gradient": 100,
+  "titleSize": 95,
+  "slides": [
+    {
+      "template": "post-texte",
+      "eyebrow": "DÉCRYPTAGE · ENC 2026",
+      "title": "L'esport a-t-il enfin *sa coupe du monde* ?",
+      "desc": "Novembre 2026. 32 nations s'affrontent à Riyad sur 16 jeux. $45 millions en jeu. L'Esports Nations Cup veut devenir la première vraie coupe du monde de l'esport. Mais entre clubs qui refusent de libérer leurs joueurs et fédérations qui claquent la porte — est-ce vraiment une coupe du monde ? On décortique tout.",
+      "showDesc": true
+    },
+    {
+      "template": "edito",
+      "watermark": false,
+      "eyebrow": "C'EST QUOI L'ENC ?",
+      "title": "La première *compétition par nations* à cette échelle",
+      "desc": "L'ENC est organisée par l'EWCF — la même fondation que l'Esports World Cup. Mais au lieu des clubs, ce sont les pays qui s'affrontent.\n\nChaque nation désigne un manager, des coachs par jeu, et un roster sélectionné — comme une équipe nationale de football.\n\nPour la France, c'est YellOwStaR qui pilote la délégation avec 9 coachs sur les différents titres.",
+      "showDesc": true,
+      "image": "ewc-stage.jpg"
+    },
+    {
+      "template": "statistique",
+      "eyebrow": "LES CHIFFRES",
+      "title": "*L'ENC 2026* en bref",
+      "stats": "Budget total · $45 millions\nDisciplines · 16 jeux\nNations · 32 qualifiées\n1ère place · $50K/joueur/jeu"
+    },
+    {
+      "template": "post-texte",
+      "eyebrow": "15 ANS DE TENTATIVES",
+      "title": "Tout le monde a *échoué* avant",
+      "desc": "L'IESF organise un \"championnat du monde\" depuis 2009 — budget dérisoire, aucune star, personne ne connaît.\n\nLe WESG d'Alibaba (2016) y a injecté des millions : mort en 3 éditions.\n\nL'EWC (2024) a le budget saoudien, mais oppose des clubs — pas des nations.\n\nL'ENC est la première à combiner l'argent, les publishers majeurs ET le format sélections nationales.",
+      "showDesc": true
+    },
+    {
+      "template": "edito",
+      "watermark": false,
+      "editoFlip": true,
+      "eyebrow": "LA CRISE CORÉENNE",
+      "title": "La Corée a failli *boycotter* l'ENC",
+      "desc": "Pour s'assurer d'avoir Faker et les stars coréennes, l'EWCF a tenté d'influencer la sélection nationale.\n\nLa KeSPA (fédération coréenne, la plus ancienne au monde) a claqué la porte : \"C'est nous qui choisissons, pas l'organisateur.\"\n\nLe Comité olympique coréen a menacé : pas de drapeau ni de nom \"Team Korea\" sans la KeSPA.\n\nAccord trouvé finalement. Mais l'incident révèle le vrai problème.",
+      "showDesc": true,
+      "image": "faker.jpg"
+    },
+    {
+      "template": "citation",
+      "eyebrow": "CLUBS VS SÉLECTIONS",
+      "title": "Les joueurs sont payés par leurs clubs *toute l'année*. Naturellement, la priorité leur revient.",
+      "playerName": "YellOwStaR",
+      "playerRole": "Manager Équipe de France ENC"
+    },
+    {
+      "template": "statistique",
+      "eyebrow": "CE QUI MANQUE",
+      "title": "L'ENC n'est *pas encore* une FIFA",
+      "stats": "Libération joueurs · Non obligatoire\nSanctions boycott · Aucune\nFenêtres intl. · Inexistantes\nGouvernance · Fondation privée"
+    },
+    {
+      "template": "edito",
+      "watermark": false,
+      "eyebrow": "EN FRANCE",
+      "title": "La France n'a même *pas réussi* à s'organiser",
+      "desc": "L'EWCF a demandé à chaque pays un partenaire national — l'équivalent d'une fédération.\n\nEn France, deux structures se sont affrontées : France Esports (historique, éditeurs) et l'UFCEP (clubs pros — Vitality, KCorp...).\n\nDeadline du 18 mars ratée. L'UFCEP se retire.\n\nL'EWCF nomme YellOwStaR directement. Vitality refuse de libérer ZywOo et apEX — la France joue son CS2 sans ses stars.",
+      "showDesc": true,
+      "image": "france-esport.jpg"
+    },
+    {
+      "template": "post-texte",
+      "eyebrow": "LE VERDICT",
+      "title": "Coupe du monde *ou pas* ?",
+      "desc": "L'ENC est la tentative la plus sérieuse, la plus riche et la plus ambitieuse jamais faite pour créer une coupe du monde de l'esport.\n\nMais l'EWCF reste une fondation privée saoudienne. Pas de fenêtres internationales, pas de pouvoir sur les clubs, pas de sanctions possibles.\n\nLe budget d'une coupe du monde est là. La structure, pas encore.",
+      "showDesc": true,
+      "signature": "Macro"
+    },
+    {
+      "template": "sondage",
+      "eyebrow": "À VOUS",
+      "title": "L'esport a-t-il besoin de *sa FIFA* ?",
+      "pollOptions": "Oui, c'est indispensable 45%\nNon, le modèle privé suffit 20%\nÇa viendra avec le temps 35%"
+    }
+  ]
+}
