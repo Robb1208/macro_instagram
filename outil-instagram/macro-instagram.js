@@ -222,7 +222,7 @@ function newSlide(img, name, tpl){
            lineup:"", lineupCount:5, lineupTeamRating:"", lineupPhotos:[],
            bracket:"", bracketFormat:"", bracketWinnerLabel:"champion", bracketDates:"", bracketWide:false, planningEvents:"", groupes:"", groupeElim:3, frameY:0, statHighlight:0, mvpBadge:"mvp",
            phonetic:"", example:"", analogy:"", boxes:"", grid:"",
-           watermark: tpl === "edito" ? false : null };
+           watermark: tpl === "edito" ? false : null, editoFlip: false };
 }
 function cur(){ return state.images[state.active] || null; }
 function curTpl(){ const it = cur(); return (it && it.template) || "post-image"; }
@@ -3550,39 +3550,51 @@ function drawLayoutGuide(W,H,c,scale,pad,maxW,acc,hi){
   lastTextBox = null;
 }
 
-// --- T19: Édito (image left + text right) ---
+// --- T19: Édito (image left/right + text) ---
 function drawLayoutEdito(W,H,c,scale,pad,maxW,acc,hi){
+  const flip = !!c.editoFlip;
   const imgW = Math.round(W * 0.45);
   const imgGap = Math.round(16 * scale);
-  const rightX = imgW + imgGap;
-  const rightW = W - rightX - pad;
+  const imgX = flip ? W - imgW : 0;
+  const textX = flip ? pad : imgW + imgGap;
+  const textW = W - imgW - imgGap - pad;
   const imgR = Math.round(14 * scale);
+  const fadeW = Math.round(60 * scale);
 
-  // --- left: image panel ---
+  // --- image panel ---
   if(c.img){
     ctx.save();
-    roundRectPath(0, 0, imgW, H, 0);
+    roundRectPath(imgX, 0, imgW, H, 0);
     ctx.clip();
-    drawCover(c.img, 0, 0, imgW, H, sVal("zoom"), c.tx.ox, c.tx.oy);
+    drawCover(c.img, imgX, 0, imgW, H, sVal("zoom"), c.tx.ox, c.tx.oy);
     if(sVal("imgBright") < 1){
       ctx.fillStyle = `rgba(0,0,0,${1 - sVal("imgBright")})`;
-      ctx.fillRect(0, 0, imgW, H);
+      ctx.fillRect(imgX, 0, imgW, H);
     }
-    // subtle right-edge fade into dark
-    const edgeFade = ctx.createLinearGradient(imgW - Math.round(60*scale), 0, imgW, 0);
-    edgeFade.addColorStop(0, "rgba(7,10,13,0)");
-    edgeFade.addColorStop(1, "rgba(7,10,13,0.55)");
-    ctx.fillStyle = edgeFade;
-    ctx.fillRect(imgW - Math.round(60*scale), 0, Math.round(60*scale), H);
+    // edge fade into dark background
+    if(flip){
+      const edgeFade = ctx.createLinearGradient(imgX, 0, imgX + fadeW, 0);
+      edgeFade.addColorStop(0, "rgba(7,10,13,0.55)");
+      edgeFade.addColorStop(1, "rgba(7,10,13,0)");
+      ctx.fillStyle = edgeFade;
+      ctx.fillRect(imgX, 0, fadeW, H);
+    } else {
+      const edgeFade = ctx.createLinearGradient(imgX + imgW - fadeW, 0, imgX + imgW, 0);
+      edgeFade.addColorStop(0, "rgba(7,10,13,0)");
+      edgeFade.addColorStop(1, "rgba(7,10,13,0.55)");
+      ctx.fillStyle = edgeFade;
+      ctx.fillRect(imgX + imgW - fadeW, 0, fadeW, H);
+    }
     ctx.restore();
 
-    // accent border on right edge of image
+    // accent border on inner edge of image
+    const borderX = flip ? imgX : imgX + imgW - Math.round(3*scale);
     ctx.fillStyle = acc;
-    ctx.fillRect(imgW - Math.round(3*scale), 0, Math.round(3*scale), H);
+    ctx.fillRect(borderX, 0, Math.round(3*scale), H);
   } else {
-    // no image: dark placeholder panel
+    const phX = flip ? imgX + pad : pad;
     ctx.save();
-    roundRectPath(pad, pad, imgW - pad*2, H - pad*2, imgR);
+    roundRectPath(phX, pad, imgW - pad*2, H - pad*2, imgR);
     ctx.fillStyle = "#0e161d";
     ctx.fill();
     ctx.strokeStyle = "#1a2a36";
@@ -3592,11 +3604,11 @@ function drawLayoutEdito(W,H,c,scale,pad,maxW,acc,hi){
     ctx.fillStyle = "#3a4c57";
     ctx.font = `500 ${Math.round(18*scale)}px Manrope, sans-serif`;
     ctx.textAlign = "center"; ctx.textBaseline = "middle";
-    ctx.fillText("Image", imgW/2, H/2);
+    ctx.fillText("Image", imgX + imgW/2, H/2);
     ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
   }
 
-  // --- right: text content ---
+  // --- text content ---
   const eyeF = Math.round(20 * scale);
   const titleF = Math.round(72 * scale * sVal("titleScale"));
   const descF = Math.round(26 * scale * sVal("descScale"));
@@ -3605,10 +3617,9 @@ function drawLayoutEdito(W,H,c,scale,pad,maxW,acc,hi){
   const titleFont = `800 ${titleF}px Sora, sans-serif`;
   const descFont = `500 ${descF}px Manrope, sans-serif`;
   const eyebrow = (c.eyebrow || "").toUpperCase();
-  const titleLines = wrapRich(richWords(c.title), titleFont, rightW);
-  const descLines = (c.showDesc && c.desc && c.desc.trim()) ? wrapRich(richWords(c.desc), descFont, Math.round(rightW * 0.95)).slice(0, 20) : [];
+  const titleLines = wrapRich(richWords(c.title), titleFont, textW);
+  const descLines = (c.showDesc && c.desc && c.desc.trim()) ? wrapRich(richWords(c.desc), descFont, Math.round(textW * 0.95)).slice(0, 20) : [];
 
-  // compute total block height for vertical centering
   const accentLineH = Math.round(4 * scale);
   const gap = Math.round(14 * scale);
   let blockH = accentLineH + gap;
@@ -3619,41 +3630,36 @@ function drawLayoutEdito(W,H,c,scale,pad,maxW,acc,hi){
   const dragOffset = ((c.textY||0)*scale) + (c.textDrag||0);
   const centerY = H * 0.46 + dragOffset;
   let y = centerY - blockH / 2;
-  lastTextBox = { x: rightX, y, w: rightW, h: blockH };
+  lastTextBox = { x: textX, y, w: textW, h: blockH };
 
-  // accent tick
   ctx.fillStyle = acc;
-  ctx.fillRect(rightX, y, Math.round(44 * scale), accentLineH);
+  ctx.fillRect(textX, y, Math.round(44 * scale), accentLineH);
   y += accentLineH + gap;
 
-  // eyebrow
   if(eyebrow){
     ctx.font = `700 ${eyeF}px Sora, sans-serif`;
     ctx.fillStyle = acc;
     ctx.textBaseline = "top";
-    drawSpaced(eyebrow, rightX, y, eyeF * 0.18);
+    drawSpaced(eyebrow, textX, y, eyeF * 0.18);
     y += eyeF + gap;
   }
 
-  // title (rich text with *accent*)
   ctx.textBaseline = "top";
   ctx.shadowColor = "rgba(0,0,0,0.35)"; ctx.shadowBlur = 12; ctx.shadowOffsetY = 2;
   for(const ln of titleLines){
-    drawRichLine(ln, rightX, y, titleFont, hi, "#ffffff");
+    drawRichLine(ln, textX, y, titleFont, hi, "#ffffff");
     y += titleLH;
   }
   ctx.shadowColor = "transparent"; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
 
-  // description
   if(descLines.length){
     y += Math.round(20 * scale);
     for(const ln of descLines){
-      drawRichLine(ln, rightX, y, descFont, hi, descBaseColor());
+      drawRichLine(ln, textX, y, descFont, hi, descBaseColor());
       y += descLH;
     }
   }
 
-  // signature at bottom-right
   if(c.signature && c.signature.trim()){
     const sigF = Math.round(22 * scale);
     const avatarR = Math.round(30 * scale);
@@ -3662,14 +3668,14 @@ function drawLayoutEdito(W,H,c,scale,pad,maxW,acc,hi){
     const sigY = H - pad - avatarR / 2;
     ctx.save();
     ctx.fillStyle = "#13202a"; ctx.strokeStyle = "#243039"; ctx.lineWidth = Math.max(1, 2*scale);
-    ctx.beginPath(); ctx.arc(rightX + avatarR/2, sigY, avatarR/2, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.arc(textX + avatarR/2, sigY, avatarR/2, 0, Math.PI*2); ctx.fill(); ctx.stroke();
     ctx.fillStyle = acc; ctx.font = `600 ${Math.round(20*scale)}px 'JetBrains Mono', monospace`;
     ctx.textAlign = "center"; ctx.textBaseline = "middle";
-    ctx.fillText(initials, rightX + avatarR/2, sigY);
+    ctx.fillText(initials, textX + avatarR/2, sigY);
     ctx.restore();
     ctx.font = `500 ${sigF}px 'JetBrains Mono', monospace`;
     ctx.fillStyle = "#9aa7b0"; ctx.textBaseline = "middle";
-    ctx.fillText(c.signature, rightX + avatarR + Math.round(10*scale), sigY);
+    ctx.fillText(c.signature, textX + avatarR + Math.round(10*scale), sigY);
     ctx.textBaseline = "alphabetic";
   }
 }
@@ -3910,6 +3916,7 @@ function syncInputs(){
   show("scoreCheckRow", false);
   show("badgeRow", tpl==="breaking");
   show("signatureRow", tpl==="post-texte" || tpl==="breaking" || tpl==="edito");
+  show("editoFlipRow", tpl==="edito");
   show("teamRow", tpl==="score");
   show("gradientRow", tpl==="post-image" || tpl==="post-video" || tpl==="score" || tpl==="statistique");
   show("videoRow", tpl==="post-video");
@@ -3974,6 +3981,7 @@ $("addText").onclick = ()=> addTextSlide();
 
 // template-specific fields
 if($("badge")) $("badge").onchange = e => setField("badge", e.target.value);
+if($("editoFlip")) $("editoFlip").onclick = ()=> { const it = cur(); if(it){ it.editoFlip = !it.editoFlip; render(); } };
 if($("signature")) $("signature").oninput = e => setField("signature", e.target.value);
 if($("teamA")) $("teamA").oninput = e => setField("teamA", e.target.value);
 if($("teamB")) $("teamB").oninput = e => setField("teamB", e.target.value);
@@ -4667,6 +4675,7 @@ function applyJsonPreset(data, imageFiles){
     slide.groupeElim = s.groupeElim != null ? s.groupeElim : 3;
     slide.frameY = s.frameY || 0;
     if(s.watermark != null) slide.watermark = s.watermark;
+    if(s.editoFlip) slide.editoFlip = true;
     if(s.titleSize!=null) slide.titleScale = s.titleSize/100;
     if(s.descSize!=null) slide.descScale = s.descSize/100;
     if(s.zoom!=null) slide.zoom = s.zoom/100;
@@ -4917,6 +4926,7 @@ $("dlJson").onclick = ()=>{
       planningEvents: s.planningEvents, groupes: s.groupes, groupeElim: s.groupeElim, frameY: s.frameY,
     };
     if(s.watermark != null) sl.watermark = s.watermark;
+    if(s.editoFlip) sl.editoFlip = true;
     if(s.titleScale!=null) sl.titleSize = Math.round(s.titleScale*100);
     if(s.descScale!=null) sl.descSize = Math.round(s.descScale*100);
     if(s.zoom!=null) sl.zoom = Math.round(s.zoom*100);
