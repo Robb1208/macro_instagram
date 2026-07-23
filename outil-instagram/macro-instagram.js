@@ -221,7 +221,8 @@ function newSlide(img, name, tpl){
            titleScale: null, descScale: null, zoom: null, zoom2: null, descColor: null, imgBright: null,
            lineup:"", lineupCount:5, lineupTeamRating:"", lineupPhotos:[],
            bracket:"", bracketFormat:"", bracketWinnerLabel:"champion", bracketDates:"", bracketWide:false, planningEvents:"", groupes:"", groupeElim:3, frameY:0, statHighlight:0, mvpBadge:"mvp",
-           phonetic:"", example:"", analogy:"", boxes:"", grid:"" };
+           phonetic:"", example:"", analogy:"", boxes:"", grid:"",
+           watermark: tpl === "edito" ? false : null };
 }
 function cur(){ return state.images[state.active] || null; }
 function curTpl(){ const it = cur(); return (it && it.template) || "post-image"; }
@@ -578,7 +579,8 @@ function drawOverlay(W, H, slideInfo, content, hasImage){
   }
 
   // --- Shared: logo + cyan bar ---
-  if(state.watermark && logoReady){
+  const showWatermark = c.watermark != null ? c.watermark : state.watermark;
+  if(showWatermark && logoReady){
     const lw = refW*0.135;
     const lh = lw * (logo.naturalHeight/logo.naturalWidth);
     ctx.save();
@@ -3550,7 +3552,7 @@ function drawLayoutGuide(W,H,c,scale,pad,maxW,acc,hi){
 
 // --- T19: Édito (image left + text right) ---
 function drawLayoutEdito(W,H,c,scale,pad,maxW,acc,hi){
-  const imgW = Math.round(W * 0.38);
+  const imgW = Math.round(W * 0.45);
   const imgGap = Math.round(16 * scale);
   const rightX = imgW + imgGap;
   const rightW = W - rightX - pad;
@@ -3898,6 +3900,7 @@ function syncInputs(){
   const dualRow = document.getElementById("dualImageRow");
   if(dualRow) dualRow.style.display = (has && !!it.dualImage) ? "" : "none";
   if($("bgImageBtn")) { $("bgImageBtn").disabled = !has; }
+  if($("watermark")) { const wm = has && it.watermark != null ? it.watermark : state.watermark; $("watermark").checked = wm; }
 
   // template-specific field visibility
   const show = (id, vis) => { const el = document.getElementById(id); if(el) el.style.display = vis ? "" : "none"; };
@@ -3966,7 +3969,7 @@ $("showDesc").onchange = e => setField("showDesc", e.target.checked);
 $("score").oninput = e => setField("score", e.target.value);
 $("showScore").onchange = e => setField("showScore", e.target.checked);
 $("scoreY").oninput = e => { const v=parseFloat(e.target.value); $("scoreYV").textContent=v; setField("scoreY", v); };
-$("watermark").onchange = e => { state.watermark=e.target.checked; render(); };
+$("watermark").onchange = e => { const it = cur(); if(it){ it.watermark = e.target.checked; } else { state.watermark = e.target.checked; } render(); };
 $("addText").onclick = ()=> addTextSlide();
 
 // template-specific fields
@@ -4505,6 +4508,7 @@ document.querySelectorAll("#tplGrid .tpl-btn").forEach(b=>{
     const it = cur();
     if(it){
       it.template = tpl;
+      if(tpl === "edito" && it.watermark == null) it.watermark = false;
       syncInputs(); render();
     } else {
       // no slide yet — create one with this template
@@ -4662,6 +4666,7 @@ function applyJsonPreset(data, imageFiles){
     slide.groupes = s.groupes || "";
     slide.groupeElim = s.groupeElim != null ? s.groupeElim : 3;
     slide.frameY = s.frameY || 0;
+    if(s.watermark != null) slide.watermark = s.watermark;
     if(s.titleSize!=null) slide.titleScale = s.titleSize/100;
     if(s.descSize!=null) slide.descScale = s.descSize/100;
     if(s.zoom!=null) slide.zoom = s.zoom/100;
@@ -4911,6 +4916,7 @@ $("dlJson").onclick = ()=>{
       lineupTeamRating: s.lineupTeamRating, bracket: s.bracket, bracketFormat: s.bracketFormat, bracketWinnerLabel: s.bracketWinnerLabel, bracketDates: s.bracketDates, bracketWide: s.bracketWide,
       planningEvents: s.planningEvents, groupes: s.groupes, groupeElim: s.groupeElim, frameY: s.frameY,
     };
+    if(s.watermark != null) sl.watermark = s.watermark;
     if(s.titleScale!=null) sl.titleSize = Math.round(s.titleScale*100);
     if(s.descScale!=null) sl.descSize = Math.round(s.descScale*100);
     if(s.zoom!=null) sl.zoom = Math.round(s.zoom*100);
