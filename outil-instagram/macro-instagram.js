@@ -30,6 +30,7 @@ const TEMPLATES = {
   "bracket":   { label:"Bracket", icon:"🏅" },
   "glossaire": { label:"Glossaire", icon:"📖" },
   "guide":     { label:"Guide", icon:"📘" },
+  "edito":     { label:"Édito", icon:"▐" },
 };
 
 // ═══ SECTION: TEAM LOGOS ═══
@@ -555,8 +556,8 @@ function drawOverlay(W, H, slideInfo, content, hasImage){
   glow.addColorStop(0.6, rgba(glowCol, 0));
   ctx.fillStyle = glow; ctx.fillRect(0,0,W,H);
 
-  // --- Bottom gradient (skip for post-texte) ---
-  if(tpl !== "post-texte"){
+  // --- Bottom gradient (skip for post-texte, edito) ---
+  if(tpl !== "post-texte" && tpl !== "edito"){
     const gStr = state.gradient;
     const gCol = tpl==="breaking" ? "#ff4d57" : acc;
     const dark = (hasImage || tpl==="score" || tpl==="breaking") ? mix(gCol, INK, 0.80) : hexToRgb(INK);
@@ -618,6 +619,7 @@ function drawOverlay(W, H, slideInfo, content, hasImage){
     case "planning":   drawLayoutPlanning(W,H,c,scale,pad,maxW,acc,hi); break;
     case "glossaire":  drawLayoutGlossaire(W,H,c,scale,pad,maxW,acc,hi); break;
     case "guide":      drawLayoutGuide(W,H,c,scale,pad,maxW,acc,hi); break;
+    case "edito":      drawLayoutEdito(W,H,c,scale,pad,maxW,acc,hi); break;
     default:           drawLayoutBottom(W,H,c,scale,pad,maxW,acc,hi); break;
   }
 }
@@ -3546,6 +3548,130 @@ function drawLayoutGuide(W,H,c,scale,pad,maxW,acc,hi){
   lastTextBox = null;
 }
 
+// --- T19: Édito (image left + text right) ---
+function drawLayoutEdito(W,H,c,scale,pad,maxW,acc,hi){
+  const imgW = Math.round(W * 0.38);
+  const imgGap = Math.round(16 * scale);
+  const rightX = imgW + imgGap;
+  const rightW = W - rightX - pad;
+  const imgR = Math.round(14 * scale);
+
+  // --- left: image panel ---
+  if(c.img){
+    ctx.save();
+    roundRectPath(0, 0, imgW, H, 0);
+    ctx.clip();
+    drawCover(c.img, 0, 0, imgW, H, sVal("zoom"), c.tx.ox, c.tx.oy);
+    if(sVal("imgBright") < 1){
+      ctx.fillStyle = `rgba(0,0,0,${1 - sVal("imgBright")})`;
+      ctx.fillRect(0, 0, imgW, H);
+    }
+    // subtle right-edge fade into dark
+    const edgeFade = ctx.createLinearGradient(imgW - Math.round(60*scale), 0, imgW, 0);
+    edgeFade.addColorStop(0, "rgba(7,10,13,0)");
+    edgeFade.addColorStop(1, "rgba(7,10,13,0.55)");
+    ctx.fillStyle = edgeFade;
+    ctx.fillRect(imgW - Math.round(60*scale), 0, Math.round(60*scale), H);
+    ctx.restore();
+
+    // accent border on right edge of image
+    ctx.fillStyle = acc;
+    ctx.fillRect(imgW - Math.round(3*scale), 0, Math.round(3*scale), H);
+  } else {
+    // no image: dark placeholder panel
+    ctx.save();
+    roundRectPath(pad, pad, imgW - pad*2, H - pad*2, imgR);
+    ctx.fillStyle = "#0e161d";
+    ctx.fill();
+    ctx.strokeStyle = "#1a2a36";
+    ctx.lineWidth = Math.max(1, 2*scale);
+    ctx.stroke();
+    ctx.restore();
+    ctx.fillStyle = "#3a4c57";
+    ctx.font = `500 ${Math.round(18*scale)}px Manrope, sans-serif`;
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText("Image", imgW/2, H/2);
+    ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+  }
+
+  // --- right: text content ---
+  const eyeF = Math.round(20 * scale);
+  const titleF = Math.round(72 * scale * sVal("titleScale"));
+  const descF = Math.round(26 * scale * sVal("descScale"));
+  const titleLH = Math.round(titleF * 1.08);
+  const descLH = Math.round(descF * 1.55);
+  const titleFont = `800 ${titleF}px Sora, sans-serif`;
+  const descFont = `500 ${descF}px Manrope, sans-serif`;
+  const eyebrow = (c.eyebrow || "").toUpperCase();
+  const titleLines = wrapRich(richWords(c.title), titleFont, rightW);
+  const descLines = (c.showDesc && c.desc && c.desc.trim()) ? wrapRich(richWords(c.desc), descFont, Math.round(rightW * 0.95)).slice(0, 20) : [];
+
+  // compute total block height for vertical centering
+  const accentLineH = Math.round(4 * scale);
+  const gap = Math.round(14 * scale);
+  let blockH = accentLineH + gap;
+  if(eyebrow) blockH += eyeF + gap;
+  blockH += titleLines.length * titleLH;
+  if(descLines.length) blockH += Math.round(20*scale) + descLines.length * descLH;
+
+  const dragOffset = ((c.textY||0)*scale) + (c.textDrag||0);
+  const centerY = H * 0.46 + dragOffset;
+  let y = centerY - blockH / 2;
+  lastTextBox = { x: rightX, y, w: rightW, h: blockH };
+
+  // accent tick
+  ctx.fillStyle = acc;
+  ctx.fillRect(rightX, y, Math.round(44 * scale), accentLineH);
+  y += accentLineH + gap;
+
+  // eyebrow
+  if(eyebrow){
+    ctx.font = `700 ${eyeF}px Sora, sans-serif`;
+    ctx.fillStyle = acc;
+    ctx.textBaseline = "top";
+    drawSpaced(eyebrow, rightX, y, eyeF * 0.18);
+    y += eyeF + gap;
+  }
+
+  // title (rich text with *accent*)
+  ctx.textBaseline = "top";
+  ctx.shadowColor = "rgba(0,0,0,0.35)"; ctx.shadowBlur = 12; ctx.shadowOffsetY = 2;
+  for(const ln of titleLines){
+    drawRichLine(ln, rightX, y, titleFont, hi, "#ffffff");
+    y += titleLH;
+  }
+  ctx.shadowColor = "transparent"; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+
+  // description
+  if(descLines.length){
+    y += Math.round(20 * scale);
+    for(const ln of descLines){
+      drawRichLine(ln, rightX, y, descFont, hi, descBaseColor());
+      y += descLH;
+    }
+  }
+
+  // signature at bottom-right
+  if(c.signature && c.signature.trim()){
+    const sigF = Math.round(22 * scale);
+    const avatarR = Math.round(30 * scale);
+    ctx.font = `500 ${sigF}px 'JetBrains Mono', monospace`;
+    const initials = c.signature.split(/\s+/).slice(0, 2).map(w => w[0] || "").join("").toUpperCase();
+    const sigY = H - pad - avatarR / 2;
+    ctx.save();
+    ctx.fillStyle = "#13202a"; ctx.strokeStyle = "#243039"; ctx.lineWidth = Math.max(1, 2*scale);
+    ctx.beginPath(); ctx.arc(rightX + avatarR/2, sigY, avatarR/2, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = acc; ctx.font = `600 ${Math.round(20*scale)}px 'JetBrains Mono', monospace`;
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText(initials, rightX + avatarR/2, sigY);
+    ctx.restore();
+    ctx.font = `500 ${sigF}px 'JetBrains Mono', monospace`;
+    ctx.fillStyle = "#9aa7b0"; ctx.textBaseline = "middle";
+    ctx.fillText(c.signature, rightX + avatarR + Math.round(10*scale), sigY);
+    ctx.textBaseline = "alphabetic";
+  }
+}
+
 // ═══ SECTION: RENDER ═══
 function render(){
   let [W,H] = state.reel ? FORMATS.story : FORMATS[state.format];
@@ -3557,10 +3683,13 @@ function render(){
   ctx.fillStyle = INK; ctx.fillRect(0,0,W,H);
 
   const showVideo = item && item.video && tpl === "post-video" && item.showBgImage !== false;
-  const showImg = (item && item.img && item.showBgImage !== false) || showVideo;
+  const editoImg = tpl === "edito" && item && item.img;
+  const showImg = ((item && item.img && item.showBgImage !== false) || showVideo) && !editoImg;
   const framed = showImg && item.framedImage && !showVideo;
   const dual = showImg && item.dualImage && !showVideo;
-  if(dual){
+  if(editoImg){
+    drawBaseBackground(W,H);
+  } else if(dual){
     drawDualImage(item, W, H, sVal("zoom"));
     if(sVal("imgBright") < 1){
       ctx.fillStyle = `rgba(0,0,0,${1 - sVal("imgBright")})`;
@@ -3772,12 +3901,12 @@ function syncInputs(){
 
   // template-specific field visibility
   const show = (id, vis) => { const el = document.getElementById(id); if(el) el.style.display = vis ? "" : "none"; };
-  const hasImage = tpl!=="post-texte" && tpl!=="planning";
+  const hasImage = tpl!=="post-texte" && tpl!=="planning" && tpl!=="edito";
   show("scoreRow", tpl==="score");
   show("scoreYRow", tpl==="score");
   show("scoreCheckRow", false);
   show("badgeRow", tpl==="breaking");
-  show("signatureRow", tpl==="post-texte" || tpl==="breaking");
+  show("signatureRow", tpl==="post-texte" || tpl==="breaking" || tpl==="edito");
   show("teamRow", tpl==="score");
   show("gradientRow", tpl==="post-image" || tpl==="post-video" || tpl==="score" || tpl==="statistique");
   show("videoRow", tpl==="post-video");
@@ -4817,11 +4946,14 @@ function drawFullSlide(targetCtx, W, H, slide, idx, total, zoomMul){
   ctx.fillStyle = INK; ctx.fillRect(0,0,W,H);
   const slideZoom = slide.zoom != null ? slide.zoom : state.zoom;
   const showVideo = slide.video && slide.template === "post-video" && slide.showBgImage !== false;
-  const showImg = (slide.img && slide.showBgImage !== false) || showVideo;
+  const tpl = slide.template;
+  const editoImg = tpl === "edito" && slide.img;
+  const showImg = ((slide.img && slide.showBgImage !== false) || showVideo) && !editoImg;
   const framed = showImg && slide.framedImage && !showVideo;
   const dual = showImg && slide.dualImage && !showVideo;
-  const tpl = slide.template;
-  if(dual){
+  if(editoImg){
+    drawBaseBackground(W,H);
+  } else if(dual){
     drawDualImage(slide, W, H, slideZoom * (zoomMul||1));
   } else if(showImg && !framed){
     drawSlideMedia(slide, W, H, slideZoom * (zoomMul||1));

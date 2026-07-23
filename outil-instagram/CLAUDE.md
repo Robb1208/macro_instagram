@@ -18,7 +18,7 @@ Objet mutable avec format, game, couleurs, watermark, gradient, zoom, textY (-80
 ### Slides (`state.images[]`)
 Chaque slide est un objet créé par `newSlide(img, name, tpl)`. Champs clés : `template`, `eyebrow`, `title`, `desc`, `score`, `standings`, `stats`, `badge`, `signature`, `teamA`, `teamB`, `photoCredit`, etc.
 
-### Templates (13)
+### Templates (14)
 Définis dans la constante `TEMPLATES`. Chaque slide a son propre template indépendant (`slide.template`). Helper `curTpl()` retourne le template du slide actif.
 
 | Clé | Nom | Fonction de rendu |
@@ -36,6 +36,7 @@ Définis dans la constante `TEMPLATES`. Chaque slide a son propre template indé
 | `mvp` | MVP | `drawLayoutMVP` — MVP doré ou badge Macro |
 | `citation` | Citation | `drawLayoutCitation` — citation avec nom/rôle |
 | `planning` | Planning | `drawLayoutPlanning` — calendrier hebdo esport |
+| `edito` | Édito | `drawLayoutEdito` — image gauche + texte droite, split layout |
 
 ### Rendu canvas
 `render()` → dessine l'image de fond → `drawOverlay(W, H, slideInfo, content, hasImage)` qui dispatche vers la bonne fonction de layout selon `content.template`.
