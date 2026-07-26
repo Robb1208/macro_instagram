@@ -183,6 +183,30 @@ Initialiser avec `npx hyperframes init` si nouveau projet, ou copier la structur
 6. `npx hyperframes render` — générer le MP4
 7. Montrer le résultat à Robin
 
+## Montage multi-vidéos
+
+Quand Robin fournit **plusieurs vidéos sources** (au lieu d'une seule vidéo déjà montée), créer un montage cohérent avant de l'utiliser comme fond HyperFrames.
+
+### Pipeline montage
+
+1. **Analyser** : extraire des frames tous les 3s de chaque vidéo (scaled ~860px pour analyse visuelle). Identifier le contenu de chaque segment (gameplay, portrait, célébration, réaction, etc.).
+2. **Sélectionner** : choisir 6-8 meilleurs moments pour un total de 15-20s. Varier les types de plans (close-up, gameplay, émotion, victoire). Construire un arc narratif cohérent : hook → action → émotion → climax.
+3. **Crop adaptatif par clip** : chaque clip a son propre offset de crop pour centrer le sujet.
+   - Source ultrawide (3440×1440) → crop 810×1440 → scale 1080×1920
+   - Extraire un frame test par clip, vérifier visuellement le cadrage, ajuster l'offset si le sujet est coupé
+   - Offsets typiques pour enregistrements YouTube ultrawide : ~945 pour contenu cinématique centré, ~1200-1300 pour gameplay (crosshair plus à droite)
+4. **Extraire** chaque clip avec : `-c:v libx264 -crf 18 -preset fast -r 30 -g 30 -keyint_min 30 -pix_fmt yuv420p -an`
+5. **Concaténer** via ffmpeg concat demuxer (fichier concat.txt + re-encode, PAS stream copy, pour éviter les sparse keyframes)
+6. Utiliser la vidéo concaténée comme `montage_bg.mp4` dans le dossier `assets/` du reel HyperFrames
+
+### Points clés montage
+
+- **Sujet toujours centré** : vérifier le crop de chaque clip individuellement, pas un offset global
+- **Pas d'audio** dans le montage (`-an`) — l'audio vient de l'outro ou d'une piste séparée
+- **Keyframes réguliers** : toujours `-g 30 -keyint_min 30` pour éviter les warnings HyperFrames
+- **Durée cible** : 15-20s de montage + 4.1s d'outro = reel final ~20-25s
+- **Transitions naturelles** : couper sur les changements de plan/action, pas au milieu d'un mouvement
+
 ## Ce qu'il ne faut PAS faire
 
 - Ne pas dépasser la durée de la vidéo source
