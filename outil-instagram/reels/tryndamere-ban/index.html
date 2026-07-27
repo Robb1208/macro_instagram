@@ -84,9 +84,44 @@ body {
   transform: scaleX(0);
 }
 
+#category-block {
+  position: absolute;
+  top: 150px; left: 0;
+  width: 1080px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  z-index: 16;
+}
+
+.cat-badge {
+  display: inline-block;
+  border: 2px solid rgba(255,255,255,0.5);
+  color: var(--white);
+  font-family: 'Sora', sans-serif;
+  font-weight: 700;
+  font-size: 20px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  padding: 6px 20px;
+  border-radius: 4px;
+  margin-bottom: 10px;
+}
+
+.cat-game {
+  font-family: 'Sora', sans-serif;
+  font-weight: 800;
+  font-size: 42px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--accent);
+  text-shadow: 0 0 20px rgba(0,229,255,0.4);
+}
+
 #title-block {
   position: absolute;
-  top: 320px; left: 0;
+  top: 700px; left: 0;
   width: 1080px;
   padding: 0 60px;
   z-index: 16;
@@ -96,25 +131,11 @@ body {
   text-align: center;
 }
 
-.badge {
-  display: inline-block;
-  background: var(--accent);
-  color: var(--bg);
-  font-family: 'Sora', sans-serif;
-  font-weight: 800;
-  font-size: 22px;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  padding: 6px 18px;
-  border-radius: 4px;
-  margin-bottom: 14px;
-}
-
 .title-text {
   font-family: 'Sora', sans-serif;
   font-weight: 800;
   font-size: 46px;
-  line-height: 1.18;
+  line-height: 1.22;
   color: var(--white);
   text-align: center;
   text-shadow: 0 4px 24px rgba(0,0,0,0.8), 0 2px 8px rgba(0,0,0,0.6);
@@ -240,10 +261,16 @@ em, .accent {
       <div id="top-line"></div>
     </div>
 
-    <div id="title-block" class="clip" data-start="0" data-duration="22.033" data-track-index="16">
+    <div id="category-block" class="clip" data-start="0" data-duration="22.033" data-track-index="16">
+      <div id="cat-inner">
+        <div class="cat-badge">Histoire Esport</div>
+        <div class="cat-game">League of Legends</div>
+      </div>
+    </div>
+
+    <div id="title-block" class="clip" data-start="0" data-duration="4.5" data-track-index="17">
       <div id="title-inner">
-        <div class="badge">League of Legends</div>
-        <div class="title-text">Le créateur de League of Legends est banni de son propre jeu.</div>
+        <div class="title-text">Le créateur de League of Legends est <em>banni</em> de son propre jeu.</div>
       </div>
     </div>
 
@@ -315,9 +342,12 @@ tl.fromTo("#top-line", { scaleX: 0, transformOrigin: "left center" }, { scaleX: 
 // Top bar entrance
 tl.from("#macro-logo", { opacity: 0, x: -20, duration: 0.6, ease: "power3.out" }, 0.2);
 
-// Title entrance — centré, impact
-tl.from(".badge", { opacity: 0, scale: 0.8, duration: 0.4, ease: "back.out(1.5)" }, 0.3);
-tl.from(".title-text", { opacity: 0, y: 40, duration: 0.6, ease: "power3.out" }, 0.5);
+// Category block entrance (persiste toute la vidéo)
+tl.from(".cat-badge", { opacity: 0, y: 15, duration: 0.4, ease: "power3.out" }, 0.3);
+tl.from(".cat-game", { opacity: 0, y: 20, duration: 0.5, ease: "power3.out" }, 0.5);
+
+// Title entrance — centré en bas, impact
+tl.from(".title-text", { opacity: 0, y: 40, duration: 0.6, ease: "power3.out" }, 0.6);
 // Title fade out après le hook
 tl.to("#title-inner", { opacity: 0, y: -20, duration: 0.4, ease: "power2.in" }, 3.8);
 tl.set("#title-inner", { opacity: 0 }, 4.2);
