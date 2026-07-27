@@ -248,7 +248,9 @@ em, .accent {
     <!-- Scene 1 — Hook (0–5s) : Merrill sur scène -->
     <div id="s1" class="clip scene" data-start="0" data-duration="5" data-track-index="5">
       <div id="s1-inner">
-        <h2>Le champion <em>Tryndamere</em><br/>porte le nom du<br/><span class="emphasis">créateur de Riot Games.</span></h2>
+        <p><em>Marc Merrill</em> a cofondé<br/>Riot Games en <em>2006</em>.</p>
+        <div class="separator"></div>
+        <p>Son pseudo en jeu ?<br/><span class="emphasis">Tryndamere.</span></p>
         <div class="separator"></div>
         <p>Son compte a été<br/><span class="red">banni définitivement.</span></p>
       </div>
@@ -318,9 +320,11 @@ tl.from(".badge", { opacity: 0, y: 20, duration: 0.4, ease: "power3.out" }, 0.3)
 tl.from(".title-text", { opacity: 0, y: 30, duration: 0.5, ease: "power3.out" }, 0.5);
 
 // ═══ SCENE 1 — Hook (0–5s) ═══
-tl.from("#s1-inner h2", { opacity: 0, y: 30, duration: 0.5, ease: "power3.out" }, 0.4);
-tl.from("#s1-inner .separator", { scaleX: 0, duration: 0.25, ease: "power2.out" }, 0.9);
-tl.from("#s1-inner p", { opacity: 0, y: 15, duration: 0.4, ease: "power3.out" }, 1.1);
+tl.from("#s1-inner > p:nth-child(1)", { opacity: 0, y: 15, duration: 0.4, ease: "power3.out" }, 0.4);
+tl.from("#s1-inner > .separator:nth-child(2)", { scaleX: 0, duration: 0.25, ease: "power2.out" }, 0.9);
+tl.from("#s1-inner > p:nth-child(3)", { opacity: 0, y: 15, duration: 0.4, ease: "power3.out" }, 1.2);
+tl.from("#s1-inner > .separator:nth-child(4)", { scaleX: 0, duration: 0.25, ease: "power2.out" }, 1.8);
+tl.from("#s1-inner > p:nth-child(5)", { opacity: 0, y: 15, duration: 0.4, ease: "power3.out" }, 2.1);
 tl.to("#s1-inner", { opacity: 0, duration: 0.3, ease: "power2.in" }, 4.5);
 tl.set("#s1-inner", { opacity: 0 }, 5.0);
 
