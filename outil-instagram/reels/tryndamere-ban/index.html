@@ -86,10 +86,14 @@ body {
 
 #title-block {
   position: absolute;
-  top: 150px; left: 0;
+  top: 320px; left: 0;
   width: 1080px;
-  padding: 0 48px;
+  padding: 0 60px;
   z-index: 16;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
 }
 
 .badge {
@@ -109,9 +113,10 @@ body {
 .title-text {
   font-family: 'Sora', sans-serif;
   font-weight: 800;
-  font-size: 40px;
-  line-height: 1.15;
+  font-size: 46px;
+  line-height: 1.18;
   color: var(--white);
+  text-align: center;
   text-shadow: 0 4px 24px rgba(0,0,0,0.8), 0 2px 8px rgba(0,0,0,0.6);
 }
 
@@ -238,45 +243,42 @@ em, .accent {
     <div id="title-block" class="clip" data-start="0" data-duration="22.033" data-track-index="16">
       <div id="title-inner">
         <div class="badge">League of Legends</div>
-        <div class="title-text">Le créateur de League of Legends<br/>est banni de son propre jeu.</div>
+        <div class="title-text">Le créateur de League of Legends est banni de son propre jeu.</div>
       </div>
     </div>
 
     <audio id="bg-audio" class="clip" data-start="0" data-duration="22.033" data-track-index="20"
            src="assets/bg.mp4" data-volume="0.7"></audio>
 
-    <!-- Scene 1 — Hook (0–5s) : Merrill sur scène -->
-    <div id="s1" class="clip scene" data-start="0" data-duration="5" data-track-index="5">
+    <!-- Scene 1 — Context (0–5.5s) : Merrill sur scène -->
+    <div id="s1" class="clip scene" data-start="0" data-duration="5.5" data-track-index="5">
       <div id="s1-inner">
-        <p><em>Marc Merrill</em> a cofondé<br/>Riot Games en <em>2006</em>.</p>
+        <p><em>Marc Merrill</em>, alias <em>Tryndamere</em>,<br/>cofonde Riot Games en <em>2006</em>.</p>
         <div class="separator"></div>
-        <p>Son pseudo en jeu ?<br/><span class="emphasis">Tryndamere.</span></p>
-        <div class="separator"></div>
-        <p>Son compte a été<br/><span class="red">banni définitivement.</span></p>
+        <p>En <em>2012</em>, il partage<br/>son compte avec un joueur pro.</p>
       </div>
     </div>
 
-    <!-- Scene 2 — Context (5–10s) : gameplay Tryndamere -->
-    <div id="s2" class="clip scene" data-start="5" data-duration="5" data-track-index="6">
+    <!-- Scene 2 — Développement (5.5–11s) : gameplay + tweets -->
+    <div id="s2" class="clip scene" data-start="5.5" data-duration="5.5" data-track-index="6">
       <div id="s2-inner">
-        <p>En <em>2012</em>, Marc Merrill<br/>partage son compte<br/>avec un joueur pro.</p>
-        <div class="separator"></div>
         <p>Celui-ci joue à sa place.<br/>Merrill poste les résultats<br/><span class="emphasis">comme si c'étaient les siens.</span></p>
-      </div>
-    </div>
-
-    <!-- Scene 3 — Reveal (10–15s) : teamfight + tweets -->
-    <div id="s3" class="clip scene" data-start="10" data-duration="5" data-track-index="7">
-      <div id="s3-inner">
-        <p><em>4 ans plus tard</em>,<br/>l'affaire éclate.</p>
         <div class="separator"></div>
-        <p>Merrill admet tout.<br/>Il s'auto-amende<br/><span class="stat">10 000$</span></p>
-        <p class="dim" style="font-size:30px;margin-top:12px;">…reversés à une asso<br/>dont il est membre.</p>
+        <p><em>4 ans plus tard</em>,<br/>l'affaire éclate.</p>
       </div>
     </div>
 
-    <!-- Scene 4 — Punchline (15–20s) : Triple Kill + bureau -->
-    <div id="s4" class="clip scene" data-start="15" data-duration="5" data-track-index="8">
+    <!-- Scene 3 — Reveal (11–16s) : teamfight -->
+    <div id="s3" class="clip scene" data-start="11" data-duration="5" data-track-index="7">
+      <div id="s3-inner">
+        <p>Merrill admet tout.<br/>Il s'auto-amende<br/><span class="stat">10 000$</span></p>
+        <div class="separator"></div>
+        <p class="dim" style="font-size:30px;">…reversés à une asso<br/>dont il est membre.</p>
+      </div>
+    </div>
+
+    <!-- Scene 4 — Punchline (16–20s) : Triple Kill + bureau -->
+    <div id="s4" class="clip scene" data-start="16" data-duration="4" data-track-index="8">
       <div id="s4-inner">
         <p>Des joueurs pro de <em>CLG</em><br/>avaient fait la même chose.</p>
         <div class="separator"></div>
@@ -315,41 +317,41 @@ tl.fromTo("#top-line", { scaleX: 0, transformOrigin: "left center" }, { scaleX: 
 // Top bar entrance
 tl.from("#macro-logo", { opacity: 0, x: -20, duration: 0.6, ease: "power3.out" }, 0.2);
 
-// Title entrance
-tl.from(".badge", { opacity: 0, y: 20, duration: 0.4, ease: "power3.out" }, 0.3);
-tl.from(".title-text", { opacity: 0, y: 30, duration: 0.5, ease: "power3.out" }, 0.5);
+// Title entrance — centré, impact
+tl.from(".badge", { opacity: 0, scale: 0.8, duration: 0.4, ease: "back.out(1.5)" }, 0.3);
+tl.from(".title-text", { opacity: 0, y: 40, duration: 0.6, ease: "power3.out" }, 0.5);
+// Title fade out après le hook
+tl.to("#title-inner", { opacity: 0, y: -20, duration: 0.4, ease: "power2.in" }, 3.8);
+tl.set("#title-inner", { opacity: 0 }, 4.2);
 
-// ═══ SCENE 1 — Hook (0–5s) ═══
-tl.from("#s1-inner > p:nth-child(1)", { opacity: 0, y: 15, duration: 0.4, ease: "power3.out" }, 0.4);
-tl.from("#s1-inner > .separator:nth-child(2)", { scaleX: 0, duration: 0.25, ease: "power2.out" }, 0.9);
-tl.from("#s1-inner > p:nth-child(3)", { opacity: 0, y: 15, duration: 0.4, ease: "power3.out" }, 1.2);
-tl.from("#s1-inner > .separator:nth-child(4)", { scaleX: 0, duration: 0.25, ease: "power2.out" }, 1.8);
-tl.from("#s1-inner > p:nth-child(5)", { opacity: 0, y: 15, duration: 0.4, ease: "power3.out" }, 2.1);
-tl.to("#s1-inner", { opacity: 0, duration: 0.3, ease: "power2.in" }, 4.5);
-tl.set("#s1-inner", { opacity: 0 }, 5.0);
+// ═══ SCENE 1 — Context (0–5.5s) ═══
+tl.from("#s1-inner > p:first-child", { opacity: 0, y: 15, duration: 0.4, ease: "power3.out" }, 0.6);
+tl.from("#s1-inner .separator", { scaleX: 0, duration: 0.25, ease: "power2.out" }, 1.1);
+tl.from("#s1-inner > p:last-child", { opacity: 0, y: 15, duration: 0.4, ease: "power3.out" }, 1.4);
+tl.to("#s1-inner", { opacity: 0, duration: 0.3, ease: "power2.in" }, 5.0);
+tl.set("#s1-inner", { opacity: 0 }, 5.5);
 
-// ═══ SCENE 2 — Context (5–10s) ═══
-tl.from("#s2-inner > p:first-child", { opacity: 0, y: 15, duration: 0.4, ease: "power3.out" }, 5.1);
-tl.from("#s2-inner .separator", { scaleX: 0, duration: 0.25, ease: "power2.out" }, 5.5);
-tl.from("#s2-inner > p:last-child", { opacity: 0, y: 15, duration: 0.4, ease: "power3.out" }, 5.8);
-tl.to("#s2-inner", { opacity: 0, duration: 0.3, ease: "power2.in" }, 9.5);
-tl.set("#s2-inner", { opacity: 0 }, 10.0);
+// ═══ SCENE 2 — Développement (5.5–11s) ═══
+tl.from("#s2-inner > p:first-child", { opacity: 0, y: 15, duration: 0.4, ease: "power3.out" }, 5.6);
+tl.from("#s2-inner .separator", { scaleX: 0, duration: 0.25, ease: "power2.out" }, 6.1);
+tl.from("#s2-inner > p:last-child", { opacity: 0, y: 15, duration: 0.4, ease: "power3.out" }, 6.4);
+tl.to("#s2-inner", { opacity: 0, duration: 0.3, ease: "power2.in" }, 10.5);
+tl.set("#s2-inner", { opacity: 0 }, 11.0);
 
-// ═══ SCENE 3 — Reveal (10–15s) ═══
-tl.from("#s3-inner > p:first-child", { opacity: 0, y: 15, duration: 0.4, ease: "power3.out" }, 10.1);
-tl.from("#s3-inner .separator", { scaleX: 0, duration: 0.25, ease: "power2.out" }, 10.5);
-tl.from("#s3-inner > p:nth-child(3)", { opacity: 0, y: 15, duration: 0.35, ease: "power3.out" }, 10.7);
-tl.from("#s3-inner .stat", { scale: 0.5, opacity: 0, duration: 0.4, ease: "back.out(1.7)" }, 11.0);
-tl.from("#s3-inner .dim", { opacity: 0, y: 10, duration: 0.35, ease: "power3.out" }, 11.8);
-tl.to("#s3-inner", { opacity: 0, duration: 0.3, ease: "power2.in" }, 14.5);
-tl.set("#s3-inner", { opacity: 0 }, 15.0);
+// ═══ SCENE 3 — Reveal (11–16s) ═══
+tl.from("#s3-inner > p:first-child", { opacity: 0, y: 15, duration: 0.4, ease: "power3.out" }, 11.1);
+tl.from("#s3-inner .separator", { scaleX: 0, duration: 0.25, ease: "power2.out" }, 11.5);
+tl.from("#s3-inner .stat", { scale: 0.5, opacity: 0, duration: 0.4, ease: "back.out(1.7)" }, 11.8);
+tl.from("#s3-inner .dim", { opacity: 0, y: 10, duration: 0.35, ease: "power3.out" }, 12.5);
+tl.to("#s3-inner", { opacity: 0, duration: 0.3, ease: "power2.in" }, 15.5);
+tl.set("#s3-inner", { opacity: 0 }, 16.0);
 
-// ═══ SCENE 4 — Punchline (15–20s) ═══
-tl.from("#s4-inner > p:first-child", { opacity: 0, y: 15, duration: 0.4, ease: "power3.out" }, 15.1);
-tl.from("#s4-inner > .separator:first-of-type", { scaleX: 0, duration: 0.25, ease: "power2.out" }, 15.5);
-tl.from("#s4-inner > p:nth-child(3)", { opacity: 0, y: 15, duration: 0.4, ease: "power3.out" }, 15.8);
-tl.from("#s4-inner > .separator:last-of-type", { scaleX: 0, duration: 0.25, ease: "power2.out" }, 16.5);
-tl.from("#s4-inner > p:last-child", { opacity: 0, y: 15, duration: 0.4, ease: "power3.out" }, 16.8);
+// ═══ SCENE 4 — Punchline (16–20s) ═══
+tl.from("#s4-inner > p:first-child", { opacity: 0, y: 15, duration: 0.4, ease: "power3.out" }, 16.1);
+tl.from("#s4-inner > .separator:first-of-type", { scaleX: 0, duration: 0.25, ease: "power2.out" }, 16.5);
+tl.from("#s4-inner > p:nth-child(3)", { opacity: 0, y: 15, duration: 0.4, ease: "power3.out" }, 16.8);
+tl.from("#s4-inner > .separator:last-of-type", { scaleX: 0, duration: 0.25, ease: "power2.out" }, 17.5);
+tl.from("#s4-inner > p:last-child", { opacity: 0, y: 15, duration: 0.4, ease: "power3.out" }, 17.8);
 
 // ═══ OUTRO — Push-slide + directional motion blur ═══
 var blurEl = document.getElementById("mblur-gauss");
