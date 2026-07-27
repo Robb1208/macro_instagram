@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=1080,height=1920"/>
-<title>Le créateur de LoL banni de son propre jeu</title>
+<title>Le créateur de League of Legends est banni de son propre jeu</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@700;800&family=Manrope:wght@500;600;700&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet"/>
@@ -42,11 +42,12 @@ body {
   top: 0; left: 0;
   width: 1080px; height: 1920px;
   background: linear-gradient(180deg,
-    rgba(5,6,10,0.72) 0%,
-    rgba(5,6,10,0.35) 25%,
-    rgba(5,6,10,0.30) 50%,
-    rgba(0,229,255,0.15) 75%,
-    rgba(0,229,255,0.08) 100%
+    rgba(5,6,10,0.80) 0%,
+    rgba(5,6,10,0.50) 20%,
+    rgba(5,6,10,0.55) 45%,
+    rgba(5,6,10,0.65) 65%,
+    rgba(0,229,255,0.20) 85%,
+    rgba(0,229,255,0.10) 100%
   );
 }
 
@@ -70,7 +71,6 @@ body {
 
 #top-bar img {
   height: 36px;
-  opacity: 0;
 }
 
 #top-line {
@@ -109,15 +109,15 @@ body {
 .title-text {
   font-family: 'Sora', sans-serif;
   font-weight: 800;
-  font-size: 42px;
+  font-size: 40px;
   line-height: 1.15;
   color: var(--white);
-  text-shadow: 0 2px 20px rgba(0,0,0,0.5);
+  text-shadow: 0 4px 24px rgba(0,0,0,0.8), 0 2px 8px rgba(0,0,0,0.6);
 }
 
 .scene {
   position: absolute;
-  top: 560px; left: 0;
+  top: 700px; left: 0;
   width: 1080px;
   display: flex;
   flex-direction: column;
@@ -133,7 +133,7 @@ body {
   line-height: 1.2;
   color: var(--white);
   margin-bottom: 20px;
-  text-shadow: 0 2px 20px rgba(0,0,0,0.5);
+  text-shadow: 0 4px 24px rgba(0,0,0,0.8), 0 2px 8px rgba(0,0,0,0.6);
 }
 
 .scene p {
@@ -142,7 +142,7 @@ body {
   font-size: 38px;
   line-height: 1.4;
   color: var(--body);
-  text-shadow: 0 2px 12px rgba(0,0,0,0.5);
+  text-shadow: 0 4px 20px rgba(0,0,0,0.8), 0 2px 6px rgba(0,0,0,0.5);
 }
 
 .scene .separator {
@@ -238,14 +238,14 @@ em, .accent {
     <div id="title-block" class="clip" data-start="0" data-duration="22.033" data-track-index="16">
       <div id="title-inner">
         <div class="badge">League of Legends</div>
-        <div class="title-text">Le créateur de LoL<br/>banni de son propre jeu</div>
+        <div class="title-text">Le créateur de League of Legends<br/>est banni de son propre jeu.</div>
       </div>
     </div>
 
     <audio id="bg-audio" class="clip" data-start="0" data-duration="22.033" data-track-index="20"
            src="assets/bg.mp4" data-volume="0.7"></audio>
 
-    <!-- Scene 1 — Hook (0–5s) : Merrill sur scène, on pose le sujet -->
+    <!-- Scene 1 — Hook (0–5s) : Merrill sur scène -->
     <div id="s1" class="clip scene" data-start="0" data-duration="5" data-track-index="5">
       <div id="s1-inner">
         <h2>Le champion <em>Tryndamere</em><br/>porte le nom du<br/><span class="emphasis">créateur de Riot Games.</span></h2>
@@ -254,7 +254,7 @@ em, .accent {
       </div>
     </div>
 
-    <!-- Scene 2 — Context (5–10s) : transition vers gameplay Tryndamere -->
+    <!-- Scene 2 — Context (5–10s) : gameplay Tryndamere -->
     <div id="s2" class="clip scene" data-start="5" data-duration="5" data-track-index="6">
       <div id="s2-inner">
         <p>En <em>2012</em>, Marc Merrill<br/>partage son compte<br/>avec un joueur pro.</p>
@@ -263,7 +263,7 @@ em, .accent {
       </div>
     </div>
 
-    <!-- Scene 3 — Reveal (10–15s) : teamfight + tweets preuve -->
+    <!-- Scene 3 — Reveal (10–15s) : teamfight + tweets -->
     <div id="s3" class="clip scene" data-start="10" data-duration="5" data-track-index="7">
       <div id="s3-inner">
         <p><em>4 ans plus tard</em>,<br/>l'affaire éclate.</p>
@@ -273,8 +273,8 @@ em, .accent {
       </div>
     </div>
 
-    <!-- Scene 4 — Punchline (15–21.2s) : Triple Kill + Merrill bureau -->
-    <div id="s4" class="clip scene" data-start="15" data-duration="6.2" data-track-index="8">
+    <!-- Scene 4 — Punchline (15–20s) : Triple Kill + bureau -->
+    <div id="s4" class="clip scene" data-start="15" data-duration="5" data-track-index="8">
       <div id="s4-inner">
         <p>Des joueurs pro de <em>CLG</em><br/>avaient fait la même chose.</p>
         <div class="separator"></div>
@@ -287,9 +287,9 @@ em, .accent {
   </div>
 
   <div id="outro-wrap">
-    <video id="outro-video" class="clip" data-start="21.2" data-duration="4.117" data-track-index="18"
+    <video id="outro-video" class="clip" data-start="20" data-duration="4.117" data-track-index="18"
            src="assets/Macro_OUT.mp4" muted playsinline></video>
-    <audio id="outro-audio" class="clip" data-start="21.2" data-duration="4.117" data-track-index="21"
+    <audio id="outro-audio" class="clip" data-start="20" data-duration="4.117" data-track-index="21"
            src="assets/Macro_OUT.mp4" data-volume="1.0"></audio>
   </div>
 
@@ -301,8 +301,8 @@ window.__timelines = window.__timelines || {};
 var tl = gsap.timeline({ paused: true });
 
 var DUREE = 22.033;
-var TRANS_T = 20.4;
-var TRANS_DUR = 0.8;
+var TRANS_T = 20.0;
+var TRANS_DUR = 1.0;
 var HALF = TRANS_DUR / 2;
 
 // Ken Burns
@@ -317,21 +317,21 @@ tl.from("#macro-logo", { opacity: 0, x: -20, duration: 0.6, ease: "power3.out" }
 tl.from(".badge", { opacity: 0, y: 20, duration: 0.4, ease: "power3.out" }, 0.3);
 tl.from(".title-text", { opacity: 0, y: 30, duration: 0.5, ease: "power3.out" }, 0.5);
 
-// ═══ SCENE 1 — Hook (0–5s) : Merrill on stage ═══
+// ═══ SCENE 1 — Hook (0–5s) ═══
 tl.from("#s1-inner h2", { opacity: 0, y: 30, duration: 0.5, ease: "power3.out" }, 0.4);
 tl.from("#s1-inner .separator", { scaleX: 0, duration: 0.25, ease: "power2.out" }, 0.9);
 tl.from("#s1-inner p", { opacity: 0, y: 15, duration: 0.4, ease: "power3.out" }, 1.1);
 tl.to("#s1-inner", { opacity: 0, duration: 0.3, ease: "power2.in" }, 4.5);
 tl.set("#s1-inner", { opacity: 0 }, 5.0);
 
-// ═══ SCENE 2 — Context (5–10s) : gameplay Tryndamere ═══
+// ═══ SCENE 2 — Context (5–10s) ═══
 tl.from("#s2-inner > p:first-child", { opacity: 0, y: 15, duration: 0.4, ease: "power3.out" }, 5.1);
 tl.from("#s2-inner .separator", { scaleX: 0, duration: 0.25, ease: "power2.out" }, 5.5);
 tl.from("#s2-inner > p:last-child", { opacity: 0, y: 15, duration: 0.4, ease: "power3.out" }, 5.8);
 tl.to("#s2-inner", { opacity: 0, duration: 0.3, ease: "power2.in" }, 9.5);
 tl.set("#s2-inner", { opacity: 0 }, 10.0);
 
-// ═══ SCENE 3 — Reveal (10–15s) : teamfight + tweets ═══
+// ═══ SCENE 3 — Reveal (10–15s) ═══
 tl.from("#s3-inner > p:first-child", { opacity: 0, y: 15, duration: 0.4, ease: "power3.out" }, 10.1);
 tl.from("#s3-inner .separator", { scaleX: 0, duration: 0.25, ease: "power2.out" }, 10.5);
 tl.from("#s3-inner > p:nth-child(3)", { opacity: 0, y: 15, duration: 0.35, ease: "power3.out" }, 10.7);
@@ -340,7 +340,7 @@ tl.from("#s3-inner .dim", { opacity: 0, y: 10, duration: 0.35, ease: "power3.out
 tl.to("#s3-inner", { opacity: 0, duration: 0.3, ease: "power2.in" }, 14.5);
 tl.set("#s3-inner", { opacity: 0 }, 15.0);
 
-// ═══ SCENE 4 — Punchline (15–21.2s) : Triple Kill + bureau ═══
+// ═══ SCENE 4 — Punchline (15–20s) ═══
 tl.from("#s4-inner > p:first-child", { opacity: 0, y: 15, duration: 0.4, ease: "power3.out" }, 15.1);
 tl.from("#s4-inner > .separator:first-of-type", { scaleX: 0, duration: 0.25, ease: "power2.out" }, 15.5);
 tl.from("#s4-inner > p:nth-child(3)", { opacity: 0, y: 15, duration: 0.4, ease: "power3.out" }, 15.8);
