@@ -27,6 +27,18 @@
 !outil-instagram/LOGOS_JEUX/
 !outil-instagram/LOGOS_JEUX/**
 
+# === REELS (HyperFrames compositions) ===
+!outil-instagram/reels/
+!outil-instagram/reels/*/
+!outil-instagram/reels/*/index.html
+!outil-instagram/reels/*/package.json
+!outil-instagram/reels/*/meta.json
+!outil-instagram/reels/*/assets/
+!outil-instagram/reels/*/assets/*.mp4
+!outil-instagram/reels/*/assets/*.png
+!outil-instagram/reels/*/renders/
+!outil-instagram/reels/*/renders/*.mp4
+
 # Ignorer les presets (posts générés + images = lourd)
 outil-instagram/presets/
 

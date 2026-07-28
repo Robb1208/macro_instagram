@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="hf:width" content="1080">
+<meta name="hf:height" content="1920">
+<meta name="hf:fps" content="30">
+<meta name="hf:duration" content="32.27">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Manrope:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    width: 1080px; height: 1920px;
+    overflow: hidden; background: #05060a;
+    font-family: 'Manrope', sans-serif;
+    color: #e0e0e0;
+  }
+
+  #bg-video {
+    position: absolute; top: 0; left: 0;
+    width: 1080px; height: 1920px;
+    object-fit: cover;
+    transform-origin: center center;
+  }
+
+  #overlay {
+    position: absolute; top: 0; left: 0;
+    width: 1080px; height: 1920px;
+    background: linear-gradient(180deg,
+      rgba(5,6,10,0.75) 0%,
+      rgba(5,6,10,0.35) 25%,
+      rgba(5,6,10,0.25) 50%,
+      rgba(240,193,75,0.18) 85%,
+      rgba(240,193,75,0.10) 100%
+    );
+  }
+
+  #top-bar {
+    position: absolute; top: 60px; left: 60px; right: 60px;
+    display: flex; align-items: center; gap: 16px;
+    z-index: 15;
+  }
+  #top-bar img { height: 40px; width: auto; }
+  .bar-wrap {
+    flex: 1; height: 4px; position: relative;
+    background: rgba(255,255,255,0.08);
+    border-radius: 2px; overflow: hidden;
+  }
+  #top-line {
+    position: absolute; top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: #f0c14b;
+    border-radius: 2px;
+    box-shadow: 0 0 8px rgba(240,193,75,0.4);
+    transform-origin: left center;
+    transform: scaleX(0);
+  }
+
+  #title-block {
+    position: absolute; top: 150px; left: 0; right: 0;
+    text-align: center; z-index: 16;
+  }
+  .badge-cat {
+    display: inline-block;
+    font-family: 'Sora', sans-serif;
+    font-size: 22px; font-weight: 700;
+    letter-spacing: 3px; text-transform: uppercase;
+    color: #f0c14b;
+    margin-bottom: 6px;
+  }
+  .badge-game {
+    display: block;
+    font-family: 'Sora', sans-serif;
+    font-size: 18px; font-weight: 600;
+    letter-spacing: 2px; text-transform: uppercase;
+    color: rgba(255,255,255,0.4);
+  }
+
+  #glow-bar {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    height: 4px;
+    background: #f0c14b;
+    box-shadow: 0 0 20px rgba(240,193,75,0.5),
+                0 0 60px rgba(240,193,75,0.2);
+    z-index: 2;
+  }
+
+  .scene {
+    position: absolute;
+    top: 560px; left: 0; right: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: flex-start;
+    padding: 0 60px;
+    text-align: center;
+    z-index: 10;
+  }
+  .scene h2 {
+    font-family: 'Sora', sans-serif;
+    font-size: 46px; font-weight: 800;
+    line-height: 1.15;
+    color: #ffffff;
+    margin-bottom: 20px;
+    text-shadow: 0 2px 20px rgba(0,0,0,0.6);
+  }
+  .scene p {
+    font-family: 'Manrope', sans-serif;
+    font-size: 30px; font-weight: 600;
+    line-height: 1.35;
+    color: #e0e0e0;
+    text-shadow: 0 2px 12px rgba(0,0,0,0.5);
+  }
+  .scene .sep {
+    width: 80px; height: 3px;
+    background: #f0c14b;
+    border-radius: 2px;
+    margin: 18px 0;
+    box-shadow: 0 0 10px rgba(240,193,75,0.3);
+  }
+  em { color: #f0c14b; font-style: normal; }
+
+  #main-wrap, #outro-wrap {
+    position: absolute; top: 0; left: 0;
+    width: 1080px; height: 1920px;
+    overflow: hidden;
+  }
+  #slide-wrap {
+    position: absolute; top: 0; left: 0;
+    width: 1080px; height: 1920px;
+    overflow: hidden;
+  }
+  #outro-wrap { transform: translateX(1080px); }
+  #outro-video {
+    position: absolute; top: 0; left: 0;
+    width: 1080px; height: 1920px;
+    object-fit: cover;
+  }
+</style>
+</head>
+<body>
+
+<div id="slide-wrap" data-composition-id="main" data-width="1080" data-height="1920" data-start="0" data-duration="32.27">
+  <svg style="position:absolute;width:0;height:0;" aria-hidden="true">
+    <defs>
+      <filter id="mblur" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur id="mblur-gauss" in="SourceGraphic" stdDeviation="0 0"/>
+      </filter>
+    </defs>
+  </svg>
+
+  <div id="main-wrap">
+    <video id="bg-video" class="clip" muted playsinline
+      data-start="0" data-duration="32.27" data-track-index="0"
+      src="assets/nbk-video.mp4"></video>
+
+    <div id="overlay" class="clip"
+      data-start="0" data-duration="32.27" data-track-index="1"></div>
+
+    <div id="glow-bar" class="clip"
+      data-start="0" data-duration="32.27" data-track-index="2"></div>
+
+    <div id="top-bar" class="clip"
+      data-start="0" data-duration="32.27" data-track-index="15">
+      <img id="macro-logo" src="assets/macro-logo.png" alt="Macro">
+      <div class="bar-wrap">
+        <div id="top-line"></div>
+      </div>
+    </div>
+
+    <div id="title-block" class="clip"
+      data-start="0" data-duration="32.27" data-track-index="16">
+      <span class="badge-cat">Histoire Esport</span>
+      <span class="badge-game">Counter-Strike</span>
+    </div>
+
+    <audio id="bg-audio" class="clip"
+      data-start="0" data-duration="32.27" data-track-index="20"
+      data-volume="0.7"
+      src="assets/nbk-video.mp4"></audio>
+
+    <!-- SCENE 1 — HOOK (0s → 4.5s) -->
+    <div class="scene clip" id="s1"
+      data-start="0" data-duration="4.5" data-track-index="10">
+      <div id="s1-inner">
+        <h2 id="s1-title">Il a <em>tout quitte</em> pour<br>recruter un inconnu.</h2>
+        <div class="sep" id="s1-sep"></div>
+        <p id="s1-sub">L'inconnu est devenu le<br><em>meilleur joueur du monde</em>.</p>
+      </div>
+    </div>
+
+    <!-- SCENE 2 — LE CONFORT (5s → 10s) -->
+    <div class="scene clip" id="s2"
+      data-start="5" data-duration="5" data-track-index="11">
+      <div id="s2-inner">
+        <h2 id="s2-title"><em>2018.</em> NBK est sur G2.</h2>
+        <div class="sep" id="s2-sep"></div>
+        <p id="s2-sub">shox. kennyS. <em>52 trophees LAN</em>.<br>2 Majors. Le confort absolu.</p>
+      </div>
+    </div>
+
+    <!-- SCENE 3 — LE PARI (10.5s → 16.5s) -->
+    <div class="scene clip" id="s3"
+      data-start="10.5" data-duration="6" data-track-index="12">
+      <div id="s3-inner">
+        <h2 id="s3-title">Il quitte tout.<br>Cofonde <em>Vitality</em>.</h2>
+        <div class="sep" id="s3-sep"></div>
+        <p id="s3-sub">Et mise sur un gamin semi-pro<br>de 18 ans : <em>ZywOo</em>.</p>
+      </div>
+    </div>
+
+    <!-- SCENE 4 — LA RECOMPENSE (17s → 22.5s) -->
+    <div class="scene clip" id="s4"
+      data-start="17" data-duration="5.5" data-track-index="13">
+      <div id="s4-inner">
+        <h2 id="s4-title"><em>2019.</em> ZywOo est elu<br><em>#1 mondial</em>.</h2>
+        <div class="sep" id="s4-sep"></div>
+        <p id="s4-sub">2020, rebelote. Le pari<br>de NBK etait <em>genial</em>.</p>
+      </div>
+    </div>
+
+    <!-- SCENE 5 — L'IRONIE (23s → 28.15s) -->
+    <div class="scene clip" id="s5"
+      data-start="23" data-duration="5.15" data-track-index="14">
+      <div id="s5-inner">
+        <h2 id="s5-title">NBK est <em>ejecte</em><br>de Vitality.</h2>
+        <div class="sep" id="s5-sep"></div>
+        <p id="s5-sub">Le batisseur a ete chasse<br>de sa propre <em>cathedrale</em>.</p>
+      </div>
+    </div>
+  </div>
+
+  <div id="outro-wrap">
+    <video id="outro-video" class="clip" muted playsinline
+      data-start="28.15" data-duration="4.12" data-track-index="3"
+      src="assets/Macro_OUT.mp4"></video>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"></script>
+<script>
+window.__timelines = window.__timelines || {};
+
+var DURATION = 32.27;
+var TRANS_DUR = 0.6;
+var TRANS_T = 28.15;
+var HALF = TRANS_DUR / 2;
+
+var tl = gsap.timeline({ paused: true });
+
+// Ken Burns
+tl.fromTo("#bg-video",
+  { scale: 1.0 },
+  { scale: 1.08, duration: DURATION, ease: "none" },
+0);
+
+// Progress bar
+tl.fromTo("#top-line",
+  { scaleX: 0, transformOrigin: "left center" },
+  { scaleX: 1, duration: DURATION, ease: "none" },
+0);
+
+// Top bar entrance
+tl.from("#macro-logo", { opacity: 0, x: -20, duration: 0.5, ease: "power3.out" }, 0.1);
+tl.from(".badge-cat", { opacity: 0, y: 15, duration: 0.4, ease: "power3.out" }, 0.3);
+tl.from(".badge-game", { opacity: 0, y: 10, duration: 0.35, ease: "power3.out" }, 0.5);
+
+// SCENE 1
+tl.from("#s1-title", { opacity: 0, y: 30, duration: 0.5, ease: "power3.out" }, 0.4);
+tl.from("#s1-sep", { scaleX: 0, duration: 0.25, ease: "power2.out" }, 0.8);
+tl.from("#s1-sub", { opacity: 0, y: 15, duration: 0.4, ease: "power3.out" }, 1.0);
+tl.to("#s1-inner", { opacity: 0, duration: 0.3, ease: "power2.in" }, 4.2);
+tl.set("#s1-inner", { opacity: 0 }, 4.5);
+
+// SCENE 2
+tl.from("#s2-title", { opacity: 0, y: 30, duration: 0.5, ease: "power3.out" }, 5.2);
+tl.from("#s2-sep", { scaleX: 0, duration: 0.25, ease: "power2.out" }, 5.6);
+tl.from("#s2-sub", { opacity: 0, y: 15, duration: 0.4, ease: "power3.out" }, 5.8);
+tl.to("#s2-inner", { opacity: 0, duration: 0.3, ease: "power2.in" }, 9.7);
+tl.set("#s2-inner", { opacity: 0 }, 10.0);
+
+// SCENE 3
+tl.from("#s3-title", { opacity: 0, y: 30, duration: 0.5, ease: "power3.out" }, 10.7);
+tl.from("#s3-sep", { scaleX: 0, duration: 0.25, ease: "power2.out" }, 11.1);
+tl.from("#s3-sub", { opacity: 0, y: 15, duration: 0.4, ease: "power3.out" }, 11.3);
+tl.to("#s3-inner", { opacity: 0, duration: 0.3, ease: "power2.in" }, 16.2);
+tl.set("#s3-inner", { opacity: 0 }, 16.5);
+
+// SCENE 4
+tl.from("#s4-title", { opacity: 0, y: 30, duration: 0.5, ease: "power3.out" }, 17.2);
+tl.from("#s4-sep", { scaleX: 0, duration: 0.25, ease: "power2.out" }, 17.6);
+tl.from("#s4-sub", { opacity: 0, y: 15, duration: 0.4, ease: "power3.out" }, 17.8);
+tl.to("#s4-inner", { opacity: 0, duration: 0.3, ease: "power2.in" }, 22.2);
+tl.set("#s4-inner", { opacity: 0 }, 22.5);
+
+// SCENE 5 (last before outro — no exit tween)
+tl.from("#s5-title", { opacity: 0, y: 30, duration: 0.5, ease: "power3.out" }, 23.2);
+tl.from("#s5-sep", { scaleX: 0, duration: 0.25, ease: "power2.out" }, 23.6);
+tl.from("#s5-sub", { opacity: 0, y: 15, duration: 0.4, ease: "power3.out" }, 23.8);
+
+// OUTRO PUSH-SLIDE
+var compRoot = document.querySelector('[data-composition-id="main"]');
+var blurEl = compRoot.querySelector("#mblur-gauss");
+var blurProxy = { val: 0 };
+
+tl.to("#main-wrap", { x: -1080, duration: TRANS_DUR, ease: "power3.inOut" }, TRANS_T);
+tl.fromTo("#outro-wrap", { x: 1080 }, { x: 0, duration: TRANS_DUR, ease: "power3.inOut" }, TRANS_T);
+
+tl.set('[data-composition-id="main"]', { filter: "url(#mblur)" }, TRANS_T);
+tl.to(blurProxy, {
+  val: 80, duration: HALF, ease: "power3.in",
+  onUpdate: function() { blurEl.setAttribute("stdDeviation", blurProxy.val + " 0"); }
+}, TRANS_T);
+tl.fromTo('[data-composition-id="main"]', { skewX: 0 }, { skewX: -12, duration: HALF, ease: "power3.in" }, TRANS_T);
+tl.to(blurProxy, {
+  val: 0, duration: HALF, ease: "power3.out",
+  onUpdate: function() { blurEl.setAttribute("stdDeviation", blurProxy.val + " 0"); }
+}, TRANS_T + HALF);
+tl.to('[data-composition-id="main"]', { skewX: 0, duration: HALF, ease: "power3.out" }, TRANS_T + HALF);
+tl.set('[data-composition-id="main"]', { filter: "none" }, TRANS_T + TRANS_DUR);
+
+window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

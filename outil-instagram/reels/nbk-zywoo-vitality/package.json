@@ -1,0 +1,9 @@
+{
+  "name": "nbk-zywoo-vitality-reel",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "npx hyperframes dev",
+    "check": "npx hyperframes check",
+    "render": "npx hyperframes render"
+  }
+}
