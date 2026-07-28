@@ -215,13 +215,21 @@
       </div>
     </div>
 
-    <!-- SCENE 5 — L'IRONIE (23s → 28.15s) -->
+    <!-- SCENE 5 — L'IRONIE (23s → 26s) -->
     <div class="scene clip" id="s5"
-      data-start="23" data-duration="5.15" data-track-index="14">
+      data-start="23" data-duration="3" data-track-index="14">
       <div id="s5-inner">
         <div class="flow" id="s5-top"><span class="xl"><em>2019.</em></span> NBK est <span class="xl"><em>éjecté</em></span><br>de Vitality.</div>
         <div class="sep" id="s5-sep"></div>
         <div class="flow" id="s5-bot">Le bâtisseur a été chassé<br>de sa propre <span class="xl"><em>cathédrale.</em></span></div>
+      </div>
+    </div>
+
+    <!-- SCENE 6 — LÉGENDE (26s → 28.15s) -->
+    <div class="scene clip" id="s6"
+      data-start="26" data-duration="2.15" data-track-index="9">
+      <div id="s6-inner">
+        <div class="flow" id="s6-flow">NBK reste une des plus grandes<br><span class="xl"><em>légendes françaises</em></span><br>de Counter-Strike.</div>
       </div>
     </div>
   </div>
@@ -287,10 +295,15 @@ tl.from("#s4-bot", { opacity: 0, y: 15, duration: 0.4, ease: "power3.out" }, 17.
 tl.to("#s4-inner", { opacity: 0, duration: 0.3, ease: "power2.in" }, 22.2);
 tl.set("#s4-inner", { opacity: 0 }, 22.5);
 
-// SCENE 5 (last before outro — no exit tween)
+// SCENE 5
 tl.from("#s5-top", { opacity: 0, y: 30, duration: 0.5, ease: "power3.out" }, 23.2);
 tl.from("#s5-sep", { scaleX: 0, duration: 0.25, ease: "power2.out" }, 23.6);
 tl.from("#s5-bot", { opacity: 0, y: 15, duration: 0.4, ease: "power3.out" }, 23.8);
+tl.to("#s5-inner", { opacity: 0, duration: 0.3, ease: "power2.in" }, 25.5);
+tl.set("#s5-inner", { opacity: 0 }, 25.8);
+
+// SCENE 6 (closing — last before outro)
+tl.from("#s6-flow", { opacity: 0, y: 30, duration: 0.5, ease: "power3.out" }, 26.1);
 
 // OUTRO PUSH-SLIDE
 var compRoot = document.querySelector('[data-composition-id="main"]');
