@@ -1,0 +1,9 @@
+{
+  "name": "worlds-2024-t1-blg",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "npx hyperframes preview",
+    "check": "npx hyperframes check",
+    "render": "npx hyperframes render"
+  }
+}

@@ -30,6 +30,13 @@
 # Ignorer les presets (posts générés + images = lourd)
 outil-instagram/presets/
 
+# === REELS (composition code only, pas les assets vidéo) ===
+!outil-instagram/reels/
+!outil-instagram/reels/*/
+!outil-instagram/reels/*/index.html
+!outil-instagram/reels/*/package.json
+!outil-instagram/reels/*/meta.json
+
 # === SKILLS ===
 !.claude/
 !.claude/skills/

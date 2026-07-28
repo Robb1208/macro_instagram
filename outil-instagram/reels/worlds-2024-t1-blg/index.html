@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=1080, height=1920" />
+<title>Worlds 2024 – T1 vs BLG</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@700;800&family=Manrope:wght@500;600;700&display=swap" rel="stylesheet" />
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    width: 1080px; height: 1920px;
+    overflow: hidden; background: #05060a;
+    font-family: 'Manrope', sans-serif; color: #e0e0e0;
+  }
+
+  /* ── Persistent elements ── */
+  #bg-video {
+    position: absolute; top: 0; left: 0;
+    width: 1080px; height: 1920px;
+    object-fit: cover;
+  }
+
+  #overlay {
+    position: absolute; top: 0; left: 0;
+    width: 1080px; height: 1920px;
+    background: linear-gradient(180deg,
+      rgba(5,6,10,0.72) 0%,
+      rgba(5,6,10,0.35) 25%,
+      rgba(5,6,10,0.30) 50%,
+      rgba(0,229,255,0.15) 75%,
+      rgba(0,229,255,0.08) 100%
+    );
+    pointer-events: none;
+  }
+
+  #glow-bar {
+    position: absolute; bottom: 0; left: 0;
+    width: 1080px; height: 4px;
+    background: #00e5ff;
+    box-shadow: 0 0 16px rgba(0,229,255,0.6), 0 0 40px rgba(0,229,255,0.3);
+  }
+
+  /* ── Top bar ── */
+  #top-bar {
+    position: absolute; top: 60px; left: 60px; right: 60px;
+    display: flex; align-items: center; gap: 16px;
+    z-index: 15;
+  }
+  #top-bar img { width: 48px; height: 48px; object-fit: contain; }
+  .bar-line-wrap {
+    flex: 1; height: 4px; position: relative;
+    background: rgba(255,255,255,0.08); border-radius: 2px;
+    overflow: hidden;
+  }
+  #top-line {
+    position: absolute; top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: #00e5ff; border-radius: 2px;
+    box-shadow: 0 0 8px rgba(0,229,255,0.4);
+    transform: scaleX(0); transform-origin: left center;
+  }
+
+  /* ── Title block ── */
+  #title-block {
+    position: absolute; top: 150px; left: 60px; right: 60px;
+    z-index: 16;
+  }
+  .badge {
+    display: inline-block;
+    font-family: 'Sora', sans-serif; font-weight: 700; font-size: 22px;
+    text-transform: uppercase; letter-spacing: 3px;
+    color: #05060a; background: #00e5ff;
+    padding: 6px 18px; border-radius: 4px;
+    margin-bottom: 14px;
+  }
+  .title-text {
+    font-family: 'Sora', sans-serif; font-weight: 800;
+    font-size: 42px; line-height: 1.15;
+    color: #ffffff;
+  }
+
+  /* ── Scenes ── */
+  .scene {
+    position: absolute; top: 560px; left: 0; right: 0;
+    display: flex; flex-direction: column; align-items: center;
+    text-align: center; padding: 0 60px;
+  }
+  .scene h2 {
+    font-family: 'Sora', sans-serif; font-weight: 800;
+    font-size: 52px; line-height: 1.2;
+    color: #ffffff; margin-bottom: 16px;
+  }
+  .scene p {
+    font-family: 'Manrope', sans-serif; font-weight: 600;
+    font-size: 36px; line-height: 1.4;
+    color: #e0e0e0;
+  }
+  .scene .separator {
+    width: 120px; height: 3px;
+    background: #00e5ff; border-radius: 2px;
+    margin: 20px 0;
+    box-shadow: 0 0 8px rgba(0,229,255,0.4);
+  }
+  em, .accent { color: #00e5ff; font-style: normal; }
+  .emphasis { color: #ffffff; font-weight: 700; }
+  .dim { color: rgba(255,255,255,0.4); }
+  .stat-big {
+    font-family: 'Sora', sans-serif; font-weight: 800;
+    font-size: 72px; color: #00e5ff;
+    text-shadow: 0 0 30px rgba(0,229,255,0.5);
+  }
+
+  /* ── Slide transition wrappers ── */
+  #slide-wrap {
+    position: absolute; top: 0; left: 0;
+    width: 1080px; height: 1920px;
+  }
+  #main-wrap {
+    position: absolute; top: 0; left: 0;
+    width: 1080px; height: 1920px;
+  }
+  #outro-wrap {
+    position: absolute; top: 0; left: 0;
+    width: 1080px; height: 1920px;
+  }
+  #outro-video {
+    width: 1080px; height: 1920px;
+    object-fit: cover;
+  }
+</style>
+</head>
+<body>
+
+<!-- SVG motion blur filter -->
+<svg style="position:absolute;width:0;height:0;" aria-hidden="true">
+  <defs>
+    <filter id="mblur" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur id="mblur-gauss" in="SourceGraphic" stdDeviation="0 0"/>
+    </filter>
+  </defs>
+</svg>
+
+<div id="slide-wrap" data-composition-id="main" data-width="1080" data-height="1920" data-start="0" data-duration="21.6">
+  <!-- ═══ MAIN WRAP ═══ -->
+  <div id="main-wrap">
+
+    <!-- Track 0 – Background video -->
+    <video id="bg-video" class="clip" muted playsinline
+      data-start="0" data-duration="21.6" data-track-index="0"
+      src="assets/montage_bg.mp4"></video>
+
+    <!-- Track 1 – Overlay -->
+    <div id="overlay" class="clip"
+      data-start="0" data-duration="21.6" data-track-index="1"></div>
+
+    <!-- Track 2 – Glow bar -->
+    <div id="glow-bar" class="clip"
+      data-start="0" data-duration="21.6" data-track-index="2"></div>
+
+    <!-- Track 15 – Top bar -->
+    <div id="top-bar" class="clip"
+      data-start="0" data-duration="21.6" data-track-index="15">
+      <img id="logo" src="assets/macro-logo.png" alt="Macro" />
+      <div class="bar-line-wrap"><div id="top-line"></div></div>
+    </div>
+
+    <!-- Track 16 – Title block -->
+    <div id="title-block" class="clip"
+      data-start="0" data-duration="21.6" data-track-index="16">
+      <div class="badge">League of Legends</div>
+      <div class="title-text">Worlds 2024</div>
+    </div>
+
+    <!-- ═══ SCENE 1: Hook (0.3–3.5s) ═══ -->
+    <div class="scene clip" id="s1"
+      data-start="0.3" data-duration="3.2" data-track-index="10">
+      <div id="s1-inner">
+        <h2>Le match esport <em>le plus regard&eacute;</em> de l'histoire.</h2>
+      </div>
+    </div>
+
+    <!-- ═══ SCENE 2: Contexte (3.7–7.0s) ═══ -->
+    <div class="scene clip" id="s2"
+      data-start="3.7" data-duration="3.3" data-track-index="10">
+      <div id="s2-inner">
+        <div class="stat-big">6,94M</div>
+        <div class="separator"></div>
+        <p>spectateurs simultan&eacute;s<br/><span class="emphasis">T1</span> vs <span class="emphasis">BLG</span></p>
+      </div>
+    </div>
+
+    <!-- ═══ SCENE 3: Tension (7.2–10.2s) ═══ -->
+    <div class="scene clip" id="s3"
+      data-start="7.2" data-duration="3.0" data-track-index="10">
+      <div id="s3-inner">
+        <h2>BLG m&egrave;ne <em>2-1</em>.</h2>
+        <p><span class="emphasis">Faker</span> au bord du gouffre.</p>
+      </div>
+    </div>
+
+    <!-- ═══ SCENE 4: Action (10.4–14.0s) ═══ -->
+    <div class="scene clip" id="s4"
+      data-start="10.4" data-duration="3.6" data-track-index="10">
+      <div id="s4-inner">
+        <h2><em>Reverse sweep.</em></h2>
+        <div class="separator"></div>
+        <p>T1 refuse de mourir.</p>
+      </div>
+    </div>
+
+    <!-- ═══ SCENE 5: Climax (14.2–17.3s) ═══ -->
+    <div class="scene clip" id="s5"
+      data-start="14.2" data-duration="3.1" data-track-index="10">
+      <div id="s5-inner">
+        <h2>5<sup>e</sup> titre mondial.</h2>
+        <p>La l&eacute;gende est <em>&eacute;ternelle</em>.</p>
+      </div>
+    </div>
+
+  </div><!-- /main-wrap -->
+
+  <!-- ═══ OUTRO WRAP ═══ -->
+  <div id="outro-wrap">
+    <video id="outro-video" class="clip" muted playsinline
+      data-start="17.5" data-duration="4.1" data-track-index="3"
+      src="assets/Macro_OUT.mp4"></video>
+  </div>
+
+</div><!-- /slide-wrap -->
+
+<!-- Track 20 – Audio -->
+<audio id="bg-audio" class="clip"
+  data-start="0" data-duration="18.47" data-track-index="20"
+  data-volume="0.7"
+  src="assets/montage_bg.mp4"></audio>
+
+<script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"></script>
+<script>
+window.__timelines = window.__timelines || {};
+var DURATION = 21.6;
+var BG_DUR = 18.47;
+var TRANS_T = 17.5;
+var TRANS_DUR = 0.6;
+var HALF = TRANS_DUR / 2;
+
+var tl = gsap.timeline({ paused: true });
+
+/* ── Global effects ── */
+// Ken Burns zoom on background
+tl.fromTo("#bg-video", { scale: 1.0 }, { scale: 1.08, duration: BG_DUR, ease: "none" }, 0);
+
+// Progress bar
+tl.fromTo("#top-line",
+  { scaleX: 0, transformOrigin: "left center" },
+  { scaleX: 1, duration: TRANS_T, ease: "none" }, 0);
+
+// Logo entrance
+tl.from("#logo", { opacity: 0, x: -20, duration: 0.5, ease: "power3.out" }, 0.1);
+
+// Title entrance
+tl.from(".badge", { opacity: 0, y: 20, duration: 0.4, ease: "power3.out" }, 0.2);
+tl.from(".title-text", { opacity: 0, y: 20, duration: 0.4, ease: "power3.out" }, 0.35);
+
+/* ── SCENE 1: Hook ── */
+tl.from("#s1-inner h2", { opacity: 0, y: 30, duration: 0.5, ease: "power3.out" }, 0.4);
+// Exit
+tl.to("#s1-inner", { opacity: 0, duration: 0.25, ease: "power2.in" }, 3.25);
+tl.set("#s1-inner", { opacity: 0 }, 3.5);
+
+/* ── SCENE 2: Stats ── */
+tl.from("#s2-inner .stat-big", { scale: 0.5, opacity: 0, duration: 0.45, ease: "back.out(1.7)" }, 3.8);
+tl.from("#s2-inner .separator", { scaleX: 0, duration: 0.25, ease: "power2.out" }, 4.1);
+tl.from("#s2-inner p", { opacity: 0, y: 15, duration: 0.4, ease: "power3.out" }, 4.25);
+// Exit
+tl.to("#s2-inner", { opacity: 0, duration: 0.25, ease: "power2.in" }, 6.75);
+tl.set("#s2-inner", { opacity: 0 }, 7.0);
+
+/* ── SCENE 3: Tension ── */
+tl.from("#s3-inner h2", { opacity: 0, y: 30, duration: 0.5, ease: "power3.out" }, 7.3);
+tl.from("#s3-inner p", { opacity: 0, y: 15, duration: 0.4, ease: "power3.out" }, 7.6);
+// Exit
+tl.to("#s3-inner", { opacity: 0, duration: 0.25, ease: "power2.in" }, 9.95);
+tl.set("#s3-inner", { opacity: 0 }, 10.2);
+
+/* ── SCENE 4: Action ── */
+tl.from("#s4-inner h2", { opacity: 0, scale: 0.6, duration: 0.5, ease: "back.out(1.5)" }, 10.5);
+tl.from("#s4-inner .separator", { scaleX: 0, duration: 0.25, ease: "power2.out" }, 10.8);
+tl.from("#s4-inner p", { opacity: 0, y: 15, duration: 0.4, ease: "power3.out" }, 10.95);
+// Exit
+tl.to("#s4-inner", { opacity: 0, duration: 0.25, ease: "power2.in" }, 13.75);
+tl.set("#s4-inner", { opacity: 0 }, 14.0);
+
+/* ── SCENE 5: Climax (last scene – no exit tween) ── */
+tl.from("#s5-inner h2", { opacity: 0, y: 30, duration: 0.5, ease: "power3.out" }, 14.3);
+tl.from("#s5-inner p", { opacity: 0, y: 15, duration: 0.4, ease: "power3.out" }, 14.65);
+
+/* ── Push-slide transition with directional motion blur ── */
+var blurEl = document.getElementById("mblur-gauss");
+var blurProxy = { val: 0 };
+
+tl.to("#main-wrap", { x: -1080, duration: TRANS_DUR, ease: "power3.inOut" }, TRANS_T);
+tl.fromTo("#outro-wrap", { x: 1080 }, { x: 0, duration: TRANS_DUR, ease: "power3.inOut" }, TRANS_T);
+
+tl.set("#slide-wrap", { filter: "url(#mblur)" }, TRANS_T);
+tl.to(blurProxy, {
+  val: 80, duration: HALF, ease: "power3.in",
+  onUpdate: function() { blurEl.setAttribute("stdDeviation", blurProxy.val + " 0"); }
+}, TRANS_T);
+tl.fromTo("#slide-wrap", { skewX: 0 }, { skewX: -12, duration: HALF, ease: "power3.in" }, TRANS_T);
+tl.to(blurProxy, {
+  val: 0, duration: HALF, ease: "power3.out",
+  onUpdate: function() { blurEl.setAttribute("stdDeviation", blurProxy.val + " 0"); }
+}, TRANS_T + HALF);
+tl.to("#slide-wrap", { skewX: 0, duration: HALF, ease: "power3.out" }, TRANS_T + HALF);
+tl.set("#slide-wrap", { filter: "none" }, TRANS_T + TRANS_DUR);
+
+window.__timelines["main"] = tl;
+</script>
+</body>
+</html>
