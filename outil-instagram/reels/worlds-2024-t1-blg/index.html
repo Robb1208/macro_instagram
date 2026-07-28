@@ -78,7 +78,7 @@
   }
   .title-text {
     font-family: 'Sora', sans-serif; font-weight: 800;
-    font-size: 48px; line-height: 1.15;
+    font-size: 40px; line-height: 1.2;
     color: #00e5ff; text-transform: uppercase;
   }
 
@@ -143,35 +143,35 @@
   </defs>
 </svg>
 
-<div id="slide-wrap" data-composition-id="main" data-width="1080" data-height="1920" data-start="0" data-duration="26.5">
+<div id="slide-wrap" data-composition-id="main" data-width="1080" data-height="1920" data-start="0" data-duration="31.2">
   <!-- ═══ MAIN WRAP ═══ -->
   <div id="main-wrap">
 
     <!-- Track 0 – Background video -->
     <video id="bg-video" class="clip" muted playsinline
-      data-start="0" data-duration="26.5" data-track-index="0"
+      data-start="0" data-duration="31.2" data-track-index="0"
       src="assets/montage_bg.mp4"></video>
 
     <!-- Track 1 – Overlay -->
     <div id="overlay" class="clip"
-      data-start="0" data-duration="26.5" data-track-index="1"></div>
+      data-start="0" data-duration="31.2" data-track-index="1"></div>
 
     <!-- Track 2 – Glow bar -->
     <div id="glow-bar" class="clip"
-      data-start="0" data-duration="26.5" data-track-index="2"></div>
+      data-start="0" data-duration="31.2" data-track-index="2"></div>
 
     <!-- Track 15 – Top bar -->
     <div id="top-bar" class="clip"
-      data-start="0" data-duration="26.5" data-track-index="15">
+      data-start="0" data-duration="31.2" data-track-index="15">
       <img id="logo" src="assets/macro-logo.png" alt="Macro" />
       <div class="bar-line-wrap"><div id="top-line"></div></div>
     </div>
 
     <!-- Track 16 – Title block -->
     <div id="title-block" class="clip"
-      data-start="0" data-duration="26.5" data-track-index="16">
+      data-start="0" data-duration="31.2" data-track-index="16">
       <div class="badge">Histoire esport</div>
-      <div class="title-text">League of Legends</div>
+      <div class="title-text">Finale des Worlds 2024,<br/>le match le plus suivi<br/>de tous les temps</div>
     </div>
 
     <!-- ═══ SCENE 1: Hook (0.3–3.5s) ═══ -->
@@ -196,7 +196,7 @@
     <div class="scene clip" id="s3"
       data-start="7.2" data-duration="3.3" data-track-index="10">
       <div id="s3-inner">
-        <h2>Plus que <em>CS</em>, <em>Valorant</em> et <em>Dota&nbsp;2</em></h2>
+        <h2>Plus que les records de <em>CS</em>, <em>Valorant</em> et <em>Dota&nbsp;2</em></h2>
         <p>...combin&eacute;s.</p>
       </div>
     </div>
@@ -243,7 +243,7 @@
   <!-- ═══ OUTRO WRAP ═══ -->
   <div id="outro-wrap">
     <video id="outro-video" class="clip" muted playsinline
-      data-start="22.3" data-duration="4.2" data-track-index="3"
+      data-start="27.0" data-duration="4.2" data-track-index="3"
       src="assets/Macro_OUT.mp4"></video>
   </div>
 
@@ -251,16 +251,16 @@
 
 <!-- Track 20 – Audio -->
 <audio id="bg-audio" class="clip"
-  data-start="0" data-duration="22.70" data-track-index="20"
+  data-start="0" data-duration="29.70" data-track-index="20"
   data-volume="0.7"
   src="assets/montage_bg.mp4"></audio>
 
 <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"></script>
 <script>
 window.__timelines = window.__timelines || {};
-var DURATION = 26.5;
-var BG_DUR = 22.70;
-var TRANS_T = 22.3;
+var DURATION = 31.2;
+var BG_DUR = 29.70;
+var TRANS_T = 27.0;
 var TRANS_DUR = 0.6;
 var HALF = TRANS_DUR / 2;
 
