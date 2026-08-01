@@ -1,0 +1,10 @@
+{
+  "name": "scream-headshot",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "npx hyperframes preview",
+    "check": "npx hyperframes check",
+    "render": "npx hyperframes render"
+  }
+}
