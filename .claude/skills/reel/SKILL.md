@@ -35,8 +35,8 @@ Skill pour créer des Reels Instagram esport pour Macro avec HyperFrames (HTML �
 L'accent est utilisé partout : badge titre, barre glow, overlay gradient (teinte en bas), séparateurs, `<em>` et `.accent`.
 
 ### Polices
-- **Sora** : titres, badges, gros texte impact (700-800)
-- **Manrope** : body text, narration (500-700)
+- **Sora** : tout le texte des scènes (flow + xl), badges, titres (700-800)
+- **Manrope** : éléments secondaires si besoin (500-700)
 - **JetBrains Mono** : éléments techniques, code, fichiers (600-700)
 
 Charger via Google Fonts (HyperFrames les résout automatiquement).
@@ -61,14 +61,85 @@ linear-gradient(180deg,
 3. **Glow bar** (`#glow-bar`) — track 2, barre 4px en bas, couleur accent + box-shadow glow
 4. **Top bar** (`#top-bar`) — track 15, logo Macro (`assets/macro-logo.png`) + ligne dégradée. **`top: 60px`** (pas 0) pour que l'interface Instagram ne cache pas le logo/barre.
 5. **Titre** (`#title-block`) — track 16, badge catégorie + titre jeu. **`top: 150px`** (sous la top bar décalée).
-6. **Audio** (`#bg-audio`) — track 20, même src que vidéo, `data-volume="0.7"`
+6. **Audio** (optionnel) (`#bg-audio`) — track 20, `data-volume="0.7"`. Omettre si pas de piste audio souhaitée.
 
-### Scènes texte
-- Positionnées à `top: 560px` (laisser le centre de la vidéo visible)
+### Badge titre (`#title-block`)
+- **Badge catégorie** (`.badge-cat`) : texte blanc, fond `rgba(255,255,255,0.12)`, padding `6px 18px`, border-radius `6px`, Sora 700, 20px, letter-spacing 3px, uppercase
+- **Badge jeu** (`.badge-game`) : texte couleur accent du jeu, Sora 600, 18px, letter-spacing 2px, uppercase, pas de fond
+
+### Scènes texte — typographie flow
+- Positionnées à **`top: 1000px`** (en dessous de la moitié de l'écran pour laisser la vidéo visible)
 - Class `.scene` : absolute, flexbox column, centré, padding 60px latéral
 - Chaque scène = un `class="clip"` avec `data-start`, `data-duration`, `data-track-index`
 - Répartir les scènes uniformément sur la durée de la vidéo
-- **5-6 scènes max** pour un reel de 15-20s
+- **5-6 scènes max** pour un reel de 15-20s, + éventuellement une scène de clôture courte
+
+#### Typographie flow (hiérarchie visuelle)
+Le texte des scènes utilise un layout "flow" avec des tailles mixtes pour faire ressortir les mots-clés :
+
+```css
+.flow {
+  font-family: 'Sora', sans-serif;
+  font-size: 36px; font-weight: 700;
+  line-height: 1.45;
+  color: #ffffff;
+  text-shadow: 0 2px 20px rgba(0,0,0,0.6);
+}
+.xl {
+  font-size: 58px; font-weight: 800;
+  line-height: 1.15;
+}
+.xl em {
+  text-shadow: 0 0 30px rgba(ACCENT,0.35),
+               0 2px 20px rgba(0,0,0,0.6);
+}
+.scene .sep {
+  width: 60px; height: 3px;
+  background: ACCENT;
+  border-radius: 2px;
+  margin: 16px auto;
+  box-shadow: 0 0 10px rgba(ACCENT,0.3);
+}
+em { color: ACCENT; font-style: normal; }
+```
+
+- **`.flow`** : conteneur texte principal (36px Sora 700, blanc)
+- **`.xl`** : mots-clés importants en gros (58px Sora 800) — noms, dates, stats, termes forts
+- **`<em>`** : couleur accent du jeu sur les mots à mettre en valeur
+- **`.xl em`** : combinaison taille XL + accent + glow subtil = impact maximal
+- **`.sep`** : séparateur fin entre partie haute et basse d'une scène
+
+#### Structure HTML d'une scène
+
+Scène simple (hook, clôture) :
+```html
+<div class="scene clip" id="s1" data-start="0" data-duration="4.5" data-track-index="10">
+  <div id="s1-inner">
+    <div class="flow" id="s1-flow">NBK a <span class="xl"><em>tout quitté</em></span><br>pour bâtir Vitality autour<br>d'un <span class="xl"><em>gamin de 18 ans.</em></span></div>
+  </div>
+</div>
+```
+
+Scène avec séparateur (narration en deux parties) :
+```html
+<div class="scene clip" id="s2" data-start="5" data-duration="5" data-track-index="11">
+  <div id="s2-inner">
+    <div class="flow" id="s2-top"><span class="xl"><em>2018.</em></span> NBK est chez <span class="xl">G2.</span></div>
+    <div class="sep" id="s2-sep"></div>
+    <div class="flow" id="s2-bot">shox. kennyS. <em>52 trophées LAN.</em><br>2 Majors. Le <span class="xl">confort absolu.</span></div>
+  </div>
+</div>
+```
+
+#### Choix des mots en `.xl`
+Mettre en gros les éléments qui captent l'œil en premier :
+- **Dates** : "2018.", "2019."
+- **Noms propres** : "G2", "ZywOo", "Vitality"
+- **Stats / records** : "#1 mondial", "52 trophées LAN"
+- **Mots émotionnels** : "tout quitté", "éjecté", "cathédrale", "génial"
+- **Confort absolu**, **légendes françaises** — les mots de punch
+
+Les mots de liaison ("est chez", "pour bâtir", "autour d'un") restent en 36px pour créer le contraste.
 
 ### Exit tweens — IMPORTANT
 Les tweens de sortie (fade out entre scènes) doivent cibler un **div wrapper intérieur** (`#sN-inner`), pas le clip directement. Terminer par un `tl.set("#sN-inner", { opacity: 0 })` au moment exact de fin du clip.
@@ -79,13 +150,13 @@ tl.to("#s1-inner", { opacity: 0, duration: 0.25, ease: "power2.in" }, 3.2);
 tl.set("#s1-inner", { opacity: 0 }, 3.5);
 ```
 
-La dernière scène n'a PAS besoin d'exit tween (elle se termine avec la vidéo).
+La dernière scène n'a PAS besoin d'exit tween (elle se termine avec la vidéo ou le wipe outro).
 
 ## Animations GSAP
 
 ### Entrées
-- Titres : `from` opacity 0, y 30, duration 0.5, `power3.out`
-- Lignes de texte : `from` opacity 0, y 15, duration 0.35-0.4, `power3.out`, staggered 0.3s
+- Bloc flow (top ou unique) : `from` opacity 0, y 30, duration 0.5, `power3.out`
+- Bloc flow (bot, après sep) : `from` opacity 0, y 15, duration 0.4, `power3.out`
 - Séparateurs : `from` scaleX 0, duration 0.25, `power2.out`
 - Éléments impact (ban, stat) : `from` scale 0.5-0.6, opacity 0, `back.out(1.5-1.7)`
 - Logo top bar : `from` opacity 0, x -20
@@ -151,11 +222,14 @@ window.__timelines["main"] = tl;
 
 - **Langue** : français
 - **Ton** : dramatique, percutant, storytelling. Phrases courtes.
-- **Structure narrative** : Hook → Contexte → Révélation → Climax → Conséquences
-- Utiliser `<em>` ou `.accent` pour les mots-clés importants (colorés en accent)
-- `.emphasis` pour le blanc pur sur mots forts
+- **Structure narrative** : Hook → Contexte → Révélation → Climax → Conséquences → (optionnel) Clôture
+- Utiliser `<em>` pour les mots-clés importants (colorés en accent)
+- Utiliser `<span class="xl">` pour les mots à grossir (58px)
+- Combiner les deux (`<span class="xl"><em>mot</em></span>`) pour l'impact maximal
+- Mots de liaison en taille normale (36px) pour créer le contraste
 - `.dim` pour les phrases secondaires (rgba blanc 40%)
 - Pas de hashtags ni CTA dans le reel lui-même
+- **Scène de clôture** (optionnelle) : phrase de fermeture courte (~2s) après la dernière scène narrative, avant l'outro
 
 ## Dossier de sortie
 
@@ -210,9 +284,9 @@ Quand Robin fournit **plusieurs vidéos sources** (au lieu d'une seule vidéo d�
 ## Ce qu'il ne faut PAS faire
 
 - Ne pas dépasser la durée de la vidéo source
-- Ne pas mettre le texte trop haut (garder `top: 560px` minimum pour voir la vidéo)
+- Ne pas mettre le texte trop haut (garder `top: 1000px` pour voir la vidéo au-dessus)
 - Ne pas utiliser `tl.set` ou `gsap.set` sur les éléments `.clip` directement (seulement sur les wrappers intérieurs)
-- Ne pas oublier l'audio séparé (`<audio>` en plus du `<video muted>`)
+- Ne pas oublier l'audio séparé si souhaité (`<audio>` en plus du `<video muted>`) — l'audio est optionnel
 - Ne pas oublier `class="clip"` sur tout élément avec timing
 - Ne pas mettre de `repeat: -1` ni de random/Date.now()
 - **Toujours ajouter l'outro Macro** (`Macro_OUT.mp4`) en fin de reel avec transition push-slide + motion blur directionnel (voir section dédiée)
