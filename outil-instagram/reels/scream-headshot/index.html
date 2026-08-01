@@ -122,7 +122,7 @@ body {
 
 #title-block {
   position: absolute;
-  top: 700px; left: 0;
+  top: 1050px; left: 0;
   width: 1080px;
   padding: 0 60px;
   z-index: 16;
@@ -144,7 +144,7 @@ body {
 
 .scene {
   position: absolute;
-  top: 700px; left: 0;
+  top: 1050px; left: 0;
   width: 1080px;
   display: flex;
   flex-direction: column;
@@ -271,7 +271,7 @@ em, .accent {
 
     <div id="title-block" class="clip" data-start="0" data-duration="4.5" data-track-index="17">
       <div id="title-inner">
-        <div class="title-text"><em>ScreaM</em><br/>Le meilleur aim de l'histoire,<br/>un palmarès qui ne suit pas.</div>
+        <div class="title-text"><em>ScreaM</em><br/>Le meilleur aim de l'histoire,<br/><em>0 trophées majeurs</em>.</div>
       </div>
     </div>
 
@@ -310,7 +310,7 @@ em, .accent {
       <div id="s4-inner">
         <p>Il tente <em>Valorant</em>.<br/>Team Liquid, KC avec <em>Nivera</em>.</p>
         <div class="separator"></div>
-        <p><span class="red">Ça n'a pas fonctionné.</span><br/><span class="emphasis">ScreaM reste le maître incontesté de l'aim.</span></p>
+        <p><span class="red">Ça n'a pas fonctionné.</span><br/><em>ScreaM reste le maître incontesté de l'aim.</em></p>
       </div>
     </div>
 
@@ -357,7 +357,6 @@ tl.set("#title-inner", { opacity: 0 }, 4.0);
 tl.from("#s1-inner > p:first-child", { opacity: 0, y: 15, duration: 0.4, ease: "power3.out" }, 4.2);
 tl.from("#s1-inner .separator", { scaleX: 0, duration: 0.25, ease: "power2.out" }, 4.7);
 tl.from("#s1-inner > p:last-child", { opacity: 0, y: 15, duration: 0.4, ease: "power3.out" }, 5.0);
-tl.from("#s1-inner .stat", { scale: 0.5, opacity: 0, duration: 0.4, ease: "back.out(1.7)" }, 5.0);
 tl.to("#s1-inner", { opacity: 0, duration: 0.3, ease: "power2.in" }, 8.0);
 tl.set("#s1-inner", { opacity: 0 }, 8.5);
 
