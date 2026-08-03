@@ -1,0 +1,37 @@
+{
+  "format": "story",
+  "game": "esport",
+  "watermark": true,
+  "gradient": 100,
+  "slides": [
+    {
+      "template": "programme",
+      "eyebrow": "PROGRAMME DU JOUR",
+      "title": "*League of Legends*",
+      "desc": "LEC Summer 2026 · Semaine 2 — Lundi sans public",
+      "showDesc": true,
+      "matches": "##LEC Summer 2026\n17:00 Natus Vincere vs Shifters BO3\n19:15 Karmine Corp vs Team Heretics BO3",
+      "showBgImage": false,
+      "game": "lol"
+    },
+    {
+      "template": "programme",
+      "eyebrow": "PROGRAMME DU JOUR",
+      "title": "*Valorant*",
+      "desc": "Game Changers EMEA · Stage 3 · Semaine 3",
+      "showDesc": true,
+      "matches": "##Game Changers EMEA Stage 3\n11:00 SK Nebula vs FOKUS Sakura BO3\n11:00 Gentle Mates GC vs Karmine Corp GC BO3\n14:00 Twisted Minds Orchid vs Barça eSports GC BO3\n14:00 G2 Gozen vs ALTERNATE aTTaX Ruby BO3",
+      "showBgImage": false,
+      "game": "val"
+    },
+    {
+      "template": "planning",
+      "eyebrow": "PLANNING DE LA SEMAINE",
+      "title": "*Semaine du 3 au 9 août*",
+      "showDesc": false,
+      "planningEvents": "## LUN 03/08\n11-17 Game Changers EMEA Stage 3 val\n17-21h30 LEC Summer 2026 lol\n## MAR 04/08\n18-23 LFL Summer 2026 lol\n## MER 05/08\n12-16 LCK 2026 Rounds 3-4 lol\n13-17 LPL 2026 Split 3 lol\n14-19 VCT EMEA Stage 2 Play-Ins val\n18-23 LFL Summer 2026 lol\n## JEU 06/08\n12-16 LCK 2026 Rounds 3-4 lol\n13-17 LPL 2026 Split 3 lol\n14-19 VCT EMEA Stage 2 Play-Ins val\n18-23 LFL Summer 2026 lol\n## VEN 07/08\n12-16 LCK 2026 lol\n13-17 LPL 2026 Split 3 lol\n14-19 VCT EMEA Stage 2 Play-Ins val\n17-21h30 LEC Summer 2026 Sem. 3 lol\n## SAM 08/08\n12-16 LCK 2026 lol\n13-17 LPL 2026 Split 3 lol\n14-19 VCT EMEA Stage 2 Play-Ins val\n17-21h30 LEC Summer 2026 Sem. 3 lol\n## DIM 09/08\n12-16 LCK 2026 lol\n13-17 LPL 2026 Split 3 lol\n14-19 VCT EMEA Stage 2 Play-Ins val\n17-21h30 LEC Summer 2026 Sem. 3 lol",
+      "showBgImage": false,
+      "game": "esport"
+    }
+  ]
+}
