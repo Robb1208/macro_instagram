@@ -98,4 +98,7 @@ Format matches : `HH:MM Nom complet équipe 1 vs Nom complet équipe 2 BOx` — 
 
 - **Pas de mail** sauf si c'est une routine automatique.
 - **En discussion** : envoyer le fichier JSON téléchargeable via SendUserFile (pas de bloc de code JSON dans la réponse). Pas d'étapes de réflexion intermédiaires.
-- **En routine** : brouillon Gmail à robinpicard@gmail.com avec le JSON en PJ.
+- **En routine** : brouillon Gmail à robinpicard@gmail.com avec le JSON en pièce jointe. Procédure obligatoire :
+  1. Écrire le JSON dans un fichier avec Write (ex: `/tmp/programme_JJ-MM-AAAA.json`)
+  2. Créer le brouillon Gmail avec `create_draft` en passant le chemin du fichier dans le paramètre `attachment_paths`
+  3. **Ne JAMAIS coller le JSON dans le corps du mail.** Le body ne contient qu'un résumé texte des matchs du jour.
