@@ -29,7 +29,7 @@ Pas de limite de recherches. Faire toutes les recherches nécessaires pour être
 ### Étape 1 — Vue d'ensemble
 Rechercher les tournois esport en cours et les matchs du jour :
 ```
-esports schedule [DATE anglais] all matches today MSI LEC LCK BLAST VCT RLCS CS2 Valorant Rocket League
+esports schedule [DATE anglais] all matches today MSI LEC LCK BLAST VCT RLCS CS2 Valorant Rocket League CDL "Call of Duty" EWC
 ```
 
 ### Étape 2 — Équipes françaises
@@ -39,11 +39,12 @@ Rechercher spécifiquement les matchs d'équipes françaises :
 ```
 
 ### Étape 3 — Vérification par jeu
-Pour chaque jeu (LoL, CS2, Valorant, RL), aller chercher les matchs du jour sur les sites de référence :
+Pour chaque jeu (LoL, CS2, Valorant, RL, CoD), aller chercher les matchs du jour sur les sites de référence :
 - **LoL** : lolesports.com, Liquipedia LoL, leaguepedia
 - **CS2** : HLTV.org, Liquipedia CS
 - **Valorant** : VLR.gg, Liquipedia Valorant
 - **Rocket League** : Liquipedia RL, start.gg
+- **Call of Duty** : Liquipedia CoD, Breaking Point, cod-esports.fandom.com
 
 Utiliser WebFetch sur ces pages pour récupérer les matchs exacts, horaires et équipes. Si un site est bloqué ou rate-limited, essayer un site alternatif.
 
@@ -52,7 +53,7 @@ Si des tournois secondaires sont en cours (Challengers EMEA, LFL, EMEA Masters, 
 
 ## Filtres
 
-**Tier 1** : Worlds, MSI, LEC, LCK, LPL, LCS, Majors CS2, BLAST, ESL Pro League, PGL, VCT Champions/Masters/EMEA/Pacific/Americas, RLCS, CDL Majors
+**Tier 1** : Worlds, MSI, LEC, LCK, LPL, LCS, Majors CS2, BLAST, ESL Pro League, PGL, VCT Champions/Masters/EMEA/Pacific/Americas, RLCS, CDL Majors, EWC (Esports World Cup)
 
 **Français (inclure même si pas tier 1)** : KC, Vitality, Gentle Mates, Solary, GameWard, LDLC, BDS, Mandatory, Falcons,Joblife,3dmax,Galions, Apeks. Ligues : LFL, EU Masters FR, VCT Challengers France, VCT Challengers EMEA (si équipe FR).
 
