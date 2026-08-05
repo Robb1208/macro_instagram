@@ -27,6 +27,19 @@
 !outil-instagram/LOGOS_JEUX/
 !outil-instagram/LOGOS_JEUX/**
 
+# === REELS ===
+!outil-instagram/reels/
+!outil-instagram/reels/*/
+!outil-instagram/reels/*/index.html
+!outil-instagram/reels/*/meta.json
+!outil-instagram/reels/*/package.json
+!outil-instagram/reels/*/assets/
+!outil-instagram/reels/*/assets/macro-logo.png
+!outil-instagram/reels/*/assets/Macro_OUT.mp4
+# Ignorer les vidéos sources et les rendus (trop lourds pour git)
+outil-instagram/reels/*/assets/*.mov
+outil-instagram/reels/*/renders/
+
 # Ignorer les presets (posts générés + images = lourd)
 outil-instagram/presets/
 
