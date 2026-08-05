@@ -14,9 +14,17 @@ Programme esport du jour → JSON.
 3. **Pas de commentaires/notes** sur les sites bloqués, le proxy, les sources, ni d'étapes de réflexion. Juste les recherches puis le JSON.
 4. **Être exhaustif.** Faire autant de recherches et de fetches de pages que nécessaire pour couvrir tous les jeux et tous les tournois. Ne pas s'arrêter tant qu'on n'a pas vérifié chaque jeu.
 
+## Horaires — Source et conversion
+
+**Source principale pour les horaires : Liquipedia.** Les horaires affichés sur Liquipedia sont en UTC. Toujours convertir en heure de Paris avant d'écrire le JSON :
+- **Été** (dernier dimanche de mars → dernier dimanche d'octobre) : heure FR = UTC + 2 (CEST)
+- **Hiver** : heure FR = UTC + 1 (CET)
+
+**Ne jamais utiliser les heures brutes de VLR.gg, HLTV, ou d'autres sites qui adaptent l'affichage au fuseau du navigateur** — le serveur qui fait le fetch n'est pas en heure FR, donc les heures récupérées seront fausses. Si Liquipedia est indisponible (429/403), utiliser des sources françaises (team-aaa.com, actustream.fr) qui affichent directement en heure FR, ou le site officiel de l'événement quand il précise le fuseau.
+
 ## Recherches
 
-Pas de limite de recherches. Faire toutes les recherches nécessaires pour être complet et précis. Utiliser WebSearch pour trouver les tournois en cours, puis WebFetch sur les pages de résultats (Liquipedia, VLR.gg, HLTV, lolesports, etc.) pour récupérer les matchs exacts avec horaires.
+Pas de limite de recherches. Faire toutes les recherches nécessaires pour être complet et précis. Utiliser WebSearch pour trouver les tournois en cours, puis WebFetch sur Liquipedia pour récupérer les matchs exacts avec horaires UTC, et convertir en heure FR.
 
 ### Étape 1 — Vue d'ensemble
 Rechercher les tournois esport en cours et les matchs du jour :
