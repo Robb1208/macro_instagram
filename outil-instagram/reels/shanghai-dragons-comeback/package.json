@@ -1,0 +1,10 @@
+{
+  "name": "shanghai-dragons-comeback",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "npx hyperframes dev",
+    "check": "npx hyperframes check",
+    "render": "npx hyperframes render"
+  }
+}
