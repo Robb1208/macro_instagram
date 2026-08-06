@@ -1,0 +1,38 @@
+{
+  "format": "story",
+  "game": "esport",
+  "watermark": true,
+  "gradient": 100,
+  "slides": [
+    {
+      "template": "programme",
+      "eyebrow": "PROGRAMME DU JOUR",
+      "title": "*League of Legends*",
+      "desc": "LPL Split 3 · LCK Rounds 3-4 · LFL Summer — Jeudi 06/08",
+      "showDesc": true,
+      "matches": "##LPL 2026 Split 3\n09:00 JD Gaming vs Anyone's Legend BO3\n11:00 Bilibili Gaming vs ThunderTalk Gaming BO3\n##LCK 2026 Rounds 3-4\n10:00 Kiwoom DRX vs DN SOOPers BO3\n12:00 Dplus KIA vs T1 BO3\n##LFL Summer 2026\n18:00 Ici Japon Corp vs Esprit Shōnen BO3\n19:00 Karmine Corp Blue Stars vs Skillcamp BO3\n20:00 TLN Pirates vs Joblife BO3\n21:00 Solary vs Galions BO3\n22:00 ZYB vs Vitality.Bee BO3",
+      "showBgImage": false,
+      "game": "lol"
+    },
+    {
+      "template": "programme",
+      "eyebrow": "PROGRAMME DU JOUR",
+      "title": "*Valorant*",
+      "desc": "VCT EMEA Stage 2 Play-Ins · VCT Americas Stage 2 — Jeudi 06/08",
+      "showDesc": true,
+      "matches": "##VCT EMEA Stage 2 · Play-Ins\n17:00 GIANTX vs Eintracht Frankfurt BO3\n20:00 Natus Vincere vs Joblife BO3\n##VCT Americas Stage 2\n23:00 Evil Geniuses vs FURIA BO3\n02:00 ENVY vs NRG BO3",
+      "showBgImage": false,
+      "game": "val"
+    },
+    {
+      "template": "programme",
+      "eyebrow": "PROGRAMME DU JOUR",
+      "title": "*Call of Duty*",
+      "desc": "EWC 2026 · Black Ops 7 Group Stage — Jeudi 06/08",
+      "showDesc": true,
+      "matches": "##EWC 2026 · Black Ops 7\n15:00 Team Heretics vs Vancouver Surge BO5\n15:00 Team Falcons vs Project Notorious BO5",
+      "showBgImage": false,
+      "game": "cod"
+    }
+  ]
+}
