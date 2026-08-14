@@ -39,6 +39,9 @@ Pour chaque jeu (LoL, CS2, Valorant, RL), aller chercher les matchs du jour sur 
 
 Utiliser WebFetch sur ces pages pour récupérer les matchs exacts, horaires et équipes. Si un site est bloqué ou rate-limited, essayer un site alternatif.
 
+### Étape 3b — Vérification des horaires (OBLIGATOIRE)
+**Source de référence pour les horaires : Liquipedia.** Toujours vérifier les horaires sur la page Liquipedia du tournoi. Beaucoup de sites (Strafe, Blast.tv, etc.) affichent les heures en UTC ou dans un autre fuseau horaire. Liquipedia affiche en heure locale du navigateur — vérifier le fuseau et convertir en CEST si besoin. En cas de rate-limit Liquipedia, utiliser team-aaa.com, lolesports.com, HLTV ou VLR.gg comme source alternative pour confirmer les heures en CEST.
+
 ### Étape 4 — Équipes françaises dans les leagues secondaires
 Si des tournois secondaires sont en cours (Challengers EMEA, LFL, EMEA Masters, etc.), vérifier spécifiquement si une équipe française y joue ce jour-là. Utiliser WebFetch sur la page du tournoi pour voir le planning du jour.
 
@@ -52,7 +55,9 @@ Pas de matchs pour un jeu = pas de slide. Aucun match du tout = pas de post, pr�
 
 ## JSON
 
-Une slide par jeu, template `programme`, format `story`, horaires CET/CEST, tags courts.
+Une slide par jeu, template `programme`, format `story`, tags courts.
+
+**Horaires** : toujours en CEST (heure de Paris). Liquipedia affiche les horaires en heure locale du navigateur — les convertir en CEST si nécessaire. En cas de doute, croiser avec un deuxième site (team-aaa, HLTV, VLR.gg, lolesports). Ne jamais utiliser les horaires UTC ou BST bruts sans conversion. Strafe.com affiche en UTC → ajouter +2h pour CEST.
 
 **Direction artistique** : le champ `game` de chaque slide doit correspondre au jeu pour appliquer la bonne couleur d'accent :
 - `lol` → League of Legends (cyan)
